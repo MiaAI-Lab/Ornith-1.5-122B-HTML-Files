@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MIDNIGHT · City of Wet Light</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#05070f;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  .scene{position:fixed;inset:0;overflow:hidden}
+  #stars{position:absolute;inset:0;z-index:1}
+  .sky{position:absolute;inset:0;z-index:0;
+    background:linear-gradient(180deg,#04060e 0%, #0a1226 34%, #132142 58%, #1a2a4e 72%, #241a3a 100%);}
+  .skyglow{position:absolute;left:0;right:0;bottom:26%;height:40%;z-index:1;pointer-events:none;
+    background:radial-gradient(80% 100% at 50% 100%, rgba(255,150,120,.20), transparent 60%);
+    mix-blend-mode:screen;}
+
+  /* skyline + neon */
+  .city{position:absolute;left:0;right:0;bottom:26%;z-index:3;width:100%;height:64%;
+    pointer-events:none}
+  .city svg{display:block;width:100%;height:100%}
+  .win{transition:opacity .5s ease, fill .5s ease;}
+
+  /* neon signs */
+  .neon{position:absolute;z-index:4;pointer-events:none;font-family:Georgia,serif;
+    text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
+  .neon .bar{display:block;height:3px;margin:2px 0;border-radius:2px}
+  .neon.pink{color:#ff4fa3;text-shadow:0 0 6px #ff4fa3,0 0 14px #ff2f8b,0 0 30px #ff1f7a;
+    animation:flick1 4.2s infinite steps(1)}
+  .neon.cyan{color:#4fe6ff;text-shadow:0 0 6px #4fe6ff,0 0 14px #2fd0f0,0 0 30px #1fb8e0;
+    animation:flick2 5.6s infinite steps(1)}
+  .neon.amber{color:#ffcf5c;text-shadow:0 0 6px #ffcf5c,0 0 14px #ffb83a,0 0 28px #ff9a1f;
+    animation:flick3 6.4s infinite steps(1)}
+  @keyframes flick1{0%,100%{opacity:1}6%{opacity:.25}7%{opacity:1}40%{opacity:1}41%{opacity:.4}42%{opacity:1}88%{opacity:.6}89%{opacity:1}}
+  @keyframes flick2{0%,100%{opacity:1}22%{opacity:.3}23%{opacity:1}55%{opacity:.7}56%{opacity:1}78%{opacity:.35}79%{opacity:1}}
+  @keyframes flick3{0%,100%{opacity:1}12%{opacity:.5}13%{opacity:1}33%{opacity:.2}34%{opacity:1}66%{opacity:.6}67%{opacity:1}}
+
+  /* wet-street reflection plane */
+  .street{position:absolute;left:0;right:0;bottom:0;z-index:2;height:26%;
+    background:linear-gradient(180deg,#0b1530 0%, #070d20 40%, #040712 100%);}
+  .reflection{position:absolute;left:0;right:0;bottom:0;z-index:2;height:26%;
+    transform:scaleY(-1);transform-origin:bottom center;
+    filter:blur(1.6px) brightness(.8) saturate(1.2);opacity:.5;pointer-events:none;
+    overflow:hidden}
+  .reflection .city{bottom:auto;top:0;height:100%}
+  #ripple{position:absolute;left:0;right:0;bottom:0;z-index:3;height:26%;pointer-events:none;mix-blend-mode:screen}
+  .sheen{position:absolute;left:0;right:0;bottom:0;z-index:4;height:26%;pointer-events:none;
+    background:linear-gradient(180deg, rgba(120,180,255,.06), rgba(255,120,180,.04) 50%, transparent);
+    mix-blend-mode:screen;animation:sheen 7s ease-in-out infinite}
+  @keyframes sheen{0%,100%{opacity:.5}50%{opacity:1}}
+
+  #rain{position:absolute;inset:0;z-index:6;pointer-events:none;mix-blend-mode:screen;opacity:.55}
+
+  .fog{position:absolute;left:-10%;right:-10%;bottom:22%;height:20%;z-index:5;pointer-events:none;
+    background:radial-gradient(60% 100% at 50% 50%, rgba(150,170,210,.12), transparent 70%);
+    filter:blur(10px);}
+
+  .vign{position:absolute;inset:0;z-index:7;pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 40%, transparent 52%, rgba(2,4,10,.7) 100%);}
+
+  .wordmark{position:absolute;left:clamp(22px,5vw,60px);top:clamp(20px,4vh,44px);z-index:8;pointer-events:none}
+  .wordmark .k{font-size:clamp(.58rem,1.4vw,.74rem);letter-spacing:.44em;text-transform:uppercase;color:#6f86c0}
+  .wordmark h1{margin:.32em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.6rem,5vw,3.1rem);line-height:.98;color:#eaf1ff;letter-spacing:.01em;
+    text-shadow:0 0 26px rgba(80,120,220,.35)}
+  .wordmark h1 em{font-style:italic;color:#ff9ecb;font-weight:300}
+  .foot{position:absolute;right:clamp(20px,4vw,50px);bottom:clamp(20px,4vh,44px);z-index:8;
+    max-width:min(400px,42vw);text-align:right;pointer-events:none}
+  .foot p{margin:0;color:#9fb0d8;font-size:clamp(.7rem,1.4vw,.86rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 8px rgba(0,0,0,.7)}
+  .foot .hint{margin-top:.7em;font-size:.7em;letter-spacing:.16em;text-transform:uppercase;color:#7f90c4}
+  @media (prefers-reduced-motion: reduce){
+    .neon,.sheen{animation:none;opacity:1}
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="sky"></div>
+  <canvas id="stars" aria-hidden="true"></canvas>
+  <div class="skyglow"></div>
+
+  <div class="city" id="city" aria-label="A night city skyline with glowing windows and neon signs">
+    <svg id="sky" viewBox="0 0 1600 640" preserveAspectRatio="xMidYMax meet" aria-hidden="true"></svg>
+  </div>
+
+  <div class="street"></div>
+  <div class="reflection" id="reflection" aria-hidden="true">
+    <div class="city" id="cityRefl"></div>
+  </div>
+  <canvas id="ripple" aria-hidden="true"></canvas>
+  <div class="sheen"></div>
+
+  <canvas id="rain" aria-hidden="true"></canvas>
+  <div class="fog"></div>
+  <div class="vign"></div>
+
+  <div class="wordmark">
+    <div class="k">Midnight · No. 072</div>
+    <h1>The city keeps its<br><em>warmest</em> light after dark.</h1>
+  </div>
+  <div class="foot">
+    <p>After the rain, the avenues turn to mirrors. A thousand windows blink on and off at random; neon hums and stutters above the puddles; and every colour in the sky dissolves into the wet street below.</p>
+    <div class="hint">Move to ripple the puddles · click for a lightning flash</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- build the skyline + windows ---------- */
+  var svg=document.getElementById("sky");
+  var NS="http://www.w3.org/2000/svg";
+  var W=1600, baseY=640;
+  var wins=[];   // window rects for twinkling
+  function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  var buildings=[];
+  var x=0;
+  while(x<W){
+    var bw=40+Math.random()*90;
+    var bh=120+Math.random()*360;
+    var by=baseY-bh;
+    buildings.push({x:x,y:by,w:bw,h:bh});
+    x+=bw+Math.random()*6;
+  }
+
+  // building silhouettes
+  var sil=document.createElementNS(NS,"g");
+  sil.setAttribute("fill","#080c18");
+  buildings.forEach(function(b){
+    var r=el("rect",{x:b.x,y:b.y-4,width:b.w,height:b.h+4,fill:"#080c18"});
+    sil.appendChild(r);
+    // rooftop antenna / ledge on some
+    if(Math.random()<0.4){
+      sil.appendChild(el("rect",{x:b.x+b.w*0.45,y:b.y-34,width:3,height:34,fill:"#080c18"}));
+    }
+    if(Math.random()<0.3){
+      sil.appendChild(el("rect",{x:b.x+b.w*0.3,y:b.y-16,width:b.w*0.4,height:16,fill:"#080c18"}));
+    }
+  });
+  svg.appendChild(sil);
+
+  // windows
+  var winLayer=document.createElementNS(NS,"g");
+  buildings.forEach(function(b){
+    var cols=Math.max(2,Math.floor((b.w-10)/16));
+    var rows=Math.max(3,Math.floor((b.h-20)/26));
+    var ox=b.x+(b.w-cols*12)/2;
+    for(var r=0;r<rows;r++){
+      for(var c=0;c<cols;c++){
+        if(Math.random()<0.28) continue;             // some dark
+        var warm=Math.random();
+        var fill = warm<0.66 ? "#ffd58a" : (warm<0.86 ? "#ffe6b0" : "#9fc7ff");
+        var rect=el("rect",{x:ox+c*16,y:b.y+12+r*26,width:9,height:14,rx:1,fill:fill,opacity:.15});
+        winLayer.appendChild(rect);
+        wins.push({node:rect, base:0.2+Math.random()*0.7, ph:Math.random()*6.28, sp:Math.random()*0.5+0.2});
+      }
+    }
+  });
+  svg.appendChild(winLayer);
+
+  // reflection = clone of city (buildings + windows + neon) flipped
+  var refl=document.getElementById("cityRefl");
+  refl.innerHTML=document.getElementById("city").innerHTML;
+
+  /* ---------- neon signs ---------- */
+  var neons=[
+    {t:"OPEN",cls:"pink",l:14,  top:30,s:26},
+    {t:"JAZZ",cls:"cyan",l:40,  top:18,s:30},
+    {t:"24h", cls:"amber",l:66, top:40,s:22},
+    {t:"BAR", cls:"pink",l:84,  top:12,s:24},
+    {t:"HOTEL",cls:"cyan",l:26, top:60,s:20},
+    {t:"CAFE",cls:"amber",l:72, top:56,s:20}
+  ];
+  var cityEl=document.getElementById("city");
+  neons.forEach(function(n){
+    var d=document.createElement("div");
+    d.className="neon "+n.cls;
+    d.style.left=n.l+"%"; d.style.top=n.top+"%";
+    d.style.fontSize=n.s+"px"; d.style.fontWeight="700";
+    d.innerHTML=n.t+'<span class="bar"></span>';
+    cityEl.appendChild(d);
+    var rc=d.cloneNode(true);
+    document.getElementById("cityRefl").appendChild(rc);
+  });
+
+  /* ---------- starfield twinkle ---------- */
+  var sc=document.getElementById("stars");
+  var sctx=sc.getContext("2d");
+  var SW=0,SH=0,SD=1,stars=[];
+  function sizeS(){
+    SD=Math.min(devicePixelRatio||1,2);SW=sc.clientWidth;SH=sc.clientHeight;
+    sc.width=SW*SD;sc.height=SH*SD;sctx.setTransform(SD,0,0,SD,0,0);
+    stars=[];var n=Math.min(160,Math.round(SW*SH/7000));
+    for(var i=0;i<n;i++)stars.push({x:Math.random()*SW,y:Math.random()*SH*0.6,
+      r:Math.random()*1.3+0.3,ph:Math.random()*6.28,sp:Math.random()+0.3});
+  }
+  function drawStars(t){
+    sctx.clearRect(0,0,SW,SH);
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i],a=0.4+0.6*Math.abs(Math.sin(t*s.sp+s.ph));
+      sctx.fillStyle="rgba(200,215,255,"+a.toFixed(3)+")";
+      sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,6.2832);sctx.fill();
+    }
+  }
+  window.addEventListener("resize",sizeS);sizeS();
+
+  /* ---------- rain ---------- */
+  var rc=document.getElementById("rain");
+  var rctx=rc.getContext("2d");
+  var RW=0,RH=0,RD=1,rain=[];
+  function sizeR(){
+    RD=Math.min(devicePixelRatio||1,2);RW=rc.clientWidth;RH=rc.clientHeight;
+    rc.width=RW*RD;rc.height=RH*RD;rctx.setTransform(RD,0,0,RD,0,0);
+    rain=[];var n=Math.min(220,Math.round(RW/6));
+    for(var i=0;i<n;i++)rain.push({x:Math.random()*RW,y:Math.random()*RH,
+      l:Math.random()*14+8,sp:Math.random()*6+7,a:Math.random()*0.4+0.15});
+  }
+  function drawRain(dt){
+    rctx.clearRect(0,0,RW,RH);
+    rctx.strokeStyle="rgba(180,200,235,1)";rctx.lineWidth=1;
+    for(var i=0;i<rain.length;i++){
+      var d=rain[i];
+      d.y+=d.sp*60*dt; d.x-=d.sp*8*dt;
+      if(d.y>RH){d.y=-20;d.x=Math.random()*RW;}
+      if(d.x<0)d.x=RW;
+      rctx.globalAlpha=d.a;
+      rctx.beginPath();rctx.moveTo(d.x,d.y);rctx.lineTo(d.x-d.l*0.28,d.y+d.l);rctx.stroke();
+    }
+    rctx.globalAlpha=1;
+  }
+  window.addEventListener("resize",sizeR);sizeR();
+
+  /* ---------- reflection ripples (mouse) ---------- */
+  var rp=document.getElementById("ripple");
+  var pctx=rp.getContext("2d");
+  var PW=0,PH=0,PD=1,ripples=[];
+  function sizeP(){
+    PD=Math.min(devicePixelRatio||1,2);PW=rp.clientWidth;PH=rp.clientHeight;
+    rp.width=PW*PD;rp.height=PH*PD;pctx.setTransform(PD,0,0,PD,0,0);
+  }
+  function addRipple(px,py){ripples.push({x:px,y:py,r:2,max:60+Math.random()*40,a:0.5});}
+  window.addEventListener("pointermove",function(e){
+    if(Math.random()<0.25) addRipple(e.clientX, e.clientY*(PH/rp.clientHeight));
+  },{passive:true});
+  window.addEventListener("pointerdown",function(e){
+    for(var i=0;i<4;i++) addRipple(e.clientX, (e.clientY||0)*(PH/rp.clientHeight));
+    flash();
+  });
+  function drawRipples(){
+    pctx.clearRect(0,0,PW,PH);
+    for(var i=ripples.length-1;i>=0;i--){
+      var q=ripples[i]; q.r+=1.4; q.a-=0.012;
+      if(q.a<=0||q.r>q.max){ripples.splice(i,1);continue;}
+      pctx.strokeStyle="rgba(180,210,255,"+q.a.toFixed(3)+")";
+      pctx.lineWidth=1.2;
+      pctx.beginPath();pctx.ellipse(q.x,q.y,q.r,q.r*0.4,0,0,6.2832);pctx.stroke();
+    }
+  }
+  window.addEventListener("resize",sizeP);sizeP();
+
+  /* ---------- lightning flash ---------- */
+  var flashEl=document.createElement("div");
+  flashEl.style.cssText="position:absolute;inset:0;z-index:9;pointer-events:none;background:#cfe0ff;opacity:0;mix-blend-mode:screen";
+  document.querySelector(".scene").appendChild(flashEl);
+  function flash(){
+    var seq=[{a:0.55,t:40},{a:0.1,t:60},{a:0.6,t:40},{a:0,t:220}];
+    var i=0;
+    (function step(){if(i>=seq.length){flashEl.style.transition="none";flashEl.style.opacity=0;return;}
+      flashEl.style.transition="opacity 0.02s linear";flashEl.style.opacity=seq[i].a;
+      i++;setTimeout(step,seq[i-1].t);})();
+  }
+  setInterval(function(){if(Math.random()<0.12 && !reduce) flash();}, 6000);
+
+  /* ---------- window twinkle loop ---------- */
+  var time=0,last=0;
+  function loop(ts){
+    if(!last)last=ts;
+    var dt=Math.min((ts-last)/1000,0.05);last=ts;
+    if(reduce)dt*=0.2;
+    time+=dt;
+    drawStars(time);
+    drawRain(dt);
+    drawRipples();
+
+    // twinkle a random subset of windows each frame (cheap)
+    var count=Math.min(wins.length, 26);
+    for(var i=0;i<count;i++){
+      var idx=Math.floor(Math.random()*wins.length);
+      var w=wins[idx];
+      var flick=0.5+0.5*Math.sin(time*w.sp+w.ph);
+      // occasional full-off/on
+      var on=(Math.sin(time*0.3+w.ph*3)>-0.85)?1:0.1;
+      w.node.setAttribute("opacity",(w.base*flick*on).toFixed(3));
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

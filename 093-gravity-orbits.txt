@@ -1,0 +1,24 @@
+PROMPT:
+An interactive N-body gravity simulation: drag to fling new bodies into orbit.
+Palette: deep space, glowing colored masses.
+Signature: canvas gravity integration, drag-to-launch with a trajectory preview, orbit trails, collision merges.
+Standalone, self-contained HTML page (093-gravity-orbits.html) — all CSS in one <style>, all JS in one <script>, no external dependencies, works offline, responsive 320px→4K, Awwwards-caliber art direction.
+
+TITLE:
+Kepler's Playground — an N-body gravity sandbox
+
+DESIGN DESCRIPTION:
+A pocket cosmos rendered on canvas over a faint static starfield. A serif display title ("Kepler's Playground") and a small-caps eyebrow sit in a quiet top-left corner above a glass control capsule docked at the bottom. The heart of the piece is a real gravitational integration: every pair of bodies attracts every other pair with an inverse-square law (softened near contact so nothing flings to infinity), advanced with sub-stepped semi-implicit Euler so orbits stay stable. Bodies are drawn as additive radial-gradient orbs — a white-hot core wrapped in a colored halo — in a curated neon palette of cyan, magenta, gold, mint and violet against deep space. Each body leaves a tapering, additive trail that fades with age, so settled systems trace luminous filaments. Drag anywhere on the void to slingshot a new world: a dashed aim line and a live-projected trajectory preview show exactly where it will curve before you release. Worlds that collide merge into one, conserving momentum, with a brief radial flash.
+
+MAJOR VISUAL TECHNIQUES:
+- Pairwise O(n²) gravitational integration with softening and sub-stepping for numerical stability.
+- Drag-to-launch slingshot with a real-time trajectory preview that integrates the new body under the current field (dashed aim line + projected dot trail).
+- Additive ("lighter") radial-gradient glow rendering: white-hot core inside a colored halo.
+- Age-faded, tapering orbit trails drawn additively per body.
+- Momentum-conserving collision merges (mass, velocity and position averaged by mass; bigger body keeps its identity) with a radial flash burst.
+- Glassmorphic bottom control capsule (backdrop-blur, hairline border, inset highlight) and gradient text.
+- DPR-aware, responsive canvas with a separately-painted static background starfield.
+- Near-circular orbital seeding: v = √(GM/r) so "Seed system" produces tidy rings around a heavy sun.
+
+INTENDED INTERACTION MODEL:
+Click-and-drag on empty space and release to fling a new body in the dragged direction; a live readout shows fling speed and mass, and the trajectory preview predicts the resulting orbit. Controls: Pause/Play, a Gravity strength slider, a Mass slider for newly launched bodies, a Trails toggle, "Seed system" (a sun plus orbiting planets) and "Clear". Keyboard shortcuts: Space = pause, S = seed, C = clear. Everything is pointer- and touch-driven and scales fluidly from phone to 4K.

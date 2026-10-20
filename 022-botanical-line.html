@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FLORA · Continuous Line</title>
+<style>
+  :root{
+    --ink:#16233b;
+    --ink-soft:#3a4a63;
+    --ivory:#f6f1e7;
+    --ivory-2:#efe7d6;
+    --paper:#f1ebdd;
+    --accent:#c0402f;      /* single accent — vermilion */
+    --gold:#b08d57;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.5,.05,.15,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 100% at 50% 0%, #fbf7ee 0%, var(--ivory) 46%, var(--ivory-2) 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  /* subtle paper grain via layered gradients */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(22,35,59,.02) 0 2px, transparent 2px 4px),
+      radial-gradient(80% 60% at 85% 15%, rgba(176,141,87,.10), transparent 60%);
+    mix-blend-mode:multiply;
+  }
+
+  .sheet{
+    position:relative;
+    max-width:1180px;
+    margin:0 auto;
+    padding:clamp(24px,5vw,72px) clamp(20px,5vw,64px) clamp(40px,7vw,96px);
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:clamp(24px,5vw,64px);
+    align-items:center;
+  }
+
+  /* ---------- ART FRAME ---------- */
+  .frame{
+    position:relative;
+    aspect-ratio:4/5;
+    background:linear-gradient(160deg,#fffdf8,#f3ecdc);
+    border:1px solid rgba(22,35,59,.16);
+    border-radius:4px;
+    box-shadow:
+      0 30px 60px -30px rgba(22,35,59,.4),
+      0 2px 0 rgba(255,255,255,.7) inset;
+    overflow:hidden;
+  }
+  .frame::after{ /* inner keyline */
+    content:"";position:absolute;inset:14px;border:1px solid rgba(22,35,59,.22);
+    pointer-events:none;border-radius:2px;
+  }
+  .plate{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  .line{
+    fill:none;
+    stroke:var(--ink);
+    stroke-linecap:round;
+    stroke-linejoin:round;
+    stroke-width:1.6;
+    stroke-dasharray:var(--len);
+    stroke-dashoffset:var(--len);
+    animation:draw 3.4s var(--ease) forwards;
+    animation-delay:var(--d,0s);
+  }
+  .line.thin{stroke-width:1.1}
+  .line.accent{stroke:var(--accent);stroke-width:1.8}
+  .dot{opacity:0;animation:pop .7s var(--ease) forwards;animation-delay:var(--d,0s)}
+  .bud{fill:var(--accent);opacity:0;animation:pop 1s var(--ease) forwards;animation-delay:var(--d,0s)}
+
+  @keyframes draw{to{stroke-dashoffset:0}}
+  @keyframes pop{from{opacity:0;transform:scale(.2)}to{opacity:1;transform:scale(1)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+
+  /* ---------- EDITORIAL TYPE ---------- */
+  .kicker{
+    font-family:var(--sans);
+    font-size:12px;letter-spacing:.44em;text-transform:uppercase;
+    color:var(--accent);margin:0 0 20px;font-weight:600;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(40px,7vw,88px);
+    line-height:.96;
+    letter-spacing:-.01em;
+    margin:0 0 22px;
+  }
+  h1 em{font-style:italic;color:var(--accent)}
+  .lede{
+    font-size:clamp(16px,1.7vw,19px);
+    line-height:1.65;
+    color:var(--ink-soft);
+    max-width:38ch;
+    margin:0 0 30px;
+  }
+  .meta{
+    display:flex;flex-wrap:wrap;gap:26px 40px;
+    font-family:var(--sans);
+    font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-soft);
+    border-top:1px solid rgba(22,35,59,.16);
+    padding-top:22px;
+  }
+  .meta b{display:block;color:var(--ink);font-weight:600;margin-top:6px;letter-spacing:.04em}
+  .rule{
+    width:56px;height:1px;background:var(--accent);margin:0 0 26px;
+  }
+  .caption{
+    font-style:italic;color:var(--ink-soft);
+    font-size:15px;margin:0 0 6px;
+  }
+
+  .replay{
+    font-family:var(--sans);
+    margin-top:26px;
+    background:transparent;border:1px solid var(--ink);
+    color:var(--ink);
+    padding:11px 22px;border-radius:999px;
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    cursor:pointer;transition:.35s var(--ease);
+  }
+  .replay:hover{background:var(--ink);color:var(--ivory);letter-spacing:.3em}
+
+  .figcap{
+    font-family:var(--sans);font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--ink-soft);margin-top:14px;text-align:right;
+  }
+
+  @media (max-width:820px){
+    .sheet{grid-template-columns:1fr;padding-top:24px}
+    .frame{max-width:460px;margin:0 auto}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .line,.dot,.bud{animation:none;stroke-dashoffset:0;opacity:1;transform:none}
+    .rule,h1,.lede,.kicker,.meta{animation:none;opacity:1}
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <section class="art">
+      <div class="frame">
+        <svg class="plate" viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet" aria-label="Continuous line botanical illustration of a fern frond">
+          <!-- main continuous stem: a single flowing S-curve from base to tip -->
+          <path class="line" style="--len:1600;--d:.2s"
+            d="M120,470
+               C120,400 150,380 165,330
+               C182,275 150,240 170,190
+               C188,145 210,120 205,70
+               C203,48 190,34 200,20"/>
+
+          <!-- left pinnae (ferns) — small curved strokes off the stem -->
+          <path class="line thin" style="--len:360;--d:1.4s"
+            d="M150,405 C120,402 96,388 78,362"/>
+          <path class="line thin" style="--len:340;--d:1.55s"
+            d="M158,360 C128,352 104,334 88,306"/>
+          <path class="line thin" style="--len:320;--d:1.7s"
+            d="M168,300 C140,290 118,270 104,244"/>
+          <path class="line thin" style="--len:300;--d:1.85s"
+            d="M178,244 C152,236 132,218 120,194"/>
+          <path class="line thin" style="--len:270;--d:2s"
+            d="M190,190 C168,182 150,166 140,144"/>
+          <path class="line thin" style="--len:230;--d:2.15s"
+            d="M200,140 C182,132 168,118 160,100"/>
+
+          <!-- right pinnae -->
+          <path class="line thin" style="--len:340;--d:1.5s"
+            d="M162,392 C192,388 216,372 236,346"/>
+          <path class="line thin" style="--len:320;--d:1.65s"
+            d="M170,344 C200,338 224,320 244,294"/>
+          <path class="line thin" style="--len:300;--d:1.8s"
+            d="M178,288 C206,280 228,262 246,236"/>
+          <path class="line thin" style="--len:280;--d:1.95s"
+            d="M186,232 C210,224 230,208 244,184"/>
+          <path class="line thin" style="--len:250;--d:2.1s"
+            d="M196,178 C216,170 234,156 246,134"/>
+          <path class="line thin" style="--len:210;--d:2.25s"
+            d="M202,128 C218,120 232,108 240,90"/>
+
+          <!-- a second leaf sprig, lower right, crossing gently -->
+          <path class="line" style="--len:620;--d:2.4s"
+            d="M236,470 C250,430 270,410 300,400
+               C330,390 350,366 356,336
+               C360,312 350,296 338,288"/>
+          <path class="line thin" style="--len:220;--d:3s"
+            d="M286,428 C296,410 312,400 332,398"/>
+          <path class="line thin" style="--len:220;--d:3.1s"
+            d="M312,396 C322,378 338,368 356,366"/>
+
+          <!-- accent flower bud at the tip -->
+          <path class="line accent" style="--len:180;--d:2.6s"
+            d="M200,20 C188,10 182,2 190,-6 C200,-14 212,-6 206,6"/>
+          <circle class="bud" style="--d:3.2s" cx="196" cy="-8" r="5"/>
+
+          <!-- small accent dots / spores -->
+          <circle class="dot" style="--d:2.7s" cx="150" cy="405" r="2.4" fill="var(--accent)"/>
+          <circle class="dot" style="--d:2.85s" cx="236" cy="346" r="2.4" fill="var(--accent)"/>
+          <circle class="dot" style="--d:3s" cx="338" cy="288" r="2.4" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <p class="figcap">Plate I — <em>Nephrolepis</em>, ink on rag paper</p>
+    </section>
+
+    <section class="copy">
+      <p class="kicker">The Line Garden · No. 07</p>
+      <h1>A single <em>unbroken</em> line, drawing breath as it grows.</h1>
+      <div class="rule"></div>
+      <p class="lede">
+        One continuous stroke rises from the soil and never once leaves the page —
+        a fern unfurling in real time, each frond emerging in the order it would
+        open in a garden. Set in old-style serif against warm ivory, this is
+        botanical illustration reduced to its most quiet, editorial essence.
+      </p>
+      <div class="meta">
+        <span>Medium<b>Continuous ink line</b></span>
+        <span>Palette<b>Ink navy · Vermilion</b></span>
+        <span>Season<b>Verano, MMXXVI</b></span>
+      </div>
+      <button class="replay" id="replay">Replay the drawing</button>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      var btn = document.getElementById('replay');
+      if(!btn) return;
+      var svg = document.querySelector('.plate');
+      btn.addEventListener('click', function(){
+        if(!svg) return;
+        // force a reflow restart of the draw-on animations
+        var nodes = svg.querySelectorAll('.line, .dot, .bud');
+        nodes.forEach(function(n){ n.style.animation = 'none'; });
+        // reflow so the browser registers the reset
+        void svg.offsetWidth;
+        nodes.forEach(function(n){ n.style.animation = ''; });
+      });
+    })();
+  </script>
+</body>
+</html>

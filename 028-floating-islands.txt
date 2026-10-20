@@ -1,0 +1,82 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: fantasy floating islands with
+waterfalls flowing UPWARD, drifting clouds, and a distant sun. Palette: sky
+blue, moss green, warm stone, soft violet haze. Signature: CSS islands with soft
+drop shadows, a looping upward waterfall (animated gradient + particles), drifting
+cloud parallax, birds. Hard constraints: one self-contained .html, all CSS in one
+<style>, all JS in one <script>, zero external dependencies (system fonts only,
+no CDN, no external images/SVG files, no libraries — build all visuals with CSS,
+HTML, inline SVG or <canvas>), responsive 320px→4K, valid HTML5, must run by
+double-click with no network requests. WOW bar: Awwwards-caliber, distinctive art
+direction, curated palette, refined typography, deliberate composition, real
+intentional motion, one signature effect, handcrafted and unique. A matching .txt
+with the same base name must accompany it.
+
+
+TITLE
+-----
+Aethermere — a sky-bound archipelago where waterfalls run back to the clouds.
+
+
+DESIGN DESCRIPTION
+------------------
+A dreamlike high-altitude scene painted in sky blue, moss green, warm stone and a
+soft violet haze near the horizon. A glowing distant sun sits high right, breathing
+gently, casting a warm radial wash across a cool-to-warm gradient sky. Several
+hand-built CSS islands drift at different depths — each a mossy grass cap crowned
+with little round trees and, on the largest, a tiny cottage with a warm-lit window
+— floating above jagged warm-stone undersides rendered with inset-shadow modelling
+and an irregular clip-path. Their defining trick: instead of pouring down, the
+waterfalls LEAP upward from a luminous source pool at each island's edge, rising
+into the sky as an animated gradient stream (a scrolling highlight repeats
+seamlessly) showered with rising, fading spray particles. Stacked cloud layers
+built from soft SVG puffs drift and parallax at their own pace, violet haze bands
+weave through the middle distance, and a small flock of hand-drawn birds glides
+across the sky with a soft bob. Everything reacts to the pointer — moving or
+dragging the mouse slides clouds, islands and haze at different depths while the
+sun shifts — giving a true sense of floating inside a living diorama, finished
+with a vignette, faint film grain and a serif caption.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- CSS-built islands: a rounded grass cap (asymmetric border-radius), a warm-stone
+  body modelled with left-to-right + inset shadows, and an irregular rocky base cut
+  with a polygon clip-path — no image assets, purely CSS.
+- Soft, layered drop shadows (large blurred drop-shadow on each island and cloud)
+  that sell the sense of weightless objects suspended in air.
+- Signature upward waterfall: a vertical animated-gradient stream whose highlight
+  band scrolls upward via a repeating-linear-gradient keyframe (seamless loop),
+  combined with 10 procedurally animated spray particles that rise from a glowing
+  source pool, drift sideways, fade in/out on a sine envelope and shrink — reversing
+  gravity for the surreal effect.
+- Depth-scaled mouse parallax: pointer (-1..1) eases toward target (lerp) and offsets
+  clouds, haze and islands by their per-layer depth, near elements moving more than
+  far ones.
+- Gentle continuous motion everywhere: islands bob on offset sine waves, clouds and
+  haze auto-drift, the sun breathes, birds bob and glide — alive even with no input.
+- Soft-violet horizon haze via blurred radial-gradient bands for atmospheric
+  perspective against the sky-blue-to-cream gradient.
+- Inline-SVG clouds (clustered translucent ellipses) and inline-SVG bird strokes,
+  all generated in JS; a glowing dual drop-shadow sun with a bright core disc.
+- devicePixelRatio-independent vector graphics that rebuild on resize/orientation,
+  keeping edges crisp from 320px to 4K; vignette + dotted grain overlay for mood.
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Move the mouse (or drag on touch) anywhere to look through the scene; clouds,
+  haze, islands and the sun respond at their own depths for a layered parallax
+  "float".
+- The world also animates continuously on its own (bobbing islands, drifting clouds,
+  rising waterfalls, gliding birds), so it is fully alive with no input; a tap nudges
+  the viewpoint.
+- A caption invites interaction and a center hint fades out on the first move.
+- Fully responsive: all geometry (island positions, cloud spacing, waterfall sizes,
+  bird field) is recomputed from the live viewport on resize and orientation change,
+  and layers are rebuilt so nothing distorts or clips.
+- No controls or menus — the interaction is purely embodied (drift through the sky),
+  keeping the composition clean and gallery-like.
+- Runs entirely offline with zero network requests; every visual is CSS / inline SVG
+  / JS.

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MANDALA — A Meditative Field of Rotating Symmetry</title>
+<style>
+  :root{
+    --indigo:#160f45; --indigo2:#221a63; --abyss:#08061c;
+    --gold:#e9b94e; --gold2:#f4d079; --rose:#e46d90; --rose2:#c74c74;
+    --cream:#f3e9d2;
+  }
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;
+    background:radial-gradient(120% 120% at 50% 45%, #1a1350, #0c0926 60%, #050413);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;color:var(--cream)}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(12px,4vw,56px);box-sizing:border-box}
+  .frame{position:relative;width:min(100%, 92vh);aspect-ratio:1/1;max-width:920px}
+  svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .rL{transform-box:fill-box;transform-origin:center;animation:rotL var(--d,60s) linear infinite}
+  .rR{transform-box:fill-box;transform-origin:center;animation:rotR var(--d,80s) linear infinite}
+  .breathe{transform-box:fill-box;transform-origin:center;animation:breathe 10s ease-in-out infinite}
+  .glowP{animation:glow 12s ease-in-out infinite}
+  .tw{animation:tw 5s ease-in-out infinite}
+  @media (prefers-reduced-motion: reduce){
+    .rL,.rR,.breathe,.glowP,.tw{animation:none!important}
+  }
+  @keyframes rotL{to{transform:rotate(360deg)}}
+  @keyframes rotR{to{transform:rotate(-360deg)}}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+  @keyframes glow{0%,100%{opacity:.45}50%{opacity:.8}}
+  @keyframes tw{0%,100%{opacity:.15}50%{opacity:.9}}
+  .wordmark{position:absolute;left:50%;transform:translateX(-50%);
+    font-family:Georgia,"Times New Roman",serif;letter-spacing:.42em;
+    text-transform:uppercase;pointer-events:none;text-align:center}
+  .wm-top{top:clamp(6px,2.4vh,22px);font-size:clamp(11px,1.5vw,17px);color:var(--gold2);opacity:.85}
+  .wm-bot{bottom:clamp(6px,2.4vh,22px);font-size:clamp(10px,1.4vw,15px);font-style:italic;letter-spacing:.3em;color:var(--rose);opacity:.85}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame">
+    <svg viewBox="0 0 1000 1000" role="img" aria-label="Animated meditative mandala of concentric counter-rotating rings in indigo, gold and rose">
+      <defs>
+        <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#e9b94e" stop-opacity=".55"/>
+          <stop offset="0.4" stop-color="#e46d90" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#e46d90" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="core" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#fff4d6"/>
+          <stop offset="0.4" stop-color="#f4d079"/>
+          <stop offset="0.8" stop-color="#e9b94e"/>
+          <stop offset="1" stop-color="#c74c74"/>
+        </radialGradient>
+      </defs>
+
+      <rect x="0" y="0" width="1000" height="1000" fill="none"/>
+      <g id="starLayer"></g>
+      <circle cx="500" cy="500" r="430" fill="url(#bgGlow)" class="glowP"/>
+      <g id="guideLayer"></g>
+
+      <g class="breathe">
+        <g id="mandala" transform="translate(500 500)"></g>
+      </g>
+    </svg>
+    <div class="wordmark wm-top">Still&nbsp;the&nbsp;Center</div>
+    <div class="wordmark wm-bot">breathe&nbsp;&nbsp;in&nbsp;&nbsp;·&nbsp;&nbsp;and&nbsp;&nbsp;out</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  function el(tag,attrs){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);return e;}
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var GOLD="#e9b94e",GOLD2="#f4d079",ROSE="#e46d90",ROSE2="#c74c74",INDIGO="#8b7fd6",CREAM="#f3e9d2";
+
+  // --- background starfield ---
+  var stars=document.getElementById("starLayer");
+  for(var s=0;s<42;s++){
+    var a=Math.random()*Math.PI*2, r=180+Math.random()*360;
+    var st=el("circle",{cx:(500+Math.cos(a)*r).toFixed(1),cy:(500+Math.sin(a)*r).toFixed(1),
+      r:(Math.random()*1.4+0.4).toFixed(2),fill:(Math.random()<0.5?GOLD2:CREAM)});
+    st.setAttribute("class","tw");
+    st.setAttribute("style","animation-delay:"+((Math.random()*5).toFixed(2))+"s");
+    stars.appendChild(st);
+  }
+
+  // --- guide circles (faint) ---
+  var guide=document.getElementById("guideLayer");
+  var radii=[120,165,215,265,315,365];
+  for(var g=0;g<radii.length;g++){
+    guide.appendChild(el("circle",{cx:500,cy:500,r:radii[g],
+      fill:"none",stroke:GOLD,"stroke-width":"0.7",opacity:(0.06+g*0.01).toFixed(3)}));
+  }
+
+  var mandala=document.getElementById("mandala");
+
+  // --- motif builders: drawn upward from local origin (toward -y) ---
+  function petal(len,w,col){
+    return el("path",{d:"M0,0 C "+w.toFixed(1)+","+(-len*0.35).toFixed(1)+" "+w.toFixed(1)+","+(-len*0.72).toFixed(1)+" 0,"+(-len).toFixed(1)+
+      " C "+(-w).toFixed(1)+","+(-len*0.72).toFixed(1)+" "+(-w).toFixed(1)+","+(-len*0.35).toFixed(1)+" 0,0 Z",
+      fill:col,opacity:"0.9"});
+  }
+  function petalStroke(len,w,col){
+    return el("path",{d:"M0,0 C "+w.toFixed(1)+","+(-len*0.35).toFixed(1)+" "+w.toFixed(1)+","+(-len*0.72).toFixed(1)+" 0,"+(-len).toFixed(1)+
+      " C "+(-w).toFixed(1)+","+(-len*0.72).toFixed(1)+" "+(-w).toFixed(1)+","+(-len*0.35).toFixed(1)+" 0,0 Z",
+      fill:"none",stroke:col,"stroke-width":"1.6",opacity:"0.8"});
+  }
+  function diamond(len,w,col){
+    return el("polygon",{points:"0,"+(-len)+" "+w+","+(-len*0.18).toFixed(1)+" 0,"+(len*0.3).toFixed(1)+" "+(-w)+","+(-len*0.18).toFixed(1),fill:col,opacity:"0.92"});
+  }
+  function bead(r,col){return el("circle",{cx:0,cy:0,r:r,fill:col,opacity:"0.95"});}
+  function ray(len,col){
+    var g=el("g",{});
+    g.appendChild(el("line",{x1:0,y1:0,x2:0,y2:-len,stroke:col,"stroke-width":"2.2",opacity:"0.85","stroke-linecap":"round"}));
+    g.appendChild(el("circle",{cx:0,cy:-len,r:3.2,fill:ROSE}));
+    return g;
+  }
+  function tick(len,col){return el("line",{x1:0,y1:0,x2:0,y2:-len,stroke:col,"stroke-width":"1.4",opacity:"0.55","stroke-linecap":"round"});}
+
+  // --- rings (inner -> outer): count, radius, dir(+1/-1), dur, motif ---
+  var rings=[
+    {n:12, r:66,  dir:1,  dur:70,  m:bead(5,ROSE)},
+    {n:12, r:96,  dir:-1, dur:90,  m:petal(30,11,ROSE)},
+    {n:24, r:132, dir:1,  dur:110, m:bead(3.4,GOLD)},
+    {n:16, r:164, dir:-1, dur:130, m:petal(34,14,INDIGO)},
+    {n:36, r:204, dir:1,  dur:160, m:ray(30,GOLD)},
+    {n:20, r:244, dir:-1, dur:190, m:diamond(26,9,ROSE2)},
+    {n:12, r:284, dir:1,  dur:230, m:petal(42,18,GOLD2)},
+    {n:48, r:318, dir:-1, dur:280, m:tick(15,GOLD)},
+    {n:24, r:344, dir:1,  dur:320, m:petalStroke(24,8,ROSE)}
+  ];
+
+  rings.forEach(function(cfg){
+    var ringG=el("g",{class:cfg.dir<0?"rL":"rR",style:"--d:"+cfg.dur+"s"});
+    for(var i=0;i<cfg.n;i++){
+      var ang=(360/cfg.n)*i;
+      var angleG=el("g",{transform:"rotate("+ang+")"});
+      var placeG=el("g",{transform:"translate(0,"+(-cfg.r)+")"});
+      placeG.appendChild(cfg.m);
+      angleG.appendChild(placeG);
+      ringG.appendChild(angleG);
+    }
+    mandala.appendChild(ringG);
+  });
+
+  // --- central lotus (8 petals) + glowing core ---
+  var lotus=el("g",{class:"rR",style:"--d:120s"});
+  for(var p=0;p<8;p++){
+    var pl=el("g",{transform:"rotate("+(p*45)+")"});
+    var t=el("g",{transform:"translate(0,-30)"});
+    t.appendChild(petal(46,15,ROSE));
+    pl.appendChild(t);
+    lotus.appendChild(pl);
+  }
+  mandala.appendChild(lotus);
+  mandala.appendChild(el("circle",{cx:0,cy:0,r:26,fill:"url(#core)"}));
+  mandala.appendChild(el("circle",{cx:0,cy:0,r:11,fill:CREAM,opacity:"0.95"}));
+
+  // --- subtle pointer drift on the glow only (gentle) ---
+  var glow=document.querySelector(".glowP");
+  var gx=0,gy=0,tx=0,ty=0,ready=false;
+  function onMove(ex,ey){
+    var f=document.querySelector(".frame").getBoundingClientRect();
+    tx=(ex-(f.left+f.width/2))/f.width*40;
+    ty=(ey-(f.top+f.height/2))/f.height*40;
+    if(!ready){ready=true;requestAnimationFrame(loop);}
+  }
+  window.addEventListener("pointermove",onMove,{passive:true});
+  function loop(){
+    gx+=(tx-gx)*0.06; gy+=(ty-gy)*0.06;
+    if(glow) glow.setAttribute("transform","translate("+gx.toFixed(2)+" "+gy.toFixed(2)+")");
+    if(!reduce) requestAnimationFrame(loop);
+  }
+  if(!reduce) requestAnimationFrame(loop);
+})();
+
+</script>
+</body>
+</html>

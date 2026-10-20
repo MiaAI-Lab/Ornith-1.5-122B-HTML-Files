@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chrome · Floating Sphere</title>
+<style>
+  :root{
+    --chrome-hi:#ffffff; --chrome-mid:#cfd3d9; --chrome-lo:#868b92;
+    --chrome-dark:#3a3d42; --bg-top:#ffffff; --bg-mid:#e7e8ec; --bg-bot:#c4c7cd;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0; overflow:hidden;
+    font-family:'Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    color:#5b5f66;
+    background:
+      radial-gradient(125% 100% at 50% 8%, var(--bg-top) 0%, var(--bg-mid) 46%, var(--bg-bot) 100%);
+    -webkit-font-smoothing:antialiased;
+  }
+  /* faint cyclorama softbox bands in the environment itself */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.35) 0 60px, rgba(255,255,255,0) 60px 220px),
+      linear-gradient(180deg, rgba(255,255,255,.25), rgba(120,124,132,0) 55%);
+  }
+
+  .stage{
+    position:relative; z-index:1; height:100%;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .scene{
+    position:relative; width:clamp(230px,52vmin,520px); aspect-ratio:1/1;
+    animation:float 6.5s cubic-bezier(.45,.05,.55,.95) infinite;
+    will-change:transform;
+  }
+  @keyframes float{
+    0%,100%{ transform:translateY(-2.4%); }
+    50%{ transform:translateY(2.4%); }
+  }
+
+  .sphere{
+    position:absolute; inset:0; border-radius:50%;
+    /* base metallic shading: a soft top-left light falling off to a dark lower-right */
+    background:
+      radial-gradient(circle at 34% 26%, rgba(255,255,255,.95) 0%, rgba(255,255,255,0) 20%),
+      radial-gradient(circle at 62% 78%, rgba(120,126,133,.9), rgba(120,126,133,0) 42%),
+      radial-gradient(circle at 50% 46%, #e2e5e9 0%, #b4b9c0 34%, #82888f 62%, #4a4e54 100%);
+    box-shadow:
+      inset -22px -26px 52px rgba(0,0,0,.5),
+      inset 14px 16px 34px rgba(255,255,255,.55),
+      0 38px 70px -22px rgba(40,44,50,.55);
+  }
+  /* the reflected studio: a large conic disc of light & grey bands, slowly turning */
+  .reflection{
+    position:absolute; inset:0; border-radius:50%; overflow:hidden;
+    mix-blend-mode:screen; opacity:.55;
+  }
+  .reflection::before{
+    content:""; position:absolute; inset:-46%;
+    background:conic-gradient(from 0deg,
+      #f6f7f9 0deg, #aeb3ba 48deg, #e7eaee 100deg, #9a9fa6 168deg,
+      #dfe2e6 220deg, #8b9097 288deg, #eceef1 336deg, #f6f7f9 360deg);
+    animation:spin 22s linear infinite;
+  }
+  /* a bright softbox streak drifting across the surface */
+  .reflection::after{
+    content:""; position:absolute; inset:-30%;
+    background:linear-gradient(115deg, rgba(255,255,255,0) 40%, rgba(255,255,255,.5) 50%, rgba(255,255,255,0) 60%);
+    animation:drift 9s ease-in-out infinite alternate;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  @keyframes drift{
+    0%{ transform:translate(-24%,-24%) rotate(0deg); }
+    100%{ transform:translate(24%,24%) rotate(12deg); }
+  }
+
+  /* crisp specular highlight, pointer-reactive */
+  .highlight{
+    position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    background:
+      radial-gradient(18% 14% at var(--hx,34%) var(--hy,26%), rgba(255,255,255,.95), rgba(255,255,255,0) 70%);
+  }
+  /* thin bright rim light, lower edge */
+  .rim{
+    position:absolute; inset:0; border-radius:50%; pointer-events:none;
+    box-shadow: inset 0 2px 2px rgba(255,255,255,.35);
+    background:
+      radial-gradient(56% 30% at 50% 96%, rgba(255,255,255,.28), rgba(255,255,255,0) 70%);
+  }
+
+  .shadow{
+    position:absolute; left:50%; bottom:-9%; width:66%; aspect-ratio:2/1;
+    transform:translateX(-50%); border-radius:50%;
+    background:radial-gradient(ellipse at center, rgba(30,33,38,.55), rgba(30,33,38,0) 68%);
+    filter:blur(7px);
+    animation:shadowPulse 6.5s cubic-bezier(.45,.05,.55,.95) infinite;
+    will-change:transform,opacity;
+  }
+  @keyframes shadowPulse{
+    0%,100%{ transform:translateX(-50%) scale(1); opacity:.62; }
+    50%{ transform:translateX(-50%) scale(.86); opacity:.42; }
+  }
+
+  .caption{
+    position:fixed; left:0; right:0; bottom:5.5vh; z-index:2;
+    text-align:center; pointer-events:none; user-select:none;
+  }
+  .caption .t{
+    font-size:.7rem; letter-spacing:.5em; text-transform:uppercase; color:#8a8e95;
+  }
+  .caption .n{
+    display:block; margin:.7rem auto 0; width:34px; height:1px; background:#b7bbc2;
+  }
+  .hint{
+    position:fixed; left:0; right:0; top:5.5vh; z-index:2; text-align:center;
+    font-size:.62rem; letter-spacing:.32em; text-transform:uppercase; color:#a7abb2;
+    opacity:.9;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .scene,.shadow,.reflection::before,.reflection::after{ animation:none; }
+    .reflection::before{ transform:rotate(24deg); }
+  }
+  @media (max-width:480px){
+    .hint{ display:none; }
+  }
+</style>
+</head>
+<body>
+  <p class="hint">move to catch the light</p>
+  <div class="stage">
+    <div class="scene">
+      <div class="sphere">
+        <div class="reflection"></div>
+        <div class="rim"></div>
+        <div class="highlight"></div>
+      </div>
+      <div class="shadow"></div>
+    </div>
+  </div>
+  <div class="caption">
+    <span class="t">Chrome · Specimen 082</span>
+    <span class="n"></span>
+  </div>
+
+<script>
+(function(){
+  "use strict";
+  var root = document.documentElement;
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduce) return;
+  function setLight(x, y){
+    root.style.setProperty("--hx", x + "%");
+    root.style.setProperty("--hy", y + "%");
+  }
+  window.addEventListener("pointermove", function(e){
+    setLight((e.clientX / window.innerWidth) * 100, (e.clientY / window.innerHeight) * 100);
+  }, {passive:true});
+  setLight(34, 26);
+})();
+</script>
+</body>
+</html>

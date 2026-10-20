@@ -1,0 +1,20 @@
+PROMPT (exact):
+013-sumi-e.html + 013-sumi-e.txt — Japanese ink-wash (sumi-e) bamboo painting; wet ink bleed on rice paper. Palette: ink black/grey, paper cream, single red seal. Signature: SVG/Canvas ink strokes with animated bleed/opacity and wet edges, red seal stamp reveal.
+
+TITLE:
+墨竹図 — "Ink Bamboo on Rice Paper"
+
+DESIGN DESCRIPTION:
+A portrait hanging-scroll composition rendered on warm washi (rice-paper) cream. Three bamboo culms rise from pooled ink at the base — one faint, soft-edged background stalk behind two darker foreground culms — each drawn as tapered, slightly swaying brush strokes with swollen nodes. Curved branches flick out from the nodes and carry clusters of pointed, calligraphic leaves. Every stroke is painted on sequentially as wet ink: it lands with a soft blurred halo that spreads into the paper fibers (bleed), then sharpens and dries as the halo fades. A vermilion seal-script stamp (a stylized bamboo glyph in negative space) then drops into the lower-left with a squash-and-settle impact, the artist's signature. The whole thing sits on a matted scroll mount with a vertical inscription column and a single hairline keyline, evoking a museum-quality sumi-e hanging scroll.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas brush strokes built as filled tapered outlines (per-point left/right normal offsets), so leaves taper to a point and culms bulge at the nodes.
+- "Wet ink" simulation: each fresh stroke is drawn twice — a blurred, slightly oversized, low-alpha halo (ctx.filter blur + width ×(1+0.6·wet)) that decays over ~1.5s while the crisp core simultaneously de-blurs, reading as ink bleeding then drying.
+- Sequential reveal: strokes unroll along their path (reveal param clips the outline to the leading edge) on a master timeline, so the painting appears brush-by-brush.
+- Rounded end caps via filled circles at stroke ends; ink splatter pooling at the base for authenticity.
+- Vermilion seal reveal with an easeOutBack squash + exponential wobble settle and a brief blurred ink-impact halo.
+- Layered CSS washi-fiber texture (repeating-linear-gradients), aged vignette, and a slowly breathing mist for atmosphere.
+- Deterministic seeded RNG (mulberry32) so the bamboo is consistent yet organic; geometry recomputed to canvas size.
+
+INTENDED INTERACTION MODEL:
+Passive to watch: the painting performs itself once on load — ink flows up the stalks, leaves unfurl, ink pools, and the red seal stamps home, after which a "再筆 · repaint" button fades in. Click anywhere on the painting (or the button) to re-paint the whole scroll from scratch; the canvas re-measures and replays on every resize so it stays crisp from 320px to 4K.

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DUNE No.063 — Low Sun</title>
+<style>
+  :root{ --ochre:#c98a3c; --rust:#a5471f; --amber:#e8b56a; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:#3a2410;overflow:hidden;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f6e6cf;overflow:hidden;}
+  .stage{position:fixed;inset:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  #haze{mix-blend-mode:screen;}
+  .frame{position:fixed;inset:0;pointer-events:none;}
+  .vignette{position:absolute;inset:0;background:radial-gradient(130% 100% at 68% 30%,rgba(255,190,110,.16),rgba(40,22,8,.55) 62%,rgba(20,10,4,.92));}
+  .tag{position:absolute;left:clamp(18px,3vw,42px);bottom:clamp(20px,3.4vw,46px);}
+  .kicker{font-size:.72rem;letter-spacing:.42em;text-transform:uppercase;opacity:.72;font-weight:600;}
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  .title{font-family:Georgia,"Times New Roman",serif;font-weight:400;margin:.14em 0 .06em;font-size:clamp(2rem,5.4vw,3.6rem);line-height:.96;letter-spacing:.005em;text-shadow:0 2px 26px rgba(60,26,6,.6);}
+  .title b{font-style:italic;font-weight:400;color:#ffd79a;}
+  .sub{max-width:34ch;font-size:.9rem;line-height:1.5;opacity:.78;text-shadow:0 1px 14px rgba(50,22,4,.7);}
+  .legend{position:absolute;right:clamp(18px,3vw,42px);top:clamp(20px,3.4vw,46px);text-align:right;}
+  .stat{font-variant-numeric:tabular-nums;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;opacity:.7;margin:.32em 0;}
+  .stat b{color:#ffcf8f;font-weight:600;opacity:1;}
+  .hint{position:absolute;left:clamp(18px,3vw,42px);top:clamp(20px,3.4vw,46px);font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;opacity:.5;}
+  @media (max-width:520px){ .sub{display:none;} .legend{top:auto;bottom:clamp(20px,3.4vw,46px);} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="sky"></canvas>
+  <canvas id="haze"></canvas>
+  <div class="frame">
+    <div class="vignette"></div>
+    <div class="legend">
+      <div class="stat">Air <b id="air">41.2</b>°C</div>
+      <div class="stat">Wind <b>14</b> kn</div>
+      <div class="stat">Sun <b>6°</b></div>
+    </div>
+    <div class="hint">Move to shift the sun · <span class="serif" style="font-style:italic;text-transform:none;letter-spacing:.02em">drag the dunes</span></div>
+    <div class="tag">
+      <div class="kicker">Great Basin · No. 063</div>
+      <h1 class="title">Low <b>Sun</b></h1>
+      <p class="sub">Heat rising off the dunes at the edge of dusk — the sun hangs low and copper-thick, its shimmer bending the air, while a thin wind combs sand along the ridgelines.</p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var W=0,H=0,DPR=1,cx=0,cy=0;
+  var sky=document.getElementById('sky'),sctx=sky.getContext('2d');
+  var hz=document.getElementById('haze'),hctx=hz.getContext('2d');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var mouse={x:0.5,y:0.5,active:false,drag:0};
+  var sand=[],heat=[],dunes=[];
+  var t=0, sunX=0.68, sunY=0.30, targetSunX=0.68;
+
+  function resize(){
+    W=innerWidth; H=innerHeight; cx=W*0.5; cy=H*0.5;
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    [sky,hz].forEach(function(c){ c.width=Math.floor(W*DPR); c.height=Math.floor(H*DPR); c.getContext('2d').setTransform(DPR,0,0,DPR,0,0); });
+    build();
+  }
+
+  function build(){
+    sand=[]; heat=[]; dunes=[];
+    // sand grains
+    var ns=Math.max(120, Math.min(520, Math.floor(W*H/9000)));
+    for(var i=0;i<ns;i++) sand.push(makeSand());
+    // heat shimmer columns
+    for(var k=0;k<40;k++) heat.push({x:Math.random()*W,y:H*0.3+Math.random()*H*0.5,ph:Math.random()*6.28,sp:0.6+Math.random()*1.2,r:2+Math.random()*5,a:0.03+Math.random()*0.05});
+    // dune layers (back -> front), each a smooth ridge
+    var layers=5;
+    for(var l=0;l<layers;l++){
+      var baseY=0.42 + l*0.12;
+      var amp=18 + l*16;
+      var segs=10;
+      var pts=[];
+      for(var s=0;s<=segs;s++){
+        pts.push({x:s/segs, y:baseY + Math.sin(s*1.3+l*2+t)*0.02 + (Math.random()-0.5)*0.01});
+      }
+      dunes.push({pts:pts, layer:l, baseY:baseY, amp:amp*H/500, speed:0.0006*(l+1), phase:t});
+    }
+    document.getElementById('air').textContent=(40+Math.random()*3).toFixed(1);
+  }
+
+  function makeSand(){
+    return {x:Math.random()*W,y:H*0.28+Math.random()*H*0.7, vx:20+Math.random()*60, vy:(Math.random()-0.5)*10, sz:0.6+Math.random()*1.4, a:0.15+Math.random()*0.4, life:Math.random()*8};
+  }
+
+  // smooth ridge path from control points, parallax offset
+  function dunePath(d,off){
+    var pts=d.pts;
+    sctx.beginPath();
+    sctx.moveTo(-20-off, H+20);
+    sctx.lineTo(-20-off, H*pts[0].y);
+    for(var i=0;i<pts.length-1;i++){
+      var p0=pts[i],p1=pts[i+1];
+      var mx=(p0.x+p1.x)/2;
+      var cpx1=p0.x*W-off, cpy1=H*p0.y;
+      var cpx2=mx*W-off, cpy2=H*p1.y;
+      sctx.quadraticCurveTo(p0.x*W-off,H*p0.y, mx*W-off, H*(p0.y+p1.y)/2);
+    }
+    var last=pts[pts.length-1];
+    sctx.lineTo(W+20-off, H*last.y);
+    sctx.lineTo(W+20-off, H+20);
+    sctx.closePath();
+  }
+
+  function drawSky(){
+    sctx.clearRect(0,0,W,H);
+    // sky gradient: amber near sun -> rust -> ochre -> deep ground
+    var g=sctx.createLinearGradient(0,0,0,H);
+    g.addColorStop(0,'#e8b56a');
+    g.addColorStop(0.28,'#e3a05a');
+    g.addColorStop(0.5,'#cf7f3e');
+    g.addColorStop(0.72,'#a5561f');
+    g.addColorStop(1,'#5c2c0f');
+    sctx.fillStyle=g; sctx.fillRect(0,0,W,H);
+    // sun glow
+    var sx=sunX*W, sy=sunY*H;
+    var glow=sctx.createRadialGradient(sx,sy,0,sx,sy,H*0.9);
+    glow.addColorStop(0,'rgba(255,244,214,0.95)');
+    glow.addColorStop(0.12,'rgba(255,224,160,0.7)');
+    glow.addColorStop(0.4,'rgba(240,160,70,0.28)');
+    glow.addColorStop(1,'rgba(200,90,30,0)');
+    sctx.fillStyle=glow; sctx.fillRect(0,0,W,H);
+    // sun disc
+    sctx.save();
+    sctx.beginPath(); sctx.arc(sx,sy,Math.min(W,H)*0.06,0,6.283); sctx.closePath();
+    var disc=sctx.createRadialGradient(sx,sy,0,sx,sy,Math.min(W,H)*0.06);
+    disc.addColorStop(0,'#fff7e0'); disc.addColorStop(1,'#ffd27a');
+    sctx.fillStyle=disc; sctx.shadowColor='rgba(255,200,120,0.9)'; sctx.shadowBlur=60; sctx.fill();
+    sctx.restore();
+  }
+
+  function drawDunes(){
+    // far -> near, colour from warm ochre to deep rust/sepia
+    var cols=[
+      ['#d99a55','#c07a3a'],
+      ['#c07f3c','#9c5c26'],
+      ['#a1612b','#7d4319'],
+      ['#7c4019','#5a2c0f'],
+      ['#4d2710','#32170a']
+    ];
+    var off=sunX*W*0.12 + mouse.drag*40; // parallax base
+    for(var l=0;l<dunes.length;l++){
+      var d=dunes[l];
+      sctx.save();
+      var c=cols[l];
+      var grd=sctx.createLinearGradient(0,H*d.baseY,0,H);
+      grd.addColorStop(0,c[0]); grd.addColorStop(1,c[1]);
+      sctx.fillStyle=grd;
+      dunePath(d, off*d.speed*60);
+      sctx.fill();
+      // rim light on ridge (sunlit side)
+      sctx.strokeStyle='rgba(255,210,140,'+(0.5-l*0.08)+')';
+      sctx.lineWidth=1.5;
+      sctx.stroke();
+      sctx.restore();
+    }
+  }
+
+  function drawSand(dt){
+    sctx.save();
+    for(var i=0;i<sand.length;i++){
+      var s=sand[i];
+      s.x+=s.vx*dt*(1+mouse.drag*2);
+      s.y+=s.vy*dt;
+      s.life-=dt*0.3;
+      if(s.x>W+10 || s.life<=0){ sand[i]=makeSand(); sand[i].x=-5; }
+      var a=s.a*Math.min(1,s.life*0.5);
+      sctx.fillStyle='rgba(255,210,150,'+a+')';
+      sctx.beginPath(); sctx.arc(s.x,s.y,s.sz,0,6.283); sctx.fill();
+    }
+    sctx.restore();
+  }
+
+  function drawHeat(dt){
+    hctx.clearRect(0,0,W,H);
+    hctx.save();
+    hctx.globalCompositeOperation='lighter';
+    for(var i=0;i<heat.length;i++){
+      var h=heat[i];
+      h.ph+=h.sp*dt;
+      var yy=h.y - (t*20)% (H*0.6);
+      if(yy<-20) yy+=H*0.6;
+      var wob=Math.sin(h.ph)*8;
+      var grd=hctx.createRadialGradient(h.x+wob,yy,0,h.x+wob,yy,h.r*3);
+      grd.addColorStop(0,'rgba(255,225,170,'+h.a+')');
+      grd.addColorStop(1,'rgba(255,180,90,0)');
+      hctx.fillStyle=grd;
+      hctx.beginPath(); hctx.arc(h.x+wob,yy,h.r*3,0,6.283); hctx.fill();
+    }
+    hctx.restore();
+  }
+
+  var last=performance.now();
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(reduce) dt*=0.25;
+    t+=dt;
+    // sun drifts with pointer x
+    targetSunX=mouse.active? (0.35+mouse.x*0.5) : (0.66+Math.sin(t*0.05)*0.04);
+    sunX+=(targetSunX-sunX)*0.04;
+    drawSky();
+    drawDunes();
+    drawSand(dt);
+    drawHeat(dt);
+    requestAnimationFrame(frame);
+  }
+
+  function onMove(px,py){ mouse.px=mouse.x*W; mouse.py=mouse.y*H; mouse.x=px/W; mouse.y=py/H; mouse.active=true; }
+  window.addEventListener('mousemove',function(e){ onMove(e.clientX,e.clientY); });
+  window.addEventListener('touchmove',function(e){ if(e.touches[0])onMove(e.touches[0].clientX,e.touches[0].clientY); },{passive:true});
+  window.addEventListener('mousedown',function(){ mouse.drag=1; });
+  window.addEventListener('mouseup',function(){ mouse.drag=0; });
+  window.addEventListener('mouseleave',function(){ mouse.active=false; mouse.drag=0; });
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

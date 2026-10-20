@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page — Arctic ice landscape with cracked ice and cold aurora. Palette: ice blue, white, pale green aurora. Signature: CSS cracked-ice polygons, drifting mist, aurora glow, cold vignette. One self-contained .html file, all CSS in a single <style> block, all JS in a single <script> block, no external dependencies (no CDN, fonts, images or libraries), responsive 320px–4K, valid HTML5. WOW quality bar: genuinely stunning, premium, Awwwards/SiteInspire-caliber, distinctive art direction, curated palette, refined typography, real motion, one signature effect.
+
+TITLE:
+"Meridian — The Quiet Freeze"
+
+DESIGN DESCRIPTION:
+A wide, silent arctic expanse under a pale-green aurora that undulates like slow silk across a near-black ice-blue sky. The foreground is a field of fractured ice plates — jagged CSS clip-path polygons in layered shades of white and ice blue, each catching a hard rim highlight and casting a soft cold shadow. Between the plates, thin seams of deep glacial blue bleed through. A low, drifting mist rolls horizontally across the horizon, softening where the aurora's glow pools. A cold vignette and faint falling snow give the whole scene a hushed, sub-zero atmosphere. The palette stays strictly within ice blue, white and pale aurora green — restraint is the point.
+
+MAJOR VISUAL TECHNIQUES:
+- Cracked-ice plates built from layered CSS clip-path polygon shapes with per-plate linear-gradient faces and inset rim highlights for a faceted, glassy look.
+- Animated aurora: multiple stacked radial/linear gradients with mix-blend-mode screen, warped and drifted via CSS keyframes (and a subtle SVG turbulence displacement) to create slow billowing curtains of pale green.
+- Drifting mist: several blurred translucent gradient layers panning at different speeds (parallax) for depth.
+- Cold vignette via radial gradient overlay and a blue-tinted inner shadow; gentle parallax snow via canvas or CSS.
+- Faint glacial reflections beneath the ice plates using soft blurred ellipses.
+- Refined, understated typography (thin system sans with wide tracking) so the scene, not the words, carries the page.
+- Fully responsive layout that keeps the horizon and ice field in proportion from 320px to 4K.
+
+INTENDED INTERACTION MODEL:
+Ambient and slow. The aurora, mist and snow move continuously on their own timelines. The viewer can gently steer the scene with the pointer / device tilt (a light parallax that shifts the aurora and ice layers), and toggle "Storm" mode which quickens the aurora's pulse and thickens the mist. A subtle "listen" affordance hints at wind ambience without requiring audio. Respects prefers-reduced-motion by settling the aurora and mist to a near-still state.

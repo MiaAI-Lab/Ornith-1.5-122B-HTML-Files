@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amber &amp; Hive · A Golden Honeycomb</title>
+<style>
+:root{
+  --sky-1:#fff4cf; --sky-2:#ffe39a; --meadow-1:#cdea8f; --meadow-2:#8ec25a;
+  --honey-1:#ffd166; --honey-2:#fb8500; --honey-3:#c2410c;
+  --wax:#e9b949; --wax-deep:#b7791f;
+  --ink:#5a3a12; --ink-soft:#8a6a34;
+  --glass:rgba(255,255,255,.45);
+  --line:rgba(140,90,20,.28);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+body{
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  color:var(--ink);
+  background:
+    radial-gradient(80% 60% at 78% -8%, rgba(255,247,210,.95), rgba(255,227,154,0) 60%),
+    linear-gradient(180deg, var(--sky-1) 0%, var(--sky-2) 46%, var(--meadow-1) 78%, var(--meadow-2) 100%);
+  -webkit-font-smoothing:antialiased;
+  touch-action:none;
+}
+#stage{position:fixed;inset:0;z-index:1;display:block}
+#sky{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+header{position:fixed;top:0;left:0;z-index:5;
+  padding:clamp(16px,3vw,28px) clamp(18px,4vw,40px);max-width:56ch;pointer-events:none}
+.eyebrow{font-family:Georgia,"Times New Roman",serif;font-style:italic;letter-spacing:.04em;
+  text-transform:none;color:var(--honey-3);opacity:.85;margin:0;font-size:clamp(.7rem,1.6vw,.9rem)}
+h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:.01em;
+  font-size:clamp(1.9rem,6vw,3.6rem);margin:.12em 0 .1em;
+  color:#4a2f0c;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+h1 em{font-style:italic;color:var(--honey-3)}
+.sub{color:var(--ink-soft);font-size:clamp(.74rem,1.8vw,.95rem);line-height:1.5;margin:0;max-width:44ch}
+
+.bar{position:fixed;left:50%;bottom:clamp(14px,3vh,26px);transform:translateX(-50%);z-index:6;
+  display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:center;
+  background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,240,200,.5));
+  border:1px solid var(--line);border-radius:999px;padding:9px 16px;
+  box-shadow:0 12px 34px rgba(120,80,20,.22), inset 0 1px 0 rgba(255,255,255,.8);
+  backdrop-filter:blur(10px);max-width:calc(100vw - 24px)}
+button.ghost{background:rgba(201,140,40,.14);border:1px solid var(--line);color:var(--ink);
+  border-radius:999px;padding:7px 15px;font:inherit;font-size:.76rem;letter-spacing:.04em;cursor:pointer;
+  transition:background .18s,border-color .18s,transform .1s}
+button.ghost:hover{background:rgba(251,133,0,.22);border-color:var(--honey-2);color:#4a2f0c}
+button.ghost:active{transform:scale(.96)}
+button.ghost.primary{background:linear-gradient(180deg,rgba(255,183,3,.5),rgba(251,133,0,.4));
+  border-color:var(--honey-2);color:#4a2f0c;font-weight:600}
+label.toggle{cursor:pointer;user-select:none;display:flex;align-items:center;gap:6px;
+  color:var(--ink-soft);font-size:.74rem;letter-spacing:.04em}
+label.toggle input{accent-color:var(--honey-2);margin:0}
+.sep{width:1px;height:22px;background:var(--line);margin:0 2px}
+
+#readout{position:fixed;top:clamp(16px,3vw,28px);right:clamp(16px,4vw,40px);z-index:5;
+  text-align:right;pointer-events:none}
+#readout .n{font-family:Georgia,serif;font-size:clamp(1.6rem,5vw,2.6rem);color:#4a2f0c;line-height:1}
+#readout .cap{font-size:.66rem;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft)}
+
+footer{position:fixed;right:clamp(16px,4vw,40px);bottom:clamp(66px,12vh,92px);z-index:5;
+  color:var(--ink-soft);font-size:.62rem;letter-spacing:.22em;text-transform:uppercase;opacity:.6;pointer-events:none}
+
+@media (max-width:560px){
+  .bar{gap:8px;padding:8px 11px}
+  .sep{display:none}
+  button.ghost{padding:7px 11px;font-size:.7rem}
+}
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<canvas id="stage"></canvas>
+
+<header>
+  <p class="eyebrow">from the top of the hour, the comb</p>
+  <h1>Amber &amp; <em>Hive</em></h1>
+  <p class="sub">The cells fill with honey until they run heavy &mdash; then a bead
+  stretches from the rim and falls. Tap a cell to feed it; watch the bees
+  work the meadow in the warm light.</p>
+</header>
+
+<div id="readout" aria-live="polite"><div class="n" id="fullN">0</div><div class="cap">cells full</div></div>
+
+<div class="bar" id="panel">
+  <button class="ghost primary" id="feedBtn">Feed hive</button>
+  <button class="ghost" id="dripBtn">Tap the comb</button>
+  <div class="sep"></div>
+  <label class="toggle"><input type="checkbox" id="beesChk" checked> Bees</label>
+  <label class="toggle"><input type="checkbox" id="dripChk" checked> Drips</label>
+</div>
+
+<footer>Orinth · Light Lab — 094</footer>
+
+<script>
+"use strict";
+(function(){
+/* ---------- canvases & sizing ---------- */
+var stage=document.getElementById('stage'), sky=document.getElementById('sky');
+var sctx=stage.getContext('2d'), skyCtx=sky.getContext('2d');
+var W=0,H=0,DPR=1, S=40;
+var cells=[], bees=[], pollen=[], drips=[];
+var showBees=true, showDrips=true, t=0, last=performance.now();
+
+function resize(){
+  DPR=Math.min(2,(window.devicePixelRatio||1)||1);
+  W=window.innerWidth; H=window.innerHeight;
+  [stage,sky].forEach(function(c){
+    c.width=Math.round(W*DPR); c.height=Math.round(H*DPR);
+    c.style.width=W+'px'; c.style.height=H+'px';
+  });
+  sctx.setTransform(DPR,0,0,DPR,0,0);
+  skyCtx.setTransform(DPR,0,0,DPR,0,0);
+  S=Math.max(34,Math.min(110,Math.min(W,H)/16));
+  buildGrid(); buildBees(); buildPollen(); drawSky();
+}
+
+/* ---------- hex helpers (pointy-top) ---------- */
+function hexVerts(cx,cy,s){
+  var v=[];
+  for(var i=0;i<6;i++){ var a=(-90+60*i)*Math.PI/180;
+    v.push([cx+Math.cos(a)*s, cy+Math.sin(a)*s]); }
+  return v;
+}
+function hexPath(cx,cy,s){
+  var v=hexVerts(cx,cy,s); sctx.beginPath();
+  sctx.moveTo(v[0][0],v[0][1]);
+  for(var i=1;i<6;i++) sctx.lineTo(v[i][0],v[i][1]);
+  sctx.closePath();
+}
+
+/* ---------- build the comb ---------- */
+function buildGrid(){
+  var colW=Math.sqrt(3)*S, rowH=1.5*S;
+  var cols=Math.max(5,Math.floor(W/colW)+2);
+  var rows=Math.max(6,Math.floor(H/rowH)+2);
+  var startX=W/2-((cols-1)*colW)/2-S*0.4;
+  var startY=H/2-((rows-1)*rowH)/2-S*0.4;
+  cells=[];
+  for(var r=0;r<rows;r++){
+    for(var c=0;c<cols;c++){
+      var cx=startX+c*colW+(r&1?colW/2:0);
+      var cy=startY+r*rowH;
+      if(cx<-S*1.5||cx>W+S*1.5||cy<-S*1.5||cy>H+S*1.5) continue;
+      var edge=(c===0||c===cols-1||r===0||r===rows-1);
+      cells.push({
+        c:c,r:r,edge:edge,cx:cx,cy:cy,s:S,
+        fill: edge?0:Math.random()*0.55,
+        rate: 0.0006+Math.random()*0.0014,
+        seed: Math.random()*1e3,
+        drip:null, dripWait: 400+Math.random()*1600,
+        bubbles: edge?0:Math.floor(Math.random()*3)
+      });
+    }
+  }
+}
+
+/* ---------- pollen motes ---------- */
+function buildPollen(){
+  pollen=[]; var n=Math.min(70,Math.floor(W*H/24000));
+  for(var i=0;i<n;i++) pollen.push(mote());
+}
+function mote(){
+  return {x:Math.random()*W,y:Math.random()*H,
+    r:0.6+Math.random()*2.2, sp:4+Math.random()*14,
+    sway:Math.random()*Math.PI*2, amp:6+Math.random()*22, a:0.15+Math.random()*0.45};
+}
+
+/* ---------- bees ---------- */
+function buildBees(){
+  bees=[]; var n=Math.max(4,Math.min(9,Math.round(cells.length/26)));
+  for(var i=0;i<n;i++){
+    var home=cells[(Math.random()*cells.length)|0]||{cx:W/2,cy:H/2};
+    bees.push({ home:home,x:home.cx,y:home.cy,tx:home.cx,ty:home.cy,ang:0,
+      vx:0,vy:0,phase:Math.random()*Math.PI*2,wing:Math.random()*Math.PI*2,
+      size:6+Math.random()*3, mode:'wander', timer:1+Math.random()*3, glide:0 });
+  }
+}
+
+/* ---------- static sky: hills + sun haze ---------- */
+function hill(base,color){
+  skyCtx.fillStyle=color; skyCtx.beginPath(); skyCtx.moveTo(0,H);
+  for(var x=0;x<=W;x+=22){ var y=base+Math.sin(x*0.004)*26+Math.sin(x*0.011)*10; skyCtx.lineTo(x,y);}
+  skyCtx.lineTo(W,H); skyCtx.closePath(); skyCtx.fill();
+}
+function drawSky(){
+  skyCtx.clearRect(0,0,W,H);
+  hill(H*0.72,'rgba(172,207,112,.5)');
+  hill(H*0.82,'rgba(138,183,88,.72)');
+  var sg=skyCtx.createRadialGradient(W*0.82,H*0.13,0,W*0.82,H*0.13,W*0.55);
+  sg.addColorStop(0,'rgba(255,251,224,.9)'); sg.addColorStop(1,'rgba(255,251,224,0)');
+  skyCtx.fillStyle=sg; skyCtx.fillRect(0,0,W,H);
+}
+/* ---------- one comb cell ---------- */
+function drawCell(cell){
+  var s=cell.s,cx=cell.cx,cy=cell.cy;
+  hexPath(cx,cy,s*0.94);
+  var wg=sctx.createRadialGradient(cx,cy-s*0.25,2,cx,cy,s*1.15);
+  wg.addColorStop(0,'#f6d477'); wg.addColorStop(1,'#c58a26');
+  sctx.fillStyle=wg; sctx.fill();
+  if(cell.fill>0.015) drawHoney(cell);
+  hexPath(cx,cy,s); sctx.lineJoin='round';
+  sctx.lineWidth=Math.max(1,s*0.05);
+  sctx.strokeStyle='rgba(255,247,214,.6)'; sctx.stroke();
+  hexPath(cx,cy,s*0.94);
+  sctx.lineWidth=Math.max(0.6,s*0.02);
+  sctx.strokeStyle='rgba(150,95,25,.28)'; sctx.stroke();
+}
+function drawHoney(cell){
+  var s=cell.s,cx=cell.cx,cy=cell.cy,bot=cy+s;
+  var hy=bot-cell.fill*(2*s);
+  sctx.save(); hexPath(cx,cy,s*0.9); sctx.clip();
+  var seg=Math.ceil(s*2);
+  sctx.beginPath(); sctx.moveTo(cx-s,bot);
+  for(var i=0;i<=seg;i++){ var x=cx-s+(2*s)*(i/seg);
+    var y=hy+Math.sin(x*0.06+cell.seed+t*0.002)*(s*0.03); sctx.lineTo(x,y);}
+  sctx.lineTo(cx+s,bot); sctx.closePath();
+  var hg=sctx.createLinearGradient(0,hy,0,bot);
+  hg.addColorStop(0,'#ffe08a'); hg.addColorStop(0.45,'#ffb335'); hg.addColorStop(1,'#cf6c08');
+  sctx.fillStyle=hg; sctx.fill();
+  sctx.strokeStyle='rgba(255,250,226,.75)'; sctx.lineWidth=Math.max(1,s*0.03);
+  sctx.beginPath();
+  for(var i=0;i<=seg;i++){ var x=cx-s+(2*s)*(i/seg);
+    var y=hy+Math.sin(x*0.06+cell.seed+t*0.002)*(s*0.03);
+    if(i===0)sctx.moveTo(x,y);else sctx.lineTo(x,y);}
+  sctx.stroke();
+  if(cell.bubbles){ for(var b=0;b<cell.bubbles;b++){
+    var bp=(cell.seed*(b+1)*0.3+t*0.0006)%1;
+    var by=bot-(bot-hy)*bp, bx=cx+Math.sin(cell.seed*(b+1)+t*0.001)*(s*0.4);
+    sctx.fillStyle='rgba(255,250,222,'+(0.12+0.28*bp)+')';
+    sctx.beginPath(); sctx.arc(bx,by,s*0.05*(0.6+bp),0,7); sctx.fill();
+  }}
+  sctx.restore();
+}
+
+/* ---------- dripping honey ---------- */
+function spawnDrip(cell){ cell.drip={state:'form',prog:0,y:cell.cy+cell.s}; }
+function drawDrip(cell){
+  if(!showDrips||!cell.drip) return;
+  var d=cell.drip,cx=cell.cx,baseY=cell.cy+cell.s;
+  sctx.save();
+  if(d.state==='form'){ var p=d.prog, rr=S*(0.06+0.11*p), yy=baseY+S*0.05*p;
+    sctx.strokeStyle='rgba(255,182,60,'+(0.55-0.3*p)+')';
+    sctx.lineWidth=S*0.05*(1-p*0.4);
+    sctx.beginPath(); sctx.moveTo(cx,baseY-S*0.02); sctx.lineTo(cx,yy-rr); sctx.stroke();
+    var g=sctx.createRadialGradient(cx-rr*0.3,yy-rr*0.3,1,cx,yy,rr);
+    g.addColorStop(0,'#ffe19a'); g.addColorStop(1,'#df8510');
+    sctx.fillStyle=g; sctx.beginPath(); sctx.arc(cx,yy,rr,0,7); sctx.fill();
+  } else { var p=d.prog, beadY=d.y;
+    sctx.strokeStyle='rgba(255,180,60,'+(0.5*(1-p))+')';
+    sctx.lineWidth=S*0.04*(1-p);
+    sctx.beginPath(); sctx.moveTo(cx,baseY); sctx.lineTo(cx,beadY-S*0.06); sctx.stroke();
+    var rr=S*0.085;
+    var g=sctx.createRadialGradient(cx-rr*0.3,beadY-rr*0.3,1,cx,beadY,rr);
+    g.addColorStop(0,'#ffe19a'); g.addColorStop(1,'#d9740c');
+    sctx.fillStyle=g; sctx.beginPath(); sctx.arc(cx,beadY,rr,0,7); sctx.fill();
+  }
+  sctx.restore();
+}
+function updateDrip(cell,dt){
+  var d=cell.drip; if(!d) return;
+  if(d.state==='form'){ d.prog+=dt*0.0018;
+    if(d.prog>=1){ d.state='fall'; d.prog=0; d.y=cell.cy+cell.s+S*0.12; }
+  } else { d.y+=dt*0.36; d.prog+=dt*0.0012;
+    if(d.prog>=1){ cell._drained=true; cell.drip=null; } }
+}
+
+/* ---------- splashes ---------- */
+var splashes=[];
+function addSplash(x,y){ splashes.push({x:x,y:y,r:4,life:1}); }
+function updateSplash(dt){
+  for(var i=splashes.length-1;i>=0;i--){ var s=splashes[i];
+    s.r+=dt*0.06; s.life-=dt*0.0022; if(s.life<=0)splashes.splice(i,1);
+  }
+}
+function drawSplash(){
+  for(var i=0;i<splashes.length;i++){ var s=splashes[i];
+    sctx.strokeStyle='rgba(255,215,120,'+(s.life*0.6)+')'; sctx.lineWidth=2.2;
+    sctx.beginPath(); sctx.arc(s.x,s.y,s.r,0,7); sctx.stroke();
+  }
+}
+/* ---------- bees ---------- */
+function drawBee(b){
+  sctx.save(); sctx.translate(b.x,b.y); sctx.rotate(b.ang);
+  var s=b.size;
+  sctx.fillStyle='rgba(120,80,10,.12)';
+  sctx.beginPath(); sctx.ellipse(0,s*0.5,s*1.3,s*0.9,0,0,7); sctx.fill();
+  var wv=Math.sin(b.wing)*0.5+0.5;
+  sctx.fillStyle='rgba(255,255,255,'+(0.28+0.18*wv)+')';
+  sctx.strokeStyle='rgba(120,120,140,.35)'; sctx.lineWidth=0.6;
+  sctx.beginPath(); sctx.ellipse(-s*0.1,-s*0.5,s*0.9,s*0.42*(0.5+0.5*wv),-0.4,0,7); sctx.fill(); sctx.stroke();
+  sctx.beginPath(); sctx.ellipse(s*0.35,-s*0.45,s*0.7,s*0.36*(0.5+0.5*wv),0.4,0,7); sctx.fill(); sctx.stroke();
+  sctx.fillStyle='#f2b705';
+  sctx.beginPath(); sctx.ellipse(0,0,s*1.0,s*0.62,0,0,7); sctx.fill();
+  sctx.fillStyle='#3a2410';
+  sctx.beginPath(); sctx.ellipse(-s*0.15,0,s*0.22,s*0.62,0,0,7); sctx.fill();
+  sctx.beginPath(); sctx.ellipse(s*0.4,0,s*0.18,s*0.56,0,0,7); sctx.fill();
+  sctx.fillStyle='#2e1c0c';
+  sctx.beginPath(); sctx.arc(s*0.95,0,s*0.34,0,7); sctx.fill();
+  sctx.strokeStyle='#2e1c0c'; sctx.lineWidth=0.8;
+  sctx.beginPath(); sctx.moveTo(s*1.15,-s*0.12); sctx.quadraticCurveTo(s*1.5,-s*0.5,s*1.55,-s*0.7); sctx.stroke();
+  sctx.beginPath(); sctx.moveTo(s*1.15,s*0.12); sctx.quadraticCurveTo(s*1.5,s*0.5,s*1.55,s*0.7); sctx.stroke();
+  sctx.fillStyle='rgba(255,255,255,.35)';
+  sctx.beginPath(); sctx.ellipse(-s*0.3,-s*0.2,s*0.25,s*0.14,-0.3,0,7); sctx.fill();
+  sctx.restore();
+}
+
+/* ---------- updates ---------- */
+function updateCells(dt){
+  var k=dt/16.67, full=0;
+  for(var i=0;i<cells.length;i++){ var cell=cells[i];
+    if(cell.fill<1) cell.fill=Math.min(1, cell.fill+cell.rate*dt);
+    if(cell.fill>=1) full++;
+    if(showDrips && cell.fill>=0.9 && !cell.drip && cell.dripWait<=0) spawnDrip(cell);
+    if(cell.dripWait>0) cell.dripWait-=dt;
+    updateDrip(cell,dt);
+    if(cell._drained){ cell.fill=Math.max(0.12, cell.fill-0.18); cell._drained=false; }
+  }
+  document.getElementById('fullN').textContent=full;
+}
+function updatePollen(dt){
+  for(var i=0;i<pollen.length;i++){ var p=pollen[i];
+    p.sway+=dt*0.001; p.y-=p.sp*dt*0.016; p.x+=Math.sin(p.sway)*p.amp*dt*0.016;
+    if(p.y<-6){ p.y=H+6; p.x=Math.random()*W; }
+    if(p.x<-6)p.x=W+6; if(p.x>W+6)p.x=-6;
+  }
+}
+function updateBee(b,dt){
+  var k=dt/16.67;
+  b.wing+=dt*0.055;
+  b.timer-=dt*0.001;
+  if(b.timer<=0){
+    b.timer=1.2+Math.random()*2.6;
+    if(Math.random()<0.5){ var h=b.home;
+      b.tx=h.cx+(Math.random()-0.5)*S*2.2; b.ty=h.cy+(Math.random()-0.5)*S*2.2;
+    } else { b.tx=W*0.5+(Math.random()-0.5)*W*0.7; b.ty=H*0.45+(Math.random()-0.5)*H*0.6; }
+  }
+  b.vx+=(b.tx-b.x)*0.006*k; b.vy+=(b.ty-b.y)*0.006*k;
+  b.vx*=Math.pow(0.9, k); b.vy*=Math.pow(0.9, k);
+  b.vx+=Math.cos(b.phase+t*0.002)*0.015; b.vy+=Math.sin(b.phase*1.3+t*0.002)*0.015;
+  b.x+=b.vx*k; b.y+=b.vy*k;
+  var a=Math.atan2(b.vy,b.vx);
+  while(a>Math.PI/2)a-=Math.PI*2; while(a<-Math.PI/2)a+=Math.PI*2; b.ang=a;
+}
+
+/* ---------- hit test + feeding ---------- */
+function cellAt(x,y){
+  var best=null,bd=S*1.15,bd2=bd*bd;
+  for(var i=0;i<cells.length;i++){ var c=cells[i],dx=c.cx-x,dy=c.cy-y,d=dx*dx+dy*dy;
+    if(d<bd2){ bd2=d; best=c; } }
+  return best;
+}
+var feeding=false;
+function pointerPos(e){ var tt=e.touches?e.touches[0]:e; return {x:tt.clientX,y:tt.clientY}; }
+function feedAt(e){
+  var p=pointerPos(e), c=cellAt(p.x,p.y);
+  if(c){ if(c.fill<0.95){ c.fill=1; addSplash(p.x,p.y); } c.dripWait=0; }
+}
+stage.addEventListener('pointerdown',function(e){ feeding=true; feedAt(e); });
+window.addEventListener('pointermove',function(e){ if(feeding) feedAt(e); });
+window.addEventListener('pointerup',function(){ feeding=false; });
+
+/* ---------- controls ---------- */
+document.getElementById('feedBtn').addEventListener('click',function(){
+  for(var i=0;i<cells.length;i++){ var c=cells[i]; if(!c.edge){ c.fill=1; c.dripWait=0; } }
+});
+document.getElementById('dripBtn').addEventListener('click',function(){
+  for(var i=0;i<cells.length;i++){ var c=cells[i];
+    if(c.fill>=0.85 && !c.drip){ c.drip=null; spawnDrip(c); }
+  }
+});
+document.getElementById('beesChk').addEventListener('change',function(e){ showBees=e.target.checked; });
+document.getElementById('dripChk').addEventListener('change',function(e){ showDrips=e.target.checked; });
+
+/* ---------- pollen motes ---------- */
+function drawPollen(){
+  for(var i=0;i<pollen.length;i++){ var p=pollen[i];
+    sctx.fillStyle='rgba(255,238,170,'+p.a+')';
+    sctx.beginPath(); sctx.arc(p.x,p.y,p.r,0,7); sctx.fill();
+  }
+}
+
+/* ---------- loop ---------- */
+function frame(now){
+  var dt=Math.min(40, now-last); last=now; t=now;
+  updateCells(dt); updatePollen(dt); updateSplash(dt);
+  if(showBees) for(var i=0;i<bees.length;i++) updateBee(bees[i],dt);
+  sctx.clearRect(0,0,W,H);
+  for(var i=0;i<cells.length;i++) drawCell(cells[i]);
+  for(var i=0;i<cells.length;i++) drawDrip(cells[i]);
+  drawSplash(); drawPollen();
+  if(showBees) for(var i=0;i<bees.length;i++) drawBee(bees[i]);
+  requestAnimationFrame(frame);
+}
+
+window.addEventListener('resize', resize);
+resize();
+requestAnimationFrame(frame);
+
+})();
+</script>
+</body>
+</html>

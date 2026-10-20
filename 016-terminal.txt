@@ -1,0 +1,18 @@
+PROMPT:
+Build a standalone, fully offline HTML page (single self-contained .html, all CSS in one <style>, all JS in one <script>, no external dependencies/fonts/images/CDN). Responsive 320px–4K, valid HTML5. WOW bar: Awwwards/SiteInspire-caliber, distinctive art direction. Theme: a retro CRT terminal boot sequence with green phosphor and typing text. Palette: phosphor green on black, scanlines. Signature: monospace typing animation, scanline + flicker overlay, cursor blink, phosphor glow.
+
+TITLE: ORINTH OS — CRT Boot Sequence
+
+DESIGN DESCRIPTION:
+A lovingly recreated 1920s-style CRT monitor whose screen lights up with a phosphor-green boot sequence. A bezel with a glowing power LED frames a slightly curved screen; as it powers on, a horizontal line sweeps and blooms into full brightness. Then lines of monospace text type themselves out — BIOS banner, memory tests, disk detection, mount checks, daemon starts — each character appearing with a jittery typewriter cadence, glowing with a soft green halo. Scanlines, a slow rolling bright band, subtle flicker and a blinking block cursor complete the authentic amber/green phosphor feel. It ends at an interactive `orinth:~$` prompt; click to replay.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas/CSS typewriter: a requestAnimationFrame-free setTimeout stepper types each line one glyph at a time with randomized per-character timing for a human, mechanical feel.
+- Phosphor glow: layered `text-shadow` (tight + wide green) on monospace text to mimic glowing phosphor.
+- CRT overlays: repeating-linear-gradient scanlines (multiply blend), a slowly rolling highlight band, and a two-step flicker animation.
+- Power-on effect: a CSS keyframe sweep (a bright horizontal line that expands and fades) to simulate the tube warming up.
+- Blinking block cursor via a stepped opacity animation; vignette via radial-gradient inset.
+- Responsive via clamp()/aspect-ratio; prefers-reduced-motion disables flicker, roll, blink and the power-on sweep.
+
+INTENDED INTERACTION MODEL:
+Autoplay on load: the screen powers on, then the boot log types out and pauses at a blinking prompt. The screen is clickable to replay the whole sequence. No other controls — the delight is in watching it boot. Motion-sensitivity aware.

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Winter, Sealed — Snow Globe</title>
+<style>
+  :root{
+    --bg-0:#0a1424;
+    --bg-1:#122843;
+    --bg-2:#1f4368;
+    --snow:#f4f9ff;
+    --glow:#bfe3ff;
+    --wood-1:#8a5a2b;
+    --wood-2:#5c3a1a;
+    --wood-3:#3a2410;
+    --cream:#eaf3ff;
+    --cream-dim:rgba(234,243,255,.6);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% 34%, #24507c 0%, #173a5c 40%, #0c1e38 80%, #071323 100%);
+    font-family:var(--serif);color:var(--cream);
+  }
+  canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* soft cold halo behind the globe + top frost light */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:
+      radial-gradient(42% 40% at 50% 40%, rgba(191,227,255,.20) 0%, rgba(191,227,255,.05) 42%, transparent 72%),
+      linear-gradient(180deg, rgba(150,190,230,.10) 0%, transparent 30%);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
+    box-shadow:inset 0 0 260px 60px rgba(3,10,22,.7);
+  }
+
+  .frame{position:fixed;inset:0;z-index:4;pointer-events:none}
+  .brand{
+    position:absolute;left:clamp(22px,4.5vw,60px);top:clamp(22px,4.5vw,54px);
+    font-family:var(--sans);font-size:10.5px;letter-spacing:.4em;text-transform:uppercase;
+    color:var(--cream-dim);display:flex;align-items:center;gap:12px;
+  }
+  .brand::before{content:"";width:30px;height:1px;background:rgba(191,227,255,.4)}
+  .title{
+    position:absolute;left:clamp(22px,4.5vw,60px);bottom:clamp(24px,4.5vw,56px);
+    text-shadow:0 2px 26px rgba(4,14,28,.7);
+  }
+  .title h1{
+    font-size:clamp(30px,6vw,80px);font-weight:400;line-height:.96;letter-spacing:.02em;
+    font-style:italic;
+    background:linear-gradient(180deg,#ffffff 0%, #cfe6ff 60%, #8fb8e6 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 3px 24px rgba(120,180,230,.35));
+  }
+  .title p{
+    margin-top:12px;font-family:var(--sans);font-size:11px;letter-spacing:.2em;
+    color:var(--cream-dim);text-transform:uppercase;line-height:1.9;max-width:420px;
+  }
+  .hint{
+    position:absolute;right:clamp(22px,4.5vw,60px);bottom:clamp(24px,4.5vw,56px);
+    text-align:right;font-family:var(--sans);font-size:10.5px;letter-spacing:.18em;
+    color:var(--cream-dim);text-transform:uppercase;line-height:1.9;
+  }
+  .hint b{color:var(--glow);font-weight:400;font-style:italic}
+  .readout{
+    position:absolute;right:clamp(22px,4.5vw,60px);top:clamp(22px,4.5vw,54px);
+    text-align:right;font-family:var(--sans);font-size:10.5px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--cream-dim);line-height:2.1;
+  }
+  .readout .val{color:var(--cream)}
+  .settled{color:var(--glow)}
+
+  @media(max-width:640px){
+    .title{bottom:auto;top:clamp(64px,14vw,120px)}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+
+  <div class="frame">
+    <div class="brand">A Winter Diorama</div>
+    <div class="readout">
+      <div>TEMP <span class="val">-4&deg;C</span></div>
+      <div>STATE <span class="val settled" id="stateVal">settled</span></div>
+      <div>FLAKES <span class="val" id="flakeVal">—</span></div>
+    </div>
+    <div class="title">
+      <h1>Winter,<br>Sealed</h1>
+      <p>A quiet blizzard kept behind glass — a world you can disturb and watch find its calm again.</p>
+    </div>
+    <div class="hint">
+      Drag across the globe to <b>shake</b><br>
+      then watch the snow <b>settle</b>
+    </div>
+  </div>
+  <script>
+  (function(){
+    "use strict";
+
+    var canvas = document.getElementById('scene');
+    var ctx = canvas.getContext('2d', { alpha:true });
+    var stateVal = document.getElementById('stateVal');
+    var flakeVal = document.getElementById('flakeVal');
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var W, H;
+    var G = {}, geo = {};
+    var flakes = [], glitter = [];
+    var t = 0, last = performance.now();
+    var energy = 0;               // 0..1 swirl energy
+    var shake = { x:0, y:0 };
+    var reduced = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var dragging = false, lastPX = 0, lastPY = 0, lastMove = 0;
+
+    function resize(){
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width  = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      var R = Math.min(W, H) * 0.28;
+      geo = {
+        cx: W * 0.5,
+        cy: H * 0.42,
+        R: R,
+        baseTopY: H*0.42 + R - 8,
+        topW: R * 1.06,
+        botW: R * 1.34,
+        baseH: R * 0.62
+      };
+      buildFlakes();
+      buildGlitter();
+      flakeVal.textContent = flakes.length;
+    }
+
+    function makeFlake(){
+      var r = 1.2 + Math.random() * 3.2;
+      var ang = Math.random() * 6.2832;
+      var rad = Math.sqrt(Math.random()) * (geo.R - 10);
+      return {
+        x: geo.cx + Math.cos(ang) * rad,
+        y: geo.cy + Math.sin(ang) * rad * 0.9,
+        r: r,
+        vx: (Math.random()-0.5) * 8,
+        vy: Math.random() * 20,
+        g: 44 + Math.random() * 36,
+        tw: Math.random() * 6.2832,
+        twF: 1.4 + Math.random() * 2.2,
+        drift: 6 + Math.random() * 10
+      };
+    }
+    function buildFlakes(){
+      flakes = [];
+      var n = Math.round(150);
+      for(var i = 0; i < n; i++) flakes.push(makeFlake());
+    }
+    function buildGlitter(){
+      glitter = [];
+      for(var i = 0; i < 36; i++){
+        glitter.push({
+          a: Math.random() * 6.28,
+          rad: Math.random(),
+          ph: Math.random() * 6.28,
+          sp: 0.6 + Math.random() * 1.6,
+          sz: 0.5 + Math.random() * 1.4
+        });
+      }
+    }
+
+    function updateFlakes(dt){
+      var cx = geo.cx, cy = geo.cy, R = geo.R;
+      var e = energy;
+      for(var i = 0; i < flakes.length; i++){
+        var f = flakes[i];
+        // gravity (velocity) — bigger flakes fall a touch faster
+        f.vy += f.g * dt;
+        var dx = f.x - cx, dy = f.y - cy;
+        var d = Math.hypot(dx, dy) || 1;
+        // swirl + updraft when disturbed
+        if(e > 0.015){
+          var tx = -dy / d, ty = dx / d;              // tangent
+          f.vx += tx * e * 1250 * dt;
+          f.vy += ty * e * 1250 * dt;
+          f.vy -= e * 340 * dt;                        // updraft
+          f.vx += (dx / d) * e * 170 * dt * (Math.random() - 0.3);
+        }
+        // gentle ambient drift so a settled globe never fully freezes
+        f.vx += Math.sin(t + f.tw) * f.drift * dt;
+        f.tw += f.twF * dt;
+        // air resistance — velocity decays toward rest
+        var damp = Math.pow(0.30, dt);
+        f.vx *= damp; f.vy *= damp;
+        f.x += f.vx * dt; f.y += f.vy * dt;
+        // circular containment — snow piles along the bottom arc
+        dx = f.x - cx; dy = f.y - cy;
+        d = Math.hypot(dx, dy);
+        var maxR = R - f.r - 3;
+        if(d > maxR){
+          var nx = dx / d, ny = dy / d;
+          f.x = cx + nx * maxR;
+          f.y = cy + ny * maxR;
+          var vn = f.vx * nx + f.vy * ny;
+          f.vx -= (1 + 0.26) * vn * nx;
+          f.vy -= (1 + 0.26) * vn * ny;
+        }
+        // slow flakes resting in the deep pile trickle back to the top
+        var spd = Math.hypot(f.vx, f.vy);
+        if(d <= maxR && f.y > cy + maxR * 0.55 && spd < 22 && Math.random() < 0.004){
+          var ra = -Math.PI/2 + (Math.random()-0.5)*1.4;
+          var rr = Math.sqrt(Math.random()) * (maxR * 0.6);
+          f.x = cx + Math.cos(ra) * rr;
+          f.y = cy + Math.sin(ra) * rr;
+          f.vx = (Math.random()-0.5) * 6; f.vy = 4 + Math.random()*8;
+        }
+      }
+    }
+
+    function drawSnow(dt){
+      var cx = geo.cx, cy = geo.cy, R = geo.R;
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R - 2, 0, 6.2832);
+      ctx.clip();
+      // glass volume tint
+      var vg = ctx.createRadialGradient(cx, cy - R*0.3, R*0.1, cx, cy, R);
+      vg.addColorStop(0, 'rgba(210,232,255,0.10)');
+      vg.addColorStop(0.7, 'rgba(150,190,230,0.06)');
+      vg.addColorStop(1, 'rgba(120,165,210,0.16)');
+      ctx.fillStyle = vg;
+      ctx.fillRect(cx - R, cy - R, R*2, R*2);
+      // settled snow bed at the bottom
+      var bed = ctx.createLinearGradient(0, cy + R*0.4, 0, cy + R);
+      bed.addColorStop(0, 'rgba(230,242,255,0)');
+      bed.addColorStop(1, 'rgba(236,245,255,0.55)');
+      ctx.fillStyle = bed;
+      ctx.beginPath();
+      ctx.arc(cx, cy + R*0.18, R*1.15, Math.PI*0.05, Math.PI*0.95, false);
+      ctx.fill();
+      // flakes
+      for(var i = 0; i < flakes.length; i++){
+        var f = flakes[i];
+        var glint = 0.55 + 0.45*Math.sin(f.tw);
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(244,249,255,' + (0.5 + f.r*0.12) + ')';
+        ctx.shadowColor = 'rgba(220,238,255,0.9)';
+        ctx.shadowBlur = f.r * 2.2;
+        ctx.arc(f.x, f.y, f.r, 0, 6.2832);
+        ctx.fill();
+      }
+      ctx.shadowBlur = 0;
+      // glitter sparkles
+      for(var j = 0; j < glitter.length; j++){
+        var g = glitter[j];
+        g.ph += g.sp * dt * (0.4 + energy);
+        var a = 0.15 + 0.75 * Math.pow(Math.max(0, Math.sin(g.ph)), 3);
+        var rr = g.rad * (R - 6);
+        var gx = cx + Math.cos(g.a) * rr;
+        var gy = cy + Math.sin(g.a) * rr * 0.9;
+        if(gy > cy + R*0.72) continue; // hide glitter in the snow bed
+        var sz = g.sz * (0.6 + energy);
+        ctx.globalAlpha = a * (0.4 + energy);
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath(); ctx.arc(gx, gy, sz, 0, 6.2832); ctx.fill();
+        // cross sparkle on bright ones
+        if(a > 0.7 && sz > 1){
+          ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+          ctx.lineWidth = 0.6;
+          ctx.beginPath();
+          ctx.moveTo(gx - sz*2.6, gy); ctx.lineTo(gx + sz*2.6, gy);
+          ctx.moveTo(gx, gy - sz*2.6); ctx.lineTo(gx, gy + sz*2.6);
+          ctx.stroke();
+        }
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawGlass(){
+      var cx = geo.cx, cy = geo.cy, R = geo.R;
+      ctx.save();
+      // rim refraction (radial-gradient stroke)
+      var rg = ctx.createRadialGradient(cx, cy, R - 16, cx, cy, R + 8);
+      rg.addColorStop(0, 'rgba(210,232,255,0)');
+      rg.addColorStop(0.65, 'rgba(214,233,255,0.42)');
+      rg.addColorStop(1, 'rgba(200,224,255,0)');
+      ctx.strokeStyle = rg; ctx.lineWidth = 18;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.stroke();
+      // bright inner edge
+      ctx.strokeStyle = 'rgba(255,255,255,0.55)'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, R - 1, 0, 6.2832); ctx.stroke();
+      // frost veil around the rim
+      var fr = ctx.createRadialGradient(cx, cy, R*0.72, cx, cy, R);
+      fr.addColorStop(0, 'rgba(220,238,255,0)');
+      fr.addColorStop(1, 'rgba(226,240,255,0.14)');
+      ctx.fillStyle = fr;
+      ctx.beginPath(); ctx.arc(cx, cy, R, 0, 6.2832); ctx.fill();
+      // specular highlight (upper-left)
+      ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 5; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.arc(cx, cy, R - 11, Math.PI*1.05, Math.PI*1.42); ctx.stroke();
+      // small secondary highlight (lower-right)
+      ctx.strokeStyle = 'rgba(255,255,255,0.28)'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(cx, cy, R - 9, Math.PI*0.04, Math.PI*0.26); ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawBase(){
+      var cx = geo.cx, topY = geo.baseTopY, topW = geo.topW, botW = geo.botW, h = geo.baseH;
+      var bottomY = topY + h;
+      ctx.save();
+      // floor shadow
+      ctx.fillStyle = 'rgba(2,8,18,0.5)';
+      ctx.beginPath();
+      ctx.ellipse(cx, bottomY + 6, botW * 1.05, h*0.16, 0, 0, 6.2832);
+      ctx.fill();
+      // pedestal body
+      var wg = ctx.createLinearGradient(0, topY, 0, bottomY);
+      wg.addColorStop(0, '#9a6631');
+      wg.addColorStop(0.35, '#7a4d22');
+      wg.addColorStop(0.75, '#563418');
+      wg.addColorStop(1, '#3a2310');
+      ctx.beginPath();
+      ctx.moveTo(cx - topW, topY);
+      ctx.lineTo(cx + topW, topY);
+      ctx.lineTo(cx + botW, bottomY);
+      ctx.quadraticCurveTo(cx, bottomY + 18, cx - botW, bottomY);
+      ctx.closePath();
+      ctx.fillStyle = wg;
+      ctx.fill();
+      // wood grain arcs
+      ctx.strokeStyle = 'rgba(30,16,6,0.28)'; ctx.lineWidth = 1.2;
+      for(var i = 1; i <= 4; i++){
+        var yy = topY + h * (i/5);
+        var ww = topW + (botW - topW) * (i/5);
+        ctx.beginPath();
+        ctx.moveTo(cx - ww*0.9, yy);
+        ctx.quadraticCurveTo(cx, yy + 5, cx + ww*0.9, yy);
+        ctx.stroke();
+      }
+      // top rim (where globe seats)
+      var rim = ctx.createLinearGradient(0, topY - 8, 0, topY + 10);
+      rim.addColorStop(0, '#b07c3e');
+      rim.addColorStop(1, '#5a3a1c');
+      ctx.fillStyle = rim;
+      ctx.beginPath();
+      ctx.ellipse(cx, topY, topW, topW * 0.20, 0, 0, 6.2832);
+      ctx.fill();
+      // highlight on rim
+      ctx.strokeStyle = 'rgba(255,230,190,0.45)'; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.ellipse(cx, topY, topW - 2, (topW*0.20) - 2, 0, Math.PI*1.05, Math.PI*1.95);
+      ctx.stroke();
+      // globe seat shadow
+      ctx.fillStyle = 'rgba(20,10,4,0.4)';
+      ctx.beginPath();
+      ctx.ellipse(cx, topY + 2, topW * 0.5, topW * 0.09, 0, 0, 6.2832);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function readout(){
+      if(energy < 0.03){ stateVal.textContent = 'settled'; stateVal.className = 'val settled'; }
+      else if(energy < 0.4){ stateVal.textContent = 'drifting'; stateVal.className = 'val'; }
+      else if(energy < 0.75){ stateVal.textContent = 'swirling'; stateVal.className = 'val'; }
+      else { stateVal.textContent = 'storming'; stateVal.className = 'val'; }
+    }
+
+    function frame(now){
+      var dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      ctx.clearRect(0, 0, W, H);
+
+      if(!reduced){
+        t += dt * 0.9;
+        energy *= Math.pow(0.18, dt);      // decay toward calm
+        if(energy < 0.001) energy = 0;
+        // shake wobble pivots with the energy
+        var amp = energy * 15;
+        shake.x = Math.sin(t * 24) * amp;
+        shake.y = Math.cos(t * 31) * amp * 0.6;
+        updateFlakes(dt);
+      }
+
+      ctx.save();
+      ctx.translate(shake.x, shake.y);
+      drawBase();
+      drawSnow(dt);
+      drawGlass();
+      ctx.restore();
+
+      readout();
+      requestAnimationFrame(frame);
+    }
+
+    /* ---------- shake interaction ---------- */
+    function startDrag(x, y){
+      dragging = true; lastPX = x; lastPY = y; lastMove = performance.now();
+    }
+    function moveDrag(x, y){
+      if(!dragging || reduced) return;
+      var now = performance.now();
+      var dt = Math.max(1, now - lastMove) / 1000;
+      var dx = x - lastPX, dy = y - lastPY;
+      var speed = Math.hypot(dx, dy) / dt;      // px/s
+      energy = Math.min(1, energy + speed * 0.0016);
+      lastPX = x; lastPY = y; lastMove = now;
+    }
+    function endDrag(){
+      dragging = false;
+    }
+
+    canvas.addEventListener('mousedown', function(e){ startDrag(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', function(e){
+      if(dragging) moveDrag(e.clientX, e.clientY);
+    });
+    window.addEventListener('mouseup', function(){ if(dragging){ endDrag(); energy = Math.max(energy, 0.55); } });
+
+    canvas.addEventListener('touchstart', function(e){
+      if(e.touches[0]){ startDrag(e.touches[0].clientX, e.touches[0].clientY); }
+    }, { passive:true });
+    window.addEventListener('touchmove', function(e){
+      if(dragging && e.touches[0]) moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive:true });
+    window.addEventListener('touchend', function(){ if(dragging){ endDrag(); energy = Math.max(energy, 0.55); } });
+
+    // single click / tap = a firm shake
+    canvas.addEventListener('click', function(e){
+      if(Math.abs(e.clientX - lastPX) < 4 && Math.abs(e.clientY - lastPY) < 4){
+        energy = Math.max(energy, 0.7);
+      }
+    });
+
+    var rTimer;
+    window.addEventListener('resize', function(){ clearTimeout(rTimer); rTimer = setTimeout(resize, 150); });
+
+    resize();
+    frame(performance.now());
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+PROMPT:
+Create a single, fully self-contained HTML5 page (all CSS and JavaScript inline, no
+CDN, no external fonts, no external images, no external SVG files, no libraries)
+titled "Hexapod — a crystal that grows itself". It is a crystallography showcase:
+a deep-icy-blue stage on which a fresh, six-fold snowflake dendrite grows itself
+from a single seed of ice. Pressing a button generates a brand-new procedurally
+unique crystal — no two alike — that draws its branches on line by line, from the
+centre outward, six times (once per symmetry arm). The mood is precise, cold and
+scientific yet delicate, like a museum exhibit of frozen light. Make it beautiful,
+responsive and offline-capable; the whole experience must live inside one file.
+
+TITLE:
+Hexapod — a crystal that grows itself (Crystallography · No. 095)
+
+DESIGN DESCRIPTION:
+A tall, centered composition on a layered radial-gradient backdrop that sinks from
+a pale arctic glow at the top to a near-black midnight blue at the edges, sprinkled
+with faint drifting frost dust (a fixed pseudo-element of tiny radial-gradient
+"stars" that slowly rises). A serif display headline ("Hexapod") renders in a
+white-to-cyan vertical gradient with background-clip:text, above a muted caption.
+The hero is a square stage (aspect-ratio 1:1, capped at 78vh) holding one inline
+SVG (viewBox 0 0 1000 1000) with a soft radial bloom behind the crystal. The
+snowflake itself is built from hundreds of thin gradient-stroked lines (a white→
+ice-blue→cyan linear gradient), each with rounded caps, arranged in six rotated
+copies for perfect six-fold symmetry, plus a small central hexagonal hub drawn last.
+Around it, 24–48 tiny six-point star sparkles twinkle on and off at staggered rates.
+Controls sit beneath: a primary "Grow a new crystal" button, a "Slow spin" toggle,
+and a tabular-numeral meta readout ("arms · 6 · depth 4"). A spaced uppercase
+footer credit closes the page. The palette is ice (#dff3ff), cyan (#7fd0ff), frost
+(#5aa9e6) and pale blue on deep navy; glassy translucent buttons with backdrop-blur
+reinforce the frozen-glass feel.
+
+MAJOR VISUAL TECHNIQUES:
+- Pure-JS recursive dendrite generator: a `branch()` routine sprouts two symmetric
+  side-branches at each tip, occasional forward sub-branches for lushness, and a
+  flat hexagonal tip pair, capped so no arm exceeds a segment budget.
+- Six-fold symmetry by rotating every segment 6×60° with a hand-rolled 2D rotation
+  transform, so one generated arm becomes a complete crystal.
+- Stroke-draw animation: each line sets strokeDasharray/strokeDashoffset to its own
+  length and animates dashoffset to 0 over ~2.5s with a staggered per-segment delay,
+  so the crystal visibly "grows" outward from the hub.
+- A central hexagonal polygon hub that draws on last, plus a radial bloom gradient
+  for a soft icy glow (a Gaussian-blur halo filter is declared in <defs> but left
+  unused). Scattered around the crystal, 24–48 tiny six-point star sparkles are
+  generated as star paths and twinkle on/off via a CSS scale+opacity keyframe at
+  staggered random delays, filling the space between arms with drifting light.
+- CSS: layered radial-gradient background, drifting frost-dust pseudo-element,
+  gradient-clipped headline text, glassmorphic buttons, tabular-numeral meta,
+  responsive clamp() typography and a mobile breakpoint that hides the meta line.
+
+INTENDED INTERACTION MODEL:
+The page is contemplative and generative. On load a crystal appears and, if "Slow
+spin" is checked, the whole assembly rotates very slowly. The core action is the
+"Grow a new crystal" button: each press wipes the stage and regenerates a new random
+parameter set (spine length, branch depth 4 or 5, spread angle, taper, tip-bar
+chance), then re-runs the outward stroke-draw growth so the viewer watches a
+genuinely new, never-before-seen snowflake assemble itself. The spin toggle starts/
+stops the rotation; the meta readout updates to report the new arm count and branch
+depth. Everything works offline, is responsive from phone to desktop, and degrades
+gracefully.

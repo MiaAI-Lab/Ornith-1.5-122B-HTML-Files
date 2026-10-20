@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arctic · Cracked Ice &amp; Cold Aurora</title>
+<style>
+  :root{
+    --sky-top:#071326; --sky-mid:#0e2f4d; --sky-low:#3c7d9c;
+    --horizon:#a9d7e6; --ice-white:#eaf6fa; --ice-blue:#bfe0ee;
+    --aurora:#7dffc0; --aurora2:#8ef0ff; --frost:#dff3f8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#04101f}
+  body{
+    font-family:system-ui,'Segoe UI',sans-serif;
+    overflow:hidden;color:var(--frost);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .scene{position:fixed;inset:0;height:100vh;width:100vw;overflow:hidden;
+    background:linear-gradient(to bottom,
+      var(--sky-top) 0%, var(--sky-mid) 30%, var(--sky-low) 56%,
+      var(--horizon) 74%, #cfe9f0 100%);
+  }
+
+  /* ---- stars ---- */
+  .stars{position:absolute;inset:0;pointer-events:none;opacity:.8;
+    background-image:
+      radial-gradient(1.4px 1.4px at 12% 18%, #dff2ff, transparent),
+      radial-gradient(1.2px 1.2px at 28% 8%, #ffffff, transparent),
+      radial-gradient(1.6px 1.6px at 46% 22%, #cfe6ff, transparent),
+      radial-gradient(1px 1px at 62% 12%, #ffffff, transparent),
+      radial-gradient(1.3px 1.3px at 78% 26%, #d7ecff, transparent),
+      radial-gradient(1.1px 1.1px at 88% 10%, #ffffff, transparent),
+      radial-gradient(1px 1px at 8% 40%, #e6f3ff, transparent),
+      radial-gradient(1.2px 1.2px at 70% 40%, #ffffff, transparent);
+    animation:twinkle 6s ease-in-out infinite alternate;}
+  @keyframes twinkle{from{opacity:.55}to{opacity:.95}}
+
+  /* ---- moon ---- */
+  .moon{position:absolute;top:9%;right:12%;width:120px;height:120px;border-radius:50%;
+    background:radial-gradient(circle at 38% 36%, #ffffff 0%, #eaf7ff 34%, rgba(200,235,250,.35) 60%, transparent 72%);
+    filter:blur(1px);box-shadow:0 0 80px 30px rgba(210,240,255,.25);opacity:.9;}
+
+  /* ---- aurora ---- */
+  .aurora{position:absolute;left:-30%;top:-6%;width:160%;height:62%;pointer-events:none;
+    transform:translate3d(var(--px,0),var(--py,0),0);transition:transform .8s cubic-bezier(.2,.8,.25,1);}
+  .band{position:absolute;inset:0;mix-blend-mode:screen;will-change:transform,opacity;}
+  .band.a{
+    background:
+      linear-gradient(to bottom, rgba(10,255,190,0) 0%, rgba(70,255,200,.0) 12%,
+        rgba(90,255,205,.55) 42%, rgba(120,255,212,.30) 66%, rgba(10,255,190,0) 100%),
+      repeating-linear-gradient(90deg, rgba(120,255,205,.0) 0 26px, rgba(120,255,205,.34) 52px, rgba(120,255,205,.0) 92px);
+    filter:blur(46px);opacity:.55;animation:driftA 24s ease-in-out infinite alternate;}
+  .band.b{
+    background:
+      linear-gradient(to bottom, rgba(120,220,255,0) 6%, rgba(120,235,255,.15) 26%,
+        rgba(140,255,220,.42) 52%, rgba(90,220,255,.12) 74%, rgba(120,220,255,0) 100%),
+      repeating-linear-gradient(90deg, rgba(140,255,225,.0) 0 40px, rgba(140,255,225,.28) 78px, rgba(140,255,225,.0) 128px);
+    filter:blur(58px);opacity:.5;animation:driftB 30s ease-in-out infinite alternate;}
+  .band.c{
+    background:
+      linear-gradient(to bottom, rgba(200,255,240,0) 20%, rgba(160,255,235,.30) 46%,
+        rgba(190,255,245,.22) 62%, rgba(200,255,240,0) 82%),
+      repeating-linear-gradient(90deg, rgba(190,255,235,.0) 0 60px, rgba(190,255,235,.22) 104px, rgba(190,255,235,.0) 160px);
+    filter:blur(70px);opacity:.42;animation:driftC 38s ease-in-out infinite alternate;}
+  .band.d{
+    background:linear-gradient(to bottom, rgba(120,255,205,0) 30%, rgba(120,255,205,.28) 52%, rgba(120,255,205,0) 78%);
+    filter:blur(40px);opacity:.4;animation:driftA 20s ease-in-out infinite alternate-reverse;}
+  @keyframes driftA{from{transform:translate3d(0,0,0)}to{transform:translate3d(-14%,3%,0)}}
+  @keyframes driftB{from{transform:translate3d(-6%,0,0)}to{transform:translate3d(8%,-4%,0)}}
+  @keyframes driftC{from{transform:translate3d(4%,2%,0)}to{transform:translate3d(-10%,-2%,0)}}
+
+  /* ---- horizon glow ---- */
+  .horizon-glow{position:absolute;left:-10%;right:-10%;top:44%;height:34%;pointer-events:none;
+    background:radial-gradient(ellipse 60% 100% at 50% 0%, rgba(220,250,255,.65), rgba(150,220,240,.18) 55%, transparent 78%);
+    filter:blur(18px);}
+
+  /* ---- ice field ---- */
+  .ice{position:absolute;left:-3%;right:-3%;top:47%;bottom:-4%;transform:translate3d(var(--ipx,0),var(--ipy,0),0);
+    transition:transform .9s cubic-bezier(.2,.8,.25,1);}
+  .ice svg{display:block;width:100%;height:auto;}
+  .ice-sheen{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to bottom, rgba(230,250,255,.5) 0%, rgba(180,225,240,.12) 30%, rgba(20,60,90,.35) 100%);}
+  .ice-vign{position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 120px 160px -40px rgba(6,26,42,.6);}
+
+  /* ---- mist ---- */
+  .mist{position:absolute;left:-20%;right:-20%;height:26%;top:40%;pointer-events:none;
+    transform:translate3d(var(--px,0),var(--py,0),0);transition:transform .8s cubic-bezier(.2,.8,.25,1);}
+  .puff{position:absolute;left:0;bottom:0;width:60vw;height:14vh;border-radius:50%;
+    background:radial-gradient(ellipse at 50% 50%, rgba(230,246,252,.5), rgba(210,238,248,.18) 55%, transparent 72%);
+    filter:blur(22px);opacity:.5;mix-blend-mode:screen;}
+  .mist.p1 .puff{animation:glide 26s linear infinite;animation-delay:-4s}
+  .mist.p2 .puff{width:80vw;height:20vh;filter:blur(34px);opacity:.4;animation:glide 36s linear infinite;animation-delay:-14s}
+  .mist.p3 .puff{width:50vw;height:12vh;filter:blur(18px);opacity:.42;animation:glide 20s linear infinite;animation-delay:-9s;bottom:14%}
+  @keyframes glide{from{transform:translateX(-18vw)}to{transform:translateX(92vw)}}
+
+  /* ---- snow ---- */
+  .snow{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  .flake{position:absolute;top:-3%;color:#fff;opacity:.85;
+    text-shadow:0 0 6px rgba(220,245,255,.9);animation:fall linear infinite;}
+  @keyframes fall{
+    0%{transform:translateY(-4vh) translateX(0);}
+    50%{transform:translateY(52vh) translateX(1.4vw);}
+    100%{transform:translateY(108vh) translateX(-0.6vw);}
+  }
+
+  /* ---- cold vignette over everything ---- */
+  .cold{position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:
+      radial-gradient(120% 120% at 50% 42%, transparent 55%, rgba(6,22,38,.55) 100%),
+      linear-gradient(to bottom, rgba(10,30,52,.28) 0%, transparent 26%, transparent 74%, rgba(4,18,32,.4) 100%);
+    mix-blend-mode:multiply;}
+  .frost-edge{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:.5;
+    background:
+      radial-gradient(60% 40% at 0% 0%, rgba(220,245,255,.35), transparent 60%),
+      radial-gradient(60% 40% at 100% 0%, rgba(220,245,255,.30), transparent 60%),
+      radial-gradient(80% 60% at 50% 100%, rgba(200,235,250,.30), transparent 62%);}
+
+  /* ---- overlay text ---- */
+  .overlay{position:absolute;z-index:8;left:clamp(20px,5vw,56px);top:clamp(20px,5vw,52px);max-width:52ch;}
+  .overlay .k{font-size:.7rem;letter-spacing:.42em;text-transform:uppercase;color:rgba(210,238,250,.8);}
+  .overlay h1{font-family:'Georgia','Times New Roman',serif;font-weight:400;margin-top:12px;
+    font-size:clamp(2rem,6vw,4.2rem);line-height:1;letter-spacing:.01em;
+    color:#f2fbff;text-shadow:0 4px 30px rgba(6,30,48,.6);}
+  .overlay h1 span{display:block;font-style:italic;color:#bfeef8;font-size:.5em;margin-top:8px;letter-spacing:.04em;}
+  .overlay .hint{margin-top:20px;font-size:.72rem;letter-spacing:.12em;color:rgba(200,230,245,.72);
+    display:inline-flex;align-items:center;gap:9px;}
+  .overlay .hint::before{content:"";width:22px;height:1px;background:rgba(190,238,248,.7);display:inline-block;}
+
+  @media(prefers-reduced-motion:reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+<div class="scene" id="scene">
+  <div class="stars"></div>
+  <div class="moon"></div>
+
+  <div class="aurora" id="aurora">
+    <div class="band a"></div>
+    <div class="band b"></div>
+    <div class="band c"></div>
+    <div class="band d"></div>
+  </div>
+
+  <div class="horizon-glow"></div>
+
+  <div class="mist p1"><div class="puff"></div></div>
+  <div class="mist p2"><div class="puff"></div></div>
+  <div class="mist p3"><div class="puff"></div></div>
+
+  <div class="ice" id="ice">
+    <svg viewBox="0 0 1200 720" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="iceBase" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f2fbff"/>
+          <stop offset="0.4" stop-color="#cfe9f3"/>
+          <stop offset="1" stop-color="#7fb2cc"/>
+        </linearGradient>
+        <linearGradient id="crackGlow" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#dff5fb"/>
+          <stop offset="1" stop-color="#5f96b4"/>
+        </linearGradient>
+      </defs>
+      <rect x="0" y="0" width="1200" height="720" fill="url(#iceBase)"/>
+      <g id="shards"></g>
+      <g id="cracks"></g>
+    </svg>
+    <div class="ice-sheen"></div>
+    <div class="ice-vign"></div>
+  </div>
+
+  <div class="snow" id="snow"></div>
+
+  <div class="cold"></div>
+  <div class="frost-edge"></div>
+
+  <div class="overlay">
+    <div class="k">82°N · The Polar Silence</div>
+    <h1>Cracked Ice<span>&amp; the cold aurora above</span></h1>
+    <div class="hint">move to drift the light</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  // ---- build cracked-ice facets: jittered grid = Voronoi-like shards ----
+  function buildIce(){
+    var cols = 10, rows = 6, W = 1200, H = 720;
+    var jx = W / cols, jy = H / rows;
+    var pts = [];
+    for (var r = 0; r <= rows; r++){
+      pts[r] = [];
+      for (var c = 0; c <= cols; c++){
+        var jxw = (c === 0 || c === cols) ? 0 : (Math.random() * 2 - 1) * jx * 0.42;
+        var jyh = (r === rows) ? 0 : (Math.random() * 2 - 1) * jy * 0.42;
+        if (r === 0) jyh = (Math.random() * 2 - 1) * jy * 0.16; // keep horizon soft
+        pts[r][c] = [c * jx + jxw, r * jy + jyh];
+      }
+    }
+    var pal = ["#d8f2f8","#c3e6f0","#e9f8fc","#a9d6ea","#e0f4f9","#b4d8ec","#d3eef5","#c7e8f2"];
+    var shards = "", i, j, k, n;
+    for (r = 0; r < rows; r++){
+      for (c = 0; c < cols; c++){
+        var a = pts[r][c], b = pts[r][c + 1], d = pts[r + 1][c + 1], e = pts[r + 1][c];
+        n = ((r * cols + c) + (Math.random() * pal.length | 0)) % pal.length;
+        var col = pal[n];
+        shards += '<polygon points="' + a[0].toFixed(1) + "," + a[1].toFixed(1) + " " +
+          b[0].toFixed(1) + "," + b[1].toFixed(1) + " " +
+          d[0].toFixed(1) + "," + d[1].toFixed(1) + " " +
+          e[0].toFixed(1) + "," + e[1].toFixed(1) +
+          '" fill="' + col + '" fill-opacity="0.9" stroke="rgba(26,74,104,0.42)" stroke-width="1"/>';
+      }
+    }
+    document.getElementById("shards").innerHTML = shards;
+
+    // primary cracks: longer fractures crossing many facets
+    var cracks = "";
+    for (i = 0; i < 5; i++){
+      var cx = 120 + Math.random() * 960, cy = 40 + Math.random() * 200;
+      var p = "M " + cx.toFixed(1) + " " + cy.toFixed(1);
+      var seg = 3 + (Math.random() * 4 | 0);
+      for (j = 0; j < seg; j++){
+        cx += (Math.random() * 2 - 1) * 150;
+        cy += 30 + Math.random() * 120;
+        p += " L " + cx.toFixed(1) + " " + cy.toFixed(1);
+      }
+      cracks += '<path d="' + p + '" fill="none" stroke="rgba(14,54,78,0.55)" stroke-width="1.6" stroke-linecap="round"/>';
+      cracks += '<path d="' + p + '" fill="none" stroke="rgba(200,240,255,0.5)" stroke-width="0.7" stroke-linecap="round"/>';
+    }
+    document.getElementById("cracks").innerHTML = cracks;
+  }
+
+  // ---- snow ----
+  function buildSnow(){
+    var host = document.getElementById("snow");
+    var frag = "", i;
+    for (i = 0; i < 46; i++){
+      var s = 2 + Math.random() * 4;
+      var dur = 7 + Math.random() * 10;
+      var delay = -Math.random() * 12;
+      var op = 0.35 + Math.random() * 0.6;
+      var left = Math.random() * 100;
+      frag += '<span class="flake" style="left:' + left.toFixed(1) + '%;' +
+        'font-size:' + s.toFixed(1) + 'px;animation-duration:' + dur.toFixed(1) + 's;' +
+        'animation-delay:' + delay.toFixed(1) + 's;opacity:' + op.toFixed(2) + ';">\u00b7</span>';
+    }
+    host.innerHTML = frag;
+  }
+
+  buildIce();
+  buildSnow();
+
+  // ---- parallax ----
+  var aurora = document.getElementById("aurora");
+  var ice = document.getElementById("ice");
+  var px = 0, py = 0, ipx = 0, ipy = 0;
+
+  function onMove(e){
+    if (reduce) return;
+    var x = (e.touches ? e.touches[0].clientX : e.clientX) / window.innerWidth - 0.5;
+    var y = (e.touches ? e.touches[0].clientY : e.clientY) / window.innerHeight - 0.5;
+    px = x * -26; py = y * -14;
+    ipx = x * 20; ipy = y * 10;
+    aurora.style.setProperty("--px", px.toFixed(1) + "px");
+    aurora.style.setProperty("--py", py.toFixed(1) + "px");
+    ice.style.setProperty("--ipx", ipx.toFixed(1) + "px");
+    ice.style.setProperty("--ipy", ipy.toFixed(1) + "px");
+  }
+  window.addEventListener("mousemove", onMove, {passive:true});
+  window.addEventListener("touchmove", onMove, {passive:true});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 029-prismatic.html + 029-prismatic.txt — Glass prism dispersing white light into a spectrum. Palette: clear glass, vivid ROYGBIV. Signature: CSS/SVG prism, animated light beam splitting into a fan of colors, refraction glow.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+REFRACTION — A Prism of White Light
+
+DESIGN DESCRIPTION:
+On a deep midnight-blue void, a single colourless white beam crosses from the left and strikes a crown-glass triangular prism rendered in translucent gradients with a crisp specular streak. At the entry face a bright caustic blooms and a faint reflected ray glances upward; inside the glass the ray bends, then exits the far face already fanned into the full ROYGBIV spectrum — red bending least, violet most — each coloured ray haloed by an additive blur bloom so the overlapping core glows white-hot and separates into saturated bands. Floating dust twinkles through the dark, a vignette deepens the corners, and a serif wordmark plus a live readout of incidence angle, dispersion and a spectrum swatch strip frame the physics as fine art.
+
+MAJOR VISUAL TECHNIQUES:
+- Inline SVG triangular prism built from translucent linear gradients plus a thin bright specular highlight line for the "glass" look.
+- A fanning spectrum of seven ROYGBIV rays recomputed every frame, each duplicated into a heavily Gaussian-blurred "bloom" layer under mix-blend-mode:screen for additive glow.
+- SVG feGaussianBlur filters (soft / bloom / bloomLg) drive the refraction caustic glows at the entry and exit points.
+- Real segment–segment intersection math recomputes the beam entry, interior path and exit point as the prism rotates, so the light tracks the geometry believably.
+- A partial reflected beam, twinkling dust field, radial vignette and a gradient-clipped serif headline add depth and polish.
+- requestAnimationFrame loop with eased state and an idle auto-oscillation keeps the scene alive when untouched; prefers-reduced-motion support included.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven, no buttons. Moving the cursor vertically tilts the angle of the incoming beam (shifting where it strikes the entry face and sweeping the whole spectrum up and down). Pressing and dragging rotates the prism slightly and widens or narrows the dispersion — the spread between red and violet — so you can "split the light" more or less intensely. After ~1.6 s of no input the apparatus gently breathes on its own, oscillating the beam angle and prism tilt; a live readout top-right shows the current incidence angle and dispersion percentage with a matching ROYGBIV swatch strip.

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON FLORA — Deer in a Luminous Meadow</title>
+<style>
+  :root{
+    --black:#020204;
+    --magenta:#ff2bd6;
+    --cyan:#2bf6ff;
+    --lime:#b6ff3d;
+    --violet:#9a5bff;
+    --warm:#ff7a59;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--black); color:#eafcff; overflow:hidden;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed; inset:0; width:100%; height:100%; display:block; touch-action:none}
+
+  /* ---- wordmark ---- */
+  .wordmark{
+    position:absolute; top:clamp(18px,4vw,48px); left:clamp(18px,4vw,48px); z-index:5;
+    pointer-events:none;
+  }
+  .wordmark .kicker{
+    font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.46em;
+    text-transform:uppercase; color:var(--cyan); opacity:.85; margin-bottom:14px;
+    text-shadow:0 0 14px rgba(43,246,255,.6);
+  }
+  .wordmark h1{
+    margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:400;
+    font-size:clamp(30px,6.4vw,74px); line-height:.94; letter-spacing:.005em;
+    color:#fff;
+    text-shadow:0 0 8px rgba(255,43,214,.75),0 0 26px rgba(255,43,214,.55),0 0 60px rgba(255,43,214,.35);
+  }
+  .wordmark h1 em{font-style:italic; color:var(--lime);
+    text-shadow:0 0 8px rgba(182,255,61,.8),0 0 30px rgba(182,255,61,.5);}
+  .wordmark .sub{
+    margin-top:14px; max-width:40ch; font-size:13px; line-height:1.5;
+    color:rgba(234,252,255,.6); letter-spacing:.02em;
+  }
+
+  .hint{
+    position:absolute; left:clamp(18px,4vw,48px); bottom:clamp(16px,3.4vw,40px); z-index:5;
+    display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:.04em;
+    color:rgba(234,252,255,.55);
+  }
+  .hint .dot{width:9px; height:9px; border-radius:50%; background:var(--magenta);
+    box-shadow:0 0 12px var(--magenta),0 0 24px var(--magenta); flex:none;
+    animation:pulse 2.6s ease-in-out infinite}
+  .credit{
+    position:absolute; right:clamp(16px,3.4vw,40px); bottom:clamp(16px,3.4vw,40px); z-index:5;
+    font:500 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.3em; text-transform:uppercase;
+    color:rgba(234,252,255,.35); text-align:right;
+  }
+
+  @keyframes pulse{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
+
+  /* ---- flicker: burning-neon instability on select tubes ---- */
+  .fl1{animation:flick1 5.5s steps(1,end) infinite}
+  .fl2{animation:flick2 7.3s steps(1,end) infinite}
+  .fl3{animation:flick3 4.1s steps(1,end) infinite}
+  @keyframes flick1{
+    0%,17%,19%,21%,23%,100%{opacity:1}
+    18%,20%,22%{opacity:.35}
+  }
+  @keyframes flick2{
+    0%,42%,44%,100%{opacity:1}
+    43%{opacity:.25}
+  }
+  @keyframes flick3{
+    0%,8%,10%,12%,60%,62%,100%{opacity:1}
+    9%,11%,61%{opacity:.3}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .fl1,.fl2,.fl3,.hint .dot{animation:none !important}
+  }
+  @media (max-width:560px){
+    .wordmark .sub{display:none}
+    .credit{display:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div class="wordmark">
+  <div class="kicker">Luminous Meadow · No. 085</div>
+  <h1>A deer in the<br><em>neon</em> grass.</h1>
+  <div class="sub">Every tube is hand-traced on pure black — magenta antlers, cyan water, lime blossom — humming with a faint current, cast onto a wet floor that glows back the light.</div>
+</div>
+
+<div class="hint"><span class="dot"></span>Move the pointer to shift the glow · click to strike a spark</div>
+<div class="credit">Neon&nbsp;Flora<br>Series 085</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var canvas = document.getElementById('stage');
+  var ctx = canvas.getContext('2d');
+  var scene = document.createElement('canvas');   // the neon world
+  var sctx = scene.getContext('2d');
+  var blur = document.createElement('canvas');     // soft bloom copy
+  var bctx = blur.getContext('2d');
+
+  var MAG='#ff2bd6', CYA='#2bf6ff', LIME='#b6ff3d', VIO='#9a5bff', WARM='#ff7a59';
+  var W=0, H=0, DPR=1, floorY=0;
+  var pointer={x:0.5,y:0.4}, target={x:0.5,y:0.4};
+  var sparks=[];
+  var stars=[];
+  var flowers=[];
+  var grass=[];
+  var t0=performance.now();
+
+  function hash01(n){ var x=Math.sin(n*127.1+37.7)*43758.5453; return x-Math.floor(x); }
+
+  // ---------- neon tube renderer (layered glow) ----------
+  function tube(ctx, color, build, w, glow, flick){
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    var a = flick==null ? 1 : flick;
+    ctx.globalAlpha=a;
+    // outer soft halo
+    ctx.strokeStyle=color; ctx.shadowColor=color; ctx.shadowBlur=glow*2.2;
+    ctx.lineWidth=w*2.6; ctx.globalAlpha=0.16*a; build(ctx); ctx.stroke();
+    // mid body
+    ctx.shadowBlur=glow; ctx.lineWidth=w*1.35; ctx.globalAlpha=0.9*a; build(ctx); ctx.stroke();
+    // hot white core
+    ctx.shadowBlur=glow*0.35; ctx.lineWidth=w*0.55;
+    ctx.strokeStyle='rgba(255,255,255,0.92)'; ctx.globalAlpha=a; build(ctx); ctx.stroke();
+    ctx.restore();
+  }
+  function dot(ctx, x, y, r, color, glow, alpha){
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=alpha==null?1:alpha;
+    var g=ctx.createRadialGradient(x,y,0,x,y,r*3);
+    g.addColorStop(0,'rgba(255,255,255,0.95)');
+    g.addColorStop(0.3,color); g.addColorStop(1,'rgba(0,0,0,0)');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,r*3,0,6.2832); ctx.fill();
+    ctx.restore();
+  }
+  function flick(seed,t){
+    var s=Math.floor(t/(420+seed*130));
+    var r=hash01(s*1.7+seed*9.3);
+    if(r>0.90){ var n=hash01(s*2.3+seed); return 0.22+0.4*n; }
+    return 1;
+  }
+
+  // ---------- scene construction ----------
+  function buildDecor(){
+    stars=[]; grass=[]; flowers=[];
+    var i, n;
+    n=Math.floor(W*H/16000);
+    for(i=0;i<n;i++){
+      stars.push({x:Math.random()*W, y:Math.random()*floorY*1.05, r:Math.random()*1.4+0.4,
+        p:Math.random()*6.28, s:Math.random()*2+0.5, c:Math.random()>0.7?CYA:(Math.random()>0.5?MAG:LIME)});
+    }
+    n=Math.floor(W/14);
+    for(i=0;i<n;i++){
+      var gx=Math.random()*W;
+      if(Math.abs(gx-W*0.5)<W*0.10) continue; // keep clear of deer feet cluster center
+      grass.push({x:gx, h:Math.random()*46+18, lean:(Math.random()-0.5)*22,
+        c:Math.random()>0.5?LIME:CYA, w:Math.random()*1.4+0.7, p:Math.random()*6.28});
+    }
+    // flower clusters
+    var fx=[0.10,0.18,0.26,0.33,0.70,0.78,0.86,0.92,0.42,0.58];
+    for(i=0;i<fx.length;i++){
+      flowers.push({x:fx[i]*W + (Math.random()-0.5)*24, type:i%2,
+        c:i%3===0?MAG:(i%3===1?CYA:LIME), s:Math.random()*0.35+0.8, p:Math.random()*6.28});
+    }
+  }
+
+  // draw the deer as stroked neon tubes into ctx (local units, origin at feet center)
+  function drawDeer(ctx, ox, oy, s, t){
+    ctx.save();
+    ctx.translate(ox, oy); ctx.scale(s, s);
+    var fl = flick(1,t);
+    // ---- legs (cyan) ----
+    var legCol=CYA;
+    function leg(x, bend){
+      return function(c){
+        c.beginPath();
+        c.moveTo(x,44);
+        c.quadraticCurveTo(x+bend,80, x+bend*0.4,120);
+        c.moveTo(x,44);
+        c.quadraticCurveTo(x+bend+8,82, x+bend*0.4+6,120); // back of leg
+        c.stroke();
+      };
+    }
+    tube(ctx, legCol, leg(-70,-6), 4, 14, flick(2,t));   // front-left
+    tube(ctx, legCol, leg(-40,-4), 4, 14, flick(2,t));   // front-right
+    tube(ctx, legCol, leg(72,8), 4, 14, flick(2,t));     // back-left
+    tube(ctx, legCol, leg(102,10),4, 14, flick(2,t));    // back-right
+    // hooves
+    ctx.globalCompositeOperation='lighter';
+    [ [-70,120],[-40,120],[72,120],[102,120] ].forEach(function(h){
+      dot(ctx,h[0],h[1],4,MAG,12,1);
+    });
+
+    // ---- body silhouette (magenta) ----
+    var body=function(c){
+      c.beginPath();
+      c.moveTo(-22,-40);
+      c.bezierCurveTo(30,-58, 92,-56, 124,-28);
+      c.bezierCurveTo(152,-6, 152,32, 120,47);
+      c.bezierCurveTo(80,57, 20,57, -30,46);
+      c.bezierCurveTo(-72,36, -92,0, -70,-30);
+      c.bezierCurveTo(-58,-49, -40,-53, -22,-40);
+      c.closePath();
+    };
+    tube(ctx, MAG, body, 4.5, 20, fl);
+
+    // ---- neck + head (magenta) ----
+    var head=function(c){
+      c.beginPath();
+      c.moveTo(-70,-30);
+      c.bezierCurveTo(-84,-40, -96,-46, -108,-52);
+      c.moveTo(-108,-52);
+      c.bezierCurveTo(-128,-58, -140,-46, -138,-34);
+      c.bezierCurveTo(-134,-22, -116,-20, -100,-25);
+      c.bezierCurveTo(-90,-28, -84,-36, -86,-44);
+      c.stroke();
+    };
+    tube(ctx, MAG, head, 4, 16, fl);
+    // ear
+    dot(ctx,-104,-56,3.5,VIO,10,1);
+
+    // ---- antlers (lime hero, flickering) ----
+    var flk = function(){ return flick(3,t)* (0.85+0.15*Math.sin(t*0.006)); };
+    var antler=function(c){
+      c.beginPath();
+      // left beam
+      c.moveTo(-110,-56);
+      c.bezierCurveTo(-120,-92, -104,-120, -74,-142);
+      c.moveTo(-116,-80); c.bezierCurveTo(-138,-86, -150,-78, -156,-64); // tine
+      c.moveTo(-108,-104); c.bezierCurveTo(-120,-116, -120,-130, -112,-140);
+      c.moveTo(-96,-124); c.bezierCurveTo(-84,-134, -74,-134, -64,-128);
+      // right beam (inner)
+      c.moveTo(-104,-54);
+      c.bezierCurveTo(-96,-88, -84,-112, -60,-128);
+      c.moveTo(-96,-86); c.bezierCurveTo(-84,-96, -74,-96, -66,-88);
+      c.moveTo(-88,-108); c.bezierCurveTo(-76,-116, -66,-114, -58,-106);
+      c.stroke();
+    };
+    tube(ctx, LIME, antler, 3.6, 18, flk);
+    // antler tip beads
+    ctx.globalCompositeOperation='lighter';
+    [[-74,-142],[-156,-64],[-112,-140],[-64,-128],[-60,-128],[-66,-88]].forEach(function(p){
+      dot(ctx,p[0],p[1],3,LIME,14,1);
+    });
+    // eye
+    dot(ctx,-120,-40,2.6,WARM,12,1);
+    // tail
+    var tail=function(c){ c.beginPath(); c.moveTo(124,-24); c.quadraticCurveTo(150,-34,156,-12); c.stroke(); };
+    tube(ctx, VIO, tail, 3, 12, flick(5,t));
+    ctx.restore();
+  }
+
+  function drawTulip(ctx, x, gy, color, s, p){
+    ctx.save(); ctx.translate(x,gy); ctx.scale(s,s);
+    var sway=Math.sin(p)*6;
+    var stem=function(c){ c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(sway*0.5,-26,sway,-46); c.stroke(); };
+    tube(ctx, LIME, stem, 2.4, 9, 1);
+    var leaf=function(c){ c.beginPath(); c.moveTo(sway*0.4,-18); c.quadraticCurveTo(sway-14,-30,sway-4,-40); c.stroke(); };
+    tube(ctx, LIME, leaf, 2, 8, 1);
+    var cx2=sway, cy2=-50;
+    var cup=function(c){
+      c.beginPath();
+      c.moveTo(cx2-11,cy2+8);
+      c.bezierCurveTo(cx2-14,cy2-10, cx2-4,cy2-18, cx2,cy2-14);
+      c.bezierCurveTo(cx2+4,cy2-18, cx2+14,cy2-10, cx2+11,cy2+8);
+      c.moveTo(cx2,cy2-14); c.lineTo(cx2,cy2+8);
+      c.stroke();
+    };
+    tube(ctx, color, cup, 2.8, 14, 1);
+    ctx.restore();
+  }
+
+  function drawDaisy(ctx, x, gy, color, s, p){
+    ctx.save(); ctx.translate(x,gy); ctx.scale(s,s);
+    var sway=Math.sin(p)*5;
+    var stem=function(c){ c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(sway*0.5,-24,sway,-42); c.stroke(); };
+    tube(ctx, LIME, stem, 2.2, 8, 1);
+    var cx2=sway, cy2=-46;
+    var petals=function(c){
+      c.beginPath();
+      for(var i=0;i<8;i++){
+        var a=i/8*6.2832;
+        var px=cx2+Math.cos(a)*10, py=cy2+Math.sin(a)*10;
+        c.moveTo(cx2+Math.cos(a)*4, cy2+Math.sin(a)*4);
+        c.lineTo(px,py);
+      }
+      c.stroke();
+    };
+    tube(ctx, color, petals, 2.4, 12, 1);
+    var center=function(c){ c.beginPath(); c.arc(cx2,cy2,4,0,6.2832); c.stroke(); };
+    tube(ctx, WARM, center, 2.2, 10, 1);
+    ctx.restore();
+  }
+
+  // ---------- render the neon world into the scene offscreen ----------
+  function drawWorld(target, t, forBlur){
+    var g = target.getContext('2d');
+    g.clearRect(0,0,scene.width,scene.height);
+    g.setTransform(DPR,0,0,DPR,0,0);
+    // moon (cyan ring, top right)
+    var mx=W*0.80, my=floorY*0.34, mr=Math.min(W,H)*0.075;
+    var moon=function(c){ c.beginPath(); c.arc(mx,my,mr,0,6.2832); c.stroke(); };
+    tube(g, CYA, moon, 4, 26, 1);
+    g.save(); g.globalCompositeOperation='lighter';
+    var mg=g.createRadialGradient(mx,my,mr*0.2,mx,my,mr*2.4);
+    mg.addColorStop(0,'rgba(43,246,255,0.16)'); mg.addColorStop(1,'rgba(0,0,0,0)');
+    g.fillStyle=mg; g.beginPath(); g.arc(mx,my,mr*2.4,0,6.2832); g.fill(); g.restore();
+
+    // stars
+    var i, st;
+    for(i=0;i<stars.length;i++){
+      st=stars[i];
+      var tw=0.55+0.45*Math.sin(t*0.002*st.s+st.p);
+      dot(g, st.x, st.y, st.r, st.c, 8, tw);
+    }
+    // deer
+    drawDeer(g, W*0.5, floorY, Math.min(W,H)*0.00155, t);
+    // grass
+    for(i=0;i<grass.length;i++){
+      var gr=grass[i];
+      var gb=function(c){ c.beginPath(); c.moveTo(gr.x,0); c.quadraticCurveTo(gr.x+gr.lean,-gr.h*0.6, gr.x+gr.lean*1.4,-gr.h); c.stroke(); };
+      tube(g, gr.c, gb, gr.w, 8, 0.9);
+    }
+    // flowers
+    for(i=0;i<flowers.length;i++){
+      var f=flowers[i];
+      var gy=f.y || floorY;
+      if(f.type===0) drawTulip(g, f.x, floorY, f.c, f.s, f.p + t*0.0015);
+      else drawDaisy(g, f.x, floorY, f.c, f.s, f.p + t*0.0015);
+    }
+  }
+
+  // ---------- background ambient glow (not reflected) ----------
+  function drawBackdrop(t){
+    ctx.fillStyle='#020204'; ctx.fillRect(0,0,W,H);
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    var px=pointer.x, py=pointer.y;
+    function blob(cx,cy,r,col,a){
+      var g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+      g.addColorStop(0,col.replace('ALPHA',a)); g.addColorStop(1,'rgba(0,0,0,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(cx,cy,r,0,6.2832); ctx.fill();
+    }
+    var sway=Math.sin(t*0.0005)*30;
+    blob(W*0.5+sway, floorY*0.55, Math.max(W,H)*0.6, 'rgba(255,43,214,ALPHA)', 0.16);
+    blob(W*(0.35+px*0.12), H*(0.4+py*0.1), Math.max(W,H)*0.55, 'rgba(43,246,255,ALPHA)', 0.12);
+    blob(W*(0.7+px*0.08), H*0.3, Math.max(W,H)*0.42, 'rgba(182,255,61,ALPHA)', 0.07);
+    ctx.restore();
+  }
+
+  // ---------- floor + reflection ----------
+  function drawFloor(t){
+    // reflect the scene below the floor line
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, floorY, W, H-floorY); ctx.clip();
+    ctx.globalCompositeOperation='lighter';
+    // soft bloom reflection
+    ctx.globalAlpha=0.5; ctx.drawImage(blur,0,0,W,H);
+    // crisp-ish mirror
+    ctx.globalAlpha=0.28;
+    ctx.translate(0, floorY*2); ctx.scale(1,-1);
+    ctx.drawImage(scene,0,0,W,H);
+    ctx.restore();
+    // fade reflection into the dark
+    var fade=ctx.createLinearGradient(0,floorY,0,H);
+    fade.addColorStop(0,'rgba(2,2,4,0)');
+    fade.addColorStop(0.5,'rgba(2,2,4,0.55)');
+    fade.addColorStop(1,'rgba(2,2,4,0.96)');
+    ctx.fillStyle=fade; ctx.fillRect(0,floorY,W,H-floorY);
+    // wet-floor grid (perspective)
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.strokeStyle='rgba(43,246,255,0.10)'; ctx.lineWidth=1;
+    var rows=9;
+    for(var i=0;i<=rows;i++){
+      var yy=floorY + Math.pow(i/rows,2)*(H-floorY);
+      ctx.beginPath(); ctx.moveTo(0,yy); ctx.lineTo(W,yy); ctx.stroke();
+    }
+    var vpX=W*(0.4+pointer.x*0.1), vpY=floorY;
+    for(var v=-6;v<=10;v++){
+      ctx.globalAlpha=0.08;
+      ctx.beginPath(); ctx.moveTo(vpX,vpY);
+      ctx.lineTo(W*0.5 + v*W*0.10, H); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ---------- sparks (click) ----------
+  function drawSparks(t){
+    if(!sparks.length) return;
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    for(var i=sparks.length-1;i>=0;i--){
+      var sp=sparks[i], age=t-sp.born, life=900;
+      if(age>life){ sparks.splice(i,1); continue; }
+      var k=age/life, r=6+k*150;
+      ctx.strokeStyle=MAG; ctx.lineWidth=3*(1-k);
+      ctx.shadowColor=MAG; ctx.shadowBlur=24*(1-k);
+      ctx.globalAlpha=(1-k)*0.9;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,r,0,6.2832); ctx.stroke();
+      ctx.strokeStyle=CYA; ctx.shadowColor=CYA; ctx.globalAlpha=(1-k)*0.6;
+      ctx.lineWidth=2*(1-k);
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,r*0.6,0,6.2832); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  // ---------- sizing ----------
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1, 2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    scene.width=Math.round(W*DPR); scene.height=Math.round(H*DPR);
+    blur.width=scene.width; blur.height=scene.height;
+    floorY=H*0.66;
+    buildDecor();
+    // soft-blur copy of the world
+    bctx.setTransform(DPR,0,0,DPR,0,0); bctx.filter='blur(9px)';
+    bctx.clearRect(0,0,scene.width,scene.height);
+    bctx.drawImage(scene,0,0);
+    bctx.filter='none';
+  }
+
+  function pos(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    var cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    target.x=Math.max(0,Math.min(1,cx/W));
+    target.y=Math.max(0,Math.min(1,cy/H));
+  }
+  function strike(e){
+    var r=canvas.getBoundingClientRect();
+    var cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    var cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    sparks.push({x:cx,y:cy,born:performance.now()});
+    if(sparks.length>6) sparks.shift();
+  }
+  canvas.addEventListener('mousemove',pos);
+  canvas.addEventListener('touchmove',function(e){pos(e);},{passive:true});
+  canvas.addEventListener('click',strike);
+  canvas.addEventListener('touchstart',function(e){pos(e);strike(e);},{passive:true});
+
+  var last=performance.now();
+  function frame(now){
+    var t=reduce? 0 : (now-t0);
+    if(!reduce){
+      var dt=Math.min(0.05,(now-last)/1000); last=now;
+      pointer.x += (target.x-pointer.x)*Math.min(1,dt*4);
+      pointer.y += (target.y-pointer.y)*Math.min(1,dt*4);
+    }
+    drawBackdrop(t);
+    if(!reduce){ drawWorld(scene,t,false);
+      bctx.setTransform(DPR,0,0,DPR,0,0); bctx.filter='blur(9px)';
+      bctx.clearRect(0,0,scene.width,scene.height); bctx.drawImage(scene,0,0); bctx.filter='none';
+    }
+    drawFloor(t);
+    // static world when reduced (built once at first frame)
+    if(reduce && !frame._done){ drawWorld(scene,0,false);
+      bctx.setTransform(DPR,0,0,DPR,0,0); bctx.filter='blur(9px)';
+      bctx.clearRect(0,0,scene.width,scene.height); bctx.drawImage(scene,0,0); bctx.filter='none';
+      frame._done=true;
+    }
+    // composite the real scene on top (upper region)
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    ctx.drawImage(scene,0,0,W,H); ctx.restore();
+    drawSparks(t);
+    // vignette
+    var vg=ctx.createRadialGradient(W*0.5,H*0.55,Math.min(W,H)*0.3, W*0.5,H*0.55,Math.max(W,H)*0.75);
+    vg.addColorStop(0,'rgba(2,2,4,0)'); vg.addColorStop(1,'rgba(2,2,4,0.72)');
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

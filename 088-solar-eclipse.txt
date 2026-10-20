@@ -1,0 +1,21 @@
+PROMPT:
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+Page 4: 088-solar-eclipse.html + 088-solar-eclipse.txt — A solar eclipse: the moon transits and progressively covers the sun, revealing the corona. Palette: deep space, black moon disk, silver-white corona. Signature: CSS layered circles, radial corona glow (blur/radial gradient), animated coverage slider, ambient star dimming.
+
+TITLE: Solar Eclipse — The Reveal of the Corona
+
+DESIGN DESCRIPTION:
+Against a deep-space gradient dusted with faint stars, a brilliant sun hangs in perfect stillness until the black disk of the moon begins its slow transit across it. As coverage increases, the harsh photosphere dims and the sun's true glory emerges: a silver-white corona that blooms outward through stacked radial gradients and blur, a rose chromosphere flaring along the limb, and — at the threshold of totality — a single searing diamond-ring bead on the last uncovered edge. Behind the growing darkness, the starfield quietly brightens into view, selling the sudden night of an eclipse.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered CSS circles (sun core, corona shells, moon disk) with radial gradients and blur for the corona glow
+- Physically-based coverage: a geometric circle-overlap area calculation drives an accurate % readout and all lighting
+- Corona bloom revealed via opacity/scale ramps keyed to coverage (only shows as totality nears)
+- Chromosphere flare and diamond-ring bead triggered in narrow coverage windows near totality
+- Starfield that fades in with a dimming sky, each star with subtle twinkle (CSS custom-property animation)
+- Smoothstep easing for natural bloom/dim curves; responsive sizing so the sun scales to the viewport
+- Reduced-motion fallback: twinkle disabled, motion eased, still fully interactive via the slider
+
+INTENDED INTERACTION MODEL:
+A single expressive control: a coverage slider (0–100%) that the viewer drags to walk the moon across the sun in real time, with a live coverage percentage. An "Auto transit" button plays the whole event on a loop (partial → diamond ring → totality → reverse). Everything reacts continuously to coverage — corona, chromosphere, diamond ring and stars — so the viewer controls the phase of the eclipse with their hand. Reduced-motion respected.

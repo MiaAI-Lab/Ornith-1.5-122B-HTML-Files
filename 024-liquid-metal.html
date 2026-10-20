@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERCURO · Liquid Chrome</title>
+<style>
+  :root{
+    --bg:#0d0f14;
+    --bg-2:#161a22;
+    --chrome-hi:#ffffff;
+    --chrome-1:#eef2f7;
+    --chrome-2:#aeb7c4;
+    --chrome-3:#6b7484;
+    --chrome-lo:#3a414e;
+    --accent:#5ad7ff;
+    --ink:#eef2f7;
+    --muted:#8b95a5;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.5,.05,.15,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 100% at 50% 12%, #232833 0%, var(--bg-2) 40%, var(--bg) 100%);
+    min-height:100vh;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* reflective environment floor */
+  .stage{
+    position:fixed;inset:0;
+    display:flex;align-items:center;justify-content:center;
+    perspective:1200px;
+  }
+  .env{
+    position:absolute;inset:0;
+    background:
+      radial-gradient(60% 40% at 50% 18%, rgba(90,215,255,.16), transparent 60%),
+      radial-gradient(50% 30% at 20% 80%, rgba(120,140,200,.12), transparent 60%),
+      radial-gradient(50% 30% at 82% 78%, rgba(255,255,255,.08), transparent 60%);
+    pointer-events:none;
+  }
+  /* canvas for flowing light reflections */
+  #field{position:absolute;inset:0;width:100%;height:100%;opacity:.7;pointer-events:none}
+
+  /* the blob */
+  .blob-wrap{
+    position:relative;
+    width:min(74vw,520px);
+    aspect-ratio:1/1;
+    z-index:3;
+    transition:transform .5s var(--ease);
+    will-change:transform;
+  }
+  .blob{
+    position:absolute;inset:0;
+    background:
+      linear-gradient(115deg,
+        var(--chrome-hi) 0%,
+        var(--chrome-1) 14%,
+        var(--chrome-3) 30%,
+        var(--chrome-2) 46%,
+        var(--chrome-hi) 58%,
+        var(--chrome-lo) 74%,
+        var(--chrome-2) 88%,
+        var(--chrome-hi) 100%);
+    box-shadow:
+      0 40px 90px -30px rgba(0,0,0,.8),
+      0 0 60px -10px rgba(90,215,255,.18),
+      inset 0 2px 3px rgba(255,255,255,.9),
+      inset 0 -30px 60px -20px rgba(20,24,32,.7);
+    /* morphing border-radius — signature */
+    border-radius:42% 58% 62% 38%/56% 44% 56% 44%;
+    animation:morph 12s var(--ease) infinite, hue 24s linear infinite;
+    mix-blend-mode:normal;
+  }
+  @keyframes morph{
+    0%   {border-radius:42% 58% 62% 38%/56% 44% 56% 44%;}
+    25%  {border-radius:60% 40% 38% 62%/42% 58% 42% 58%;}
+    50%  {border-radius:38% 62% 46% 54%/60% 40% 60% 40%;}
+    75%  {border-radius:56% 44% 60% 40%/38% 62% 40% 60%;}
+    100% {border-radius:42% 58% 62% 38%/56% 44% 56% 44%;}
+  }
+  @keyframes hue{to{filter:hue-rotate(360deg) saturate(1.05)}}
+
+  /* metallic sheen layer — second rotating gradient for depth */
+  .sheen{
+    position:absolute;inset:0;
+    border-radius:inherit;
+    background:
+      conic-gradient(from 0deg at 38% 32%,
+        transparent 0 40%,
+        rgba(255,255,255,.75) 44%,
+        transparent 48% 70%,
+        rgba(90,215,255,.35) 74%,
+        transparent 78% 100%);
+    mix-blend-mode:screen;
+    animation:spin 8s linear infinite;
+    transform:rotate(0deg);
+    transform-origin:50% 50%;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* animated highlight sweep */
+  .sweep{
+    position:absolute;inset:0;
+    border-radius:inherit;
+    background:linear-gradient(105deg, transparent 40%, rgba(255,255,255,.55) 48%, transparent 56%);
+    mix-blend-mode:screen;
+    animation:sweep 6s var(--ease) infinite;
+  }
+  @keyframes sweep{0%{transform:translateX(-60%) }50%{transform:translateX(60%)}100%{transform:translateX(-60%)}}
+
+  /* specular hot spots */
+  .hot{
+    position:absolute;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,.95), transparent 60%);
+    mix-blend-mode:screen;
+    filter:blur(2px);
+    pointer-events:none;
+  }
+  .hot.a{width:22%;height:16%;top:16%;left:20%;animation:bob 7s var(--ease) infinite}
+  .hot.b{width:9%;height:9%;top:64%;left:60%;animation:bob 9s var(--ease) infinite reverse}
+  @keyframes bob{0%,100%{transform:translate(0,0);opacity:.8}50%{transform:translate(10px,-8px);opacity:1}}
+
+  /* reflection pool beneath */
+  .reflection{
+    position:absolute;
+    left:50%;bottom:8%;
+    width:min(52vw,360px);aspect-ratio:16/6;
+    transform:translateX(-50%) perspective(600px) rotateX(64deg);
+    background:
+      radial-gradient(60% 60% at 50% 40%, rgba(174,183,196,.5), transparent 70%);
+    filter:blur(6px);
+    transform-origin:50% 0;
+    z-index:2;
+    animation:reflectPulse 6s var(--ease) infinite;
+  }
+  @keyframes reflectPulse{0%,100%{opacity:.55;transform:translateX(-50%) perspective(600px) rotateX(64deg) scaleY(1)}50%{opacity:.8;transform:translateX(-50%) perspective(600px) rotateX(64deg) scaleY(1.06)}}
+
+  /* ---------- TYPE ---------- */
+  .overlay{
+    position:fixed;inset:0;z-index:5;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(20px,4vw,48px);
+  }
+  .top{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px}
+  .brand{font-size:12px;letter-spacing:.44em;text-transform:uppercase;color:var(--muted)}
+  .brand b{display:block;font-size:22px;letter-spacing:.08em;color:var(--ink);margin-top:8px;text-shadow:0 0 24px rgba(90,215,255,.4)}
+  .status{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--accent);text-align:right}
+  .status span{display:block;opacity:.7}
+
+  .bottom h1{
+    font-weight:200;
+    font-size:clamp(38px,9vw,120px);
+    line-height:.86;letter-spacing:-.02em;margin:0;
+    background:linear-gradient(180deg,#ffffff,#aeb7c4 60%,#5a6474);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+  }
+  .bottom h1 em{font-style:italic;font-weight:200}
+  .cap{
+    margin-top:16px;max-width:44ch;
+    font-size:clamp(13px,1.4vw,15px);line-height:1.6;color:var(--muted);
+  }
+  .hint{
+    margin-top:20px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+    display:inline-flex;align-items:center;gap:10px;
+  }
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);animation:pulse 1.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+  @media (max-width:560px){.bottom h1{font-size:clamp(34px,15vw,64px)}}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="env" aria-hidden="true"></div>
+    <canvas id="field" aria-hidden="true"></canvas>
+
+    <div class="reflection" aria-hidden="true"></div>
+
+    <div class="blob-wrap" id="wrap">
+      <div class="blob">
+        <div class="sheen"></div>
+        <div class="sweep"></div>
+        <div class="hot a"></div>
+        <div class="hot b"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay">
+    <div class="top">
+      <div class="brand">Element 80<b>Mercuro</b></div>
+      <div class="status">Chrome Refinement<span><span class="dot" style="display:inline-block"></span> Live · 21.6°C</span></div>
+    </div>
+    <div class="bottom">
+      <h1>Liquid<br><em>Metal</em></h1>
+      <p class="cap">A droplet of molten chrome, forever shifting. Move the pointer to steer its reflection — the surface reads the room and bends light across its polished skin.</p>
+      <div class="hint"><span class="dot"></span> Move pointer over the form</div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var wrap = document.getElementById('wrap');
+      if(!wrap) return;
+
+      /* ---- pointer-reactive tilt / parallax ---- */
+      var tx = 0, ty = 0, cx = 0, cy = 0;
+      function onMove(e){
+        var w = window.innerWidth, h = window.innerHeight;
+        var px = (e.clientX / w) - 0.5;
+        var py = (e.clientY / h) - 0.5;
+        tx = px * 16;      // degrees
+        ty = py * 16;
+      }
+      window.addEventListener('pointermove', onMove, {passive:true});
+      window.addEventListener('touchmove', function(e){
+        if(e.touches[0]) onMove({clientX:e.touches[0].clientX, clientY:e.touches[0].clientY});
+      }, {passive:true});
+
+      function loop(){
+        cx += (tx - cx) * 0.06;
+        cy += (ty - cy) * 0.06;
+        wrap.style.transform =
+          'translate3d(' + (cx*0.4) + 'px,' + (cy*0.4) + 'px,0) rotateX(' + (-cy) + 'deg) rotateY(' + cx + 'deg)';
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+
+      /* ---- canvas: flowing chrome light ribbons ---- */
+      var canvas = document.getElementById('field');
+      if(!canvas) return;
+      var ctx = canvas.getContext('2d');
+      var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+      var t = 0;
+      function resize(){
+        W = canvas.clientWidth; H = canvas.clientHeight;
+        canvas.width = Math.floor(W * dpr);
+        canvas.height = Math.floor(H * dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function draw(){
+        ctx.clearRect(0,0,W,H);
+        t += 0.004;
+        var bands = 6;
+        for(var i=0;i<bands;i++){
+          var f = i / bands;
+          var y = (Math.sin(t + f*6.28) * 0.5 + 0.5) * H;
+          var grad = ctx.createLinearGradient(0,y-140,0,y+140);
+          var a = 0.05 + 0.06 * (1-Math.abs(f-0.5)*2);
+          grad.addColorStop(0,'rgba(174,183,196,0)');
+          grad.addColorStop(0.5,'rgba(238,242,247,'+a+')');
+          grad.addColorStop(1,'rgba(174,183,196,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(0, y-140, W, 280);
+        }
+        // a couple of drifting highlight points
+        for(var k=0;k<3;k++){
+          var ax = (Math.cos(t*0.7 + k*2.1)*0.5+0.5)*W;
+          var ay = (Math.sin(t*0.5 + k*2.3)*0.5+0.5)*H;
+          var r = 60 + Math.sin(t+k)*20;
+          var g2 = ctx.createRadialGradient(ax,ay,0,ax,ay,r);
+          g2.addColorStop(0,'rgba(90,215,255,0.10)');
+          g2.addColorStop(1,'rgba(90,215,255,0)');
+          ctx.fillStyle = g2;
+          ctx.beginPath(); ctx.arc(ax,ay,r,0,6.283); ctx.fill();
+        }
+        requestAnimationFrame(draw);
+      }
+      draw();
+    })();
+  </script>
+</body>
+</html>

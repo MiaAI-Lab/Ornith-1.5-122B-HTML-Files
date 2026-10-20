@@ -1,0 +1,59 @@
+========================================================================
+PROMPT (exact, as issued):
+========================================================================
+Build a standalone, self-contained HTML page: a glass prism on a
+windowsill in a dim room, projecting a soft rainbow onto the wall as
+light turns. Palette: dim warm room, cool window light, vivid projected
+spectrum. Signature: CSS/SVG prism, an animated light beam, a projected
+rainbow arc cast on the wall with soft bloom, slow color rotation.
+Constraints: one self-contained .html, ALL CSS in one <style> and ALL JS
+in one <script> (inline everything), ZERO external dependencies (no
+CDN, no external fonts — system stacks only, no external images/SVG
+files/libraries), works fully offline by double-clicking with no network
+requests, responsive 320px->4K, valid HTML5, Awwwards-caliber original
+art direction. Keep the scene ATMOSPHERIC — a moody room with a prism on
+a windowsill projecting a rainbow onto a wall (distinct from a graphic
+close-up of a prism).
+
+------------------------------------------------------------------------
+TITLE:
+------------------------------------------------------------------------
+PRISM · Light Divided
+
+------------------------------------------------------------------------
+DESIGN DESCRIPTION:
+------------------------------------------------------------------------
+A single beam of cool window light crosses a dim, warm-lit room and
+strikes a hand-drawn glass prism resting on the windowsill; the beam
+refracts through the glass and throws a soft, blooming spectrum across
+the opposite wall, where the colours rotate and breathe slowly as if the
+sun itself is turning. The composition keeps the prism small and the
+moment cinematic — the room stays moody, the window stays bright, and the
+projected rainbow is the emotional centre of the frame.
+
+------------------------------------------------------------------------
+MAJOR VISUAL TECHNIQUES:
+------------------------------------------------------------------------
+- Inline SVG triangular prism with a glass gradient, edge highlights and
+  a subtle inner caustic.
+- Animated light beam drawn as a tapered gradient polygon that pulses
+  and subtly wanders toward the prism.
+- Projected rainbow built from stacked, blurred SVG arc bands with a
+  screen-blend bloom so the spectrum glows into the wall.
+- Slow hue rotation and opacity breathing on the projected arc to imply
+  shifting daylight.
+- Layered CSS gradients for the dim warm room, the cool window rectangle
+  and the vignette that frames the scene.
+- Canvas dust motes drifting through the sunbeam for atmosphere and depth.
+- A single cursor-driven signature effect: moving the pointer steers the
+  beam and sweeps the rainbow across the wall.
+
+------------------------------------------------------------------------
+INTENDED INTERACTION MODEL:
+------------------------------------------------------------------------
+Passive-cinematic with one point of agency. On load the page runs its
+loop — beam pulses, spectrum breathes, dust drifts — like a living
+painting. The viewer can move the pointer (or drag on touch) to steer the
+incoming light beam, which sweeps the projected rainbow across the wall;
+nothing is clickable, the mood is uninterrupted, and the scene resets to
+its slow default motion when left alone.

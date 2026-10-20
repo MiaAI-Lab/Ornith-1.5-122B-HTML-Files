@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Isometric City — Day to Night</title>
+<style>
+  :root{
+    --sans:"Segoe UI", system-ui, -apple-system, Helvetica, sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+    --cycle:42s;                 /* full day→night→day period */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    min-height:100vh; overflow:hidden; position:relative;
+    font-family:var(--sans);
+    background:#0a0e1a;
+  }
+
+  /* ---------- sky layers (crossfade for the day-night cycle) ---------- */
+  .sky{position:fixed; inset:0; z-index:0; overflow:hidden}
+  .sky .layer{position:absolute; inset:0; opacity:0}
+  .sky-day   { background:linear-gradient(180deg,#7db8e8 0%,#a9d3f2 45%,#e7f0f6 100%); }
+  .sky-night { background:linear-gradient(180deg,#05070f 0%,#0c1428 55%,#16203c 100%); }
+  .sky-dawn  { background:linear-gradient(180deg,#2a2340 0%,#e78a5a 55%,#f6c78a 100%); }
+  .sky-dusk  { background:linear-gradient(180deg,#1a1e3a 0%,#7a4b7a 50%,#e08a5a 100%); }
+
+  .day{ animation:opDay var(--cycle) infinite; }
+  .dawn{ animation:opDawn var(--cycle) infinite; }
+  .dusk{ animation:opDusk var(--cycle) infinite; }
+  .night{ animation:opNight var(--cycle) infinite; }
+
+  @keyframes opDay{  0%{opacity:0} 14%{opacity:1} 44%{opacity:1} 54%{opacity:0} 100%{opacity:0} }
+  @keyframes opDawn{ 0%{opacity:1} 12%{opacity:0} 80%{opacity:0} 92%{opacity:1} 100%{opacity:1} }
+  @keyframes opDusk{ 0%{opacity:0} 42%{opacity:0} 52%{opacity:1} 62%{opacity:0} 100%{opacity:0} }
+  @keyframes opNight{0%{opacity:0} 52%{opacity:0} 62%{opacity:1} 86%{opacity:1} 96%{opacity:0} 100%{opacity:0}}
+
+  /* stars */
+  .stars{ position:absolute; inset:0; opacity:0; animation:opNight var(--cycle) infinite; }
+  .stars i{ position:absolute; width:2px; height:2px; border-radius:50%;
+    background:#fff; box-shadow:0 0 4px rgba(255,255,255,.7);
+    animation:tw 3s ease-in-out infinite; }
+  @keyframes tw{ 0%,100%{opacity:.3; transform:scale(.7)} 50%{opacity:1; transform:scale(1)} }
+
+  /* sun & moon */
+  .sun{ position:absolute; left:10%; top:50%; width:70px; height:70px; border-radius:50%;
+    background:radial-gradient(circle,#fff6d8 0%,#ffd97a 55%,rgba(255,180,80,0) 72%);
+    filter:blur(1px); animation:sun var(--cycle) infinite; }
+  .moon{ position:absolute; left:10%; top:50%; width:48px; height:48px; border-radius:50%;
+    background:radial-gradient(circle at 38% 34%,#f2f4ff 0%,#c6cfe8 60%,#9aa6c8 100%);
+    box-shadow:0 0 30px rgba(200,215,255,.6);
+    filter:blur(.4px); animation:moon var(--cycle) infinite; }
+  @keyframes sun{
+    0%{transform:translate(6%,60%);opacity:0} 8%{transform:translate(12%,38%);opacity:1}
+    25%{transform:translate(30%,14%);opacity:1} 45%{transform:translate(50%,4%);opacity:.95}
+    54%{transform:translate(70%,20%);opacity:1} 64%{transform:translate(88%,48%);opacity:.5}
+    70%{transform:translate(94%,64%);opacity:0} 100%{opacity:0}
+  }
+  @keyframes moon{
+    0%{transform:translate(6%,-10%);opacity:0} 8%{transform:translate(14%,6%);opacity:.2}
+    30%{transform:translate(40%,20%);opacity:.9} 50%{transform:translate(62%,14%);opacity:1}
+    60%{transform:translate(78%,26%);opacity:.9} 92%{transform:translate(92%,44%);opacity:.3}
+    100%{opacity:0}
+  }
+
+  /* global darkening at night (dims the whole scene) */
+  .dusk-tint{ position:fixed; inset:0; z-index:30; pointer-events:none;
+    background:#060a16; opacity:.15; mix-blend-mode:multiply;
+    animation:tint var(--cycle) infinite; }
+  @keyframes tint{ 0%{opacity:.12} 14%{opacity:0} 48%{opacity:0}
+    58%{opacity:.5} 86%{opacity:.5} 96%{opacity:.15} 100%{opacity:.12} }
+
+  /* ---------- the isometric world ---------- */
+  .scene{
+    position:relative; z-index:10; width:100%; height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    perspective:1600px;
+  }
+  .world{
+    position:relative; width:760px; height:760px;
+    transform-style:preserve-3d;
+    transform:rotateX(60deg) rotateZ(45deg);
+    transition:transform .3s;
+  }
+
+  /* ground plaza */
+  .ground{ position:absolute; width:760px; height:760px; left:0; top:0;
+    transform:translateZ(0);
+    background:
+      linear-gradient(90deg, rgba(255,255,255,.06) 0 2px, transparent 2px) 0 0/95px 95px,
+      linear-gradient(rgba(255,255,255,.06) 0 2px, transparent 2px) 0 0/95px 95px,
+      linear-gradient(135deg,#3a4a52 0%,#2c3840 100%);
+    border-radius:6px; box-shadow:0 0 0 1px rgba(0,0,0,.3);
+  }
+
+  /* buildings — footprint in x-y, height along +z; each wall hinged at its ground edge */
+  .b{ position:absolute; transform-style:preserve-3d;
+    width:var(--s); height:var(--s);
+    transform:translate3d(var(--x),var(--y),0); }
+  /* back wall (y=0, faces -y) */
+  .b .back{ width:var(--s); height:var(--h); left:0; top:0;
+    transform-origin:0 0; transform:rotateX(90deg); background:var(--fa); }
+  /* front wall (y=s, faces +y) */
+  .b .front{ width:var(--s); height:var(--h); left:0; top:calc(var(--s) - var(--h));
+    transform-origin:0 100%; transform:rotateX(-90deg); background:var(--fa); }
+  /* right wall (x=s, faces +x) */
+  .b .right{ width:var(--h); height:var(--s); left:calc(var(--s) - var(--h)); top:0;
+    transform-origin:100% 0; transform:rotateY(90deg); background:var(--fb); }
+  /* left wall (x=0, faces -x) */
+  .b .left{ width:var(--h); height:var(--s); left:0; top:0;
+    transform-origin:0 0; transform:rotateY(-90deg); background:var(--fb); }
+  /* roof */
+  .b .top{ width:var(--s); height:var(--s); left:0; top:0;
+    transform:translateZ(var(--h)); background:var(--ft); }
+
+  /* rooftop antenna with a blinking beacon, base at roof centre */
+  .beacon{ position:absolute; left:0; top:0;
+    transform:translate3d(calc(var(--s)/2), calc(var(--s)/2), var(--h)); }
+  .beacon i{ position:absolute; left:-1.5px; top:-24px; width:3px; height:24px;
+    background:linear-gradient(#cfd4da,#7c848c); }
+  .beacon i::after{ content:""; position:absolute; top:-5px; left:-2.5px; width:8px; height:8px;
+    border-radius:50%; background:#ff5a5a; box-shadow:0 0 9px #ff5a5a; animation:blink 2.4s ease-in-out infinite; }
+
+  /* window grid + animated warm glow, applied to vertical faces */
+  .win{ position:absolute; inset:0; overflow:hidden; }
+  .win .glass{ position:absolute; inset:0;
+    background:
+      repeating-linear-gradient(90deg, rgba(20,28,40,.85) 0 9px, rgba(12,18,28,.92) 9px 16px),
+      repeating-linear-gradient(0deg,  rgba(14,22,34,.85) 0 12px, rgba(10,16,26,.92) 12px 20px);
+    mix-blend-mode:multiply; opacity:.55; }
+  .win .lit{ position:absolute; inset:0; opacity:0; animation:glow var(--cycle) infinite; }
+  .b .front .lit,.b .back .lit{
+    background:
+      repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,207,120,.9) 9px 16px),
+      repeating-linear-gradient(0deg,  transparent 0 12px, rgba(255,207,120,.85) 12px 20px);
+  }
+  .b .right .lit,.b .left .lit{
+    background:
+      repeating-linear-gradient(90deg, transparent 0 9px, rgba(255,196,110,.85) 9px 16px),
+      repeating-linear-gradient(0deg,  transparent 0 12px, rgba(255,196,110,.8) 12px 20px);
+  }
+  @keyframes glow{ 0%{opacity:.55} 14%{opacity:0} 48%{opacity:0}
+    58%{opacity:1} 86%{opacity:1} 96%{opacity:.5} 100%{opacity:.55} }
+
+  /* rooftop antenna with a blinking beacon */
+  .beacon{ position:absolute; width:3px; height:var(--h); left:calc(var(--s)/2 - 1.5px);
+    top:calc((var(--s) - var(--h))/2); transform-origin:50% 100%;
+    transform:translateY(-50%) rotateX(90deg) translateZ(calc(var(--s)/2));
+    background:linear-gradient(#c9cdd4,#7c848c); }
+  .beacon::after{ content:""; position:absolute; top:-4px; left:-2px; width:7px; height:7px;
+    border-radius:50%; background:#ff5a5a; box-shadow:0 0 8px #ff5a5a;
+    animation:blink 2.4s ease-in-out infinite; }
+  @keyframes blink{ 0%,100%{opacity:.25} 50%{opacity:1} }
+
+  /* cars moving along the streets (ground level) */
+  .cars{ position:absolute; inset:0; transform-style:preserve-3d; }
+  .car{ position:absolute; width:16px; height:9px; border-radius:3px;
+    transform-style:preserve-3d; left:0; top:0; }
+  .car .body{ position:absolute; inset:0; border-radius:3px; box-shadow:0 0 6px rgba(0,0,0,.5); }
+  .car .head{ position:absolute; right:-3px; top:2px; width:4px; height:2px; border-radius:1px;
+    background:#fff6c8; box-shadow:0 0 6px #ffe9a8; }
+  .car .tail{ position:absolute; left:-2px; top:2px; width:3px; height:2px; border-radius:1px;
+    background:#ff5a4a; box-shadow:0 0 5px #ff5a4a; }
+  .car.c1{ animation:driveX 9s linear infinite; }
+  .car.c2{ animation:driveY 12s linear infinite; }
+  .car.c3{ animation:driveX 14s linear infinite reverse; }
+  .car.c4{ animation:driveY 10s linear infinite reverse; }
+  .car.c5{ animation:driveX 16s linear infinite; }
+  @keyframes driveX{ from{transform:translate3d(-60px,var(--lane),0) translateZ(7px)}
+                     to{transform:translate3d(820px,var(--lane),0) translateZ(7px)} }
+  @keyframes driveY{ from{transform:translate3d(var(--lane),-60px,0) translateZ(7px)}
+                     to{transform:translate3d(var(--lane),820px,0) translateZ(7px)} }
+
+  /* ---------- caption ---------- */
+  .caption{ position:fixed; z-index:40; left:clamp(18px,4vw,44px); top:clamp(18px,4vw,40px);
+    max-width:44ch; }
+  .caption h1{ font-family:var(--serif); font-weight:400; font-size:clamp(26px,5vw,52px);
+    line-height:1; letter-spacing:.005em; color:#fff;
+    text-shadow:0 2px 20px rgba(0,0,0,.5); }
+  .caption p{ margin-top:10px; font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:rgba(255,255,255,.8); text-shadow:0 1px 8px rgba(0,0,0,.6); }
+  .clock{ position:fixed; z-index:40; right:clamp(18px,4vw,44px); bottom:clamp(18px,4vw,40px);
+    font-family:var(--serif); font-size:clamp(13px,2vw,18px); letter-spacing:.15em;
+    color:#fff; text-shadow:0 1px 10px rgba(0,0,0,.6); text-align:right; }
+  .clock .phase{ display:block; font-family:var(--sans); font-size:10px; letter-spacing:.34em;
+    text-transform:uppercase; opacity:.75; margin-top:4px; }
+</style>
+</head>
+<body>
+  <div class="sky">
+    <div class="layer sky-night night"></div>
+    <div class="layer sky-dawn dawn"></div>
+    <div class="layer sky-day day"></div>
+    <div class="layer sky-dusk dusk"></div>
+    <div class="stars" id="stars"></div>
+    <div class="sun"></div>
+    <div class="moon"></div>
+  </div>
+
+  <div class="dusk-tint"></div>
+
+  <div class="scene">
+    <div class="world" id="world">
+      <div class="ground"></div>
+      <div class="cars" id="cars"></div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <h1>Little City,<br>Full Day</h1>
+    <p>Isometric · day to night · window lights · traffic</p>
+  </div>
+  <div class="clock" id="clock">
+    <span id="time">06:00</span>
+    <span class="phase" id="phase">Dawn</span>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+
+    /* ---------- seeded-ish PRNG for reproducible-but-natural layout ---------- */
+    function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0;
+      var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t;
+      return ((t^t>>>14)>>>0)/4294967296; }; }
+    var rand = mulberry32(20261022);
+
+    var palettes = [
+      { fa:"#c7c3b6", fb:"#9a968b", ft:"#d9d6ca" },  // concrete
+      { fa:"#aebfce", fb:"#8395a6", ft:"#c3d0dc" },  // steel
+      { fa:"#cbb49a", fb:"#a1866c", ft:"#dcc8b2" },  // warm stone
+      { fa:"#9aa2a8", fb:"#727b81", ft:"#b3bac0" },  // slate
+      { fa:"#b9b2ac", fb:"#8d877f", ft:"#cfc9c2" }   // ash
+    ];
+
+    var GRID = 760, CELL = 95, P = 16;   // plaza size, cell, padding for streets
+    var world = document.getElementById('world');
+
+    function makeBuilding(x, y, s, h, pal, beacon){
+      var b = document.createElement('div');
+      b.className = 'b';
+      b.style.setProperty('--x', x + 'px');
+      b.style.setProperty('--y', y + 'px');
+      b.style.setProperty('--s', s + 'px');
+      b.style.setProperty('--h', h + 'px');
+      b.style.setProperty('--fa', pal.fa);
+      b.style.setProperty('--fb', pal.fb);
+      b.style.setProperty('--ft', pal.ft);
+
+      function winGrid(){
+        var win=document.createElement('div'); win.className='win';
+        var glass=document.createElement('div'); glass.className='glass';
+        var lit=document.createElement('div'); lit.className='lit';
+        lit.style.animationDelay = (-Math.floor(rand()*42)) + 's';
+        win.appendChild(glass); win.appendChild(lit);
+        return win;
+      }
+      // build faces cleanly
+      var front=document.createElement('div'); front.className='front'; front.appendChild(winGrid());
+      var back=document.createElement('div'); back.className='back';  back.appendChild(winGrid());
+      var right=document.createElement('div'); right.className='right'; right.appendChild(winGrid());
+      var left=document.createElement('div'); left.className='left';  left.appendChild(winGrid());
+      var top=document.createElement('div'); top.className='top';
+      b.appendChild(front); b.appendChild(back); b.appendChild(right);
+      b.appendChild(left);  b.appendChild(top);
+      if(beacon){ var be=document.createElement('div'); be.className='beacon';
+        var pole=document.createElement('i'); be.appendChild(pole); b.appendChild(be); }
+      world.appendChild(b);
+    }
+
+    // lay out buildings on a grid, leaving some cells empty for streets/plaza
+    var cols = Math.floor(GRID / CELL);
+    for(var gx=0; gx<cols; gx++){
+      for(var gy=0; gy<cols; gy++){
+        var cx = P + gx*CELL + CELL/2;
+        var cy = P + gy*CELL + CELL/2;
+        // skip a couple of cells to carve streets
+        if((gx===2 && gy===2) || (gx===4 && gy===1) || (gx===0 && gy===3)) continue;
+        var roll = rand();
+        if(roll < 0.16) continue;                       // empty lot
+        var s = 46 + Math.floor(rand()*30);             // 46..75
+        var h = 60 + Math.floor(rand()*250);            // 60..310
+        var pal = palettes[Math.floor(rand()*palettes.length)];
+        makeBuilding(cx - s/2, cy - s/2, s, h, pal, rand() > 0.6);
+      }
+    }
+
+    /* ---------- stars ---------- */
+    var starsEl = document.getElementById('stars');
+    for(var i=0;i<120;i++){
+      var st=document.createElement('i');
+      st.style.left=(rand()*100)+'%';
+      st.style.top=(rand()*70)+'%';
+      st.style.animationDelay=(-Math.random()*3)+'s';
+      st.style.opacity=(0.4+rand()*0.6).toFixed(2);
+      starsEl.appendChild(st);
+    }
+
+    /* ---------- cars ---------- */
+    var carsEl = document.getElementById('cars');
+    var carColors=['#e8554e','#4e8de8','#f0c03a','#5bcf8a','#e88a4e','#b05ce8','#e2e6ec'];
+    var lanes=[ P+0.5*CELL, P+1.5*CELL, P+3.5*CELL, P+5.5*CELL, P+6.5*CELL ];
+    var carEls=['c1','c2','c3','c4','c5'];
+    for(var c=0;c<5;c++){
+      var car=document.createElement('div');
+      car.className='car '+carEls[c];
+      car.style.setProperty('--lane', lanes[c % lanes.length]+'px');
+      car.style.animationDelay=(-Math.random()*14)+'s';
+      var body=document.createElement('div'); body.className='body';
+      body.style.background=carColors[Math.floor(rand()*carColors.length)];
+      var head=document.createElement('div'); head.className='head';
+      var tail=document.createElement('div'); tail.className='tail';
+      car.appendChild(body); car.appendChild(head); car.appendChild(tail);
+      carsEl.appendChild(car);
+    }
+
+    /* ---------- animated clock reading the day phase ---------- */
+    var timeEl=document.getElementById('time');
+    var phaseEl=document.getElementById('phase');
+    var CYCLE=42; // seconds, matches --cycle
+    function pad(n){ return (n<10?'0':'')+n; }
+    function tick(){
+      var t=(Date.now()/1000)%CYCLE;
+      var frac=t/CYCLE;                       // 0..1 through the day
+      // map cycle to a 24h clock: dawn(0)≈06:00, so hour = 6 + frac*24 (mod24)
+      var totalMin = Math.floor((6 + frac*24) % 24 * 60);
+      var hh=Math.floor(totalMin/60), mm=totalMin%60;
+      timeEl.textContent = pad(hh)+':'+pad(mm);
+      var phase;
+      if(frac<0.12||frac>0.9) phase='Dawn';
+      else if(frac<0.44) phase='Day';
+      else if(frac<0.54) phase='Dusk';
+      else phase='Night';
+      phaseEl.textContent=phase;
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    /* ---------- subtle pointer parallax on the world ---------- */
+    var worldEl=document.getElementById('world');
+    window.addEventListener('mousemove', function(e){
+      var dx=(e.clientX/window.innerWidth-0.5);
+      var dy=(e.clientY/window.innerHeight-0.5);
+      worldEl.style.transform='rotateX('+(60+dy*8)+'deg) rotateZ('+(45+dx*8)+'deg)';
+    });
+  })();
+  </script>
+</body>
+</html>

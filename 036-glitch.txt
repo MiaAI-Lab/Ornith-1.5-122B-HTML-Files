@@ -1,0 +1,21 @@
+PROMPT:
+Build the following standalone HTML page as a file in the current working directory. GLOBAL CONSTRAINTS (non-negotiable): One self-contained .html file; ALL CSS in a single <style> block, ALL JS in a single <script> block, inline everything. ZERO external dependencies: no CDN, no external fonts (system stacks only), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG or <canvas>. Must work fully offline by double-clicking the file — no network requests. Responsive 320px to 4K; include <meta name="viewport">. Valid HTML5. WOW QUALITY BAR: genuinely stunning, premium, Awwwards/SiteInspire-caliber, distinctive art direction, curated palette, refined typography, real motion, one signature effect.
+
+Page: 036-glitch — Glitch art typography/portrait with RGB split and datamosh. Palette: black, cyan, magenta, white. Signature: clip-path glitch slices, RGB channel offset, random datamosh jumps, scanlines.
+
+TITLE:
+GL1TCH — Datamoshed Portrait
+
+DESIGN DESCRIPTION:
+A corrupted-broadcast portrait on pure black. An inline-SVG geometric face is drawn three times and layered with additive blending — a white base plus cyan and magenta copies offset by a few pixels — producing a constant anaglyph RGB split. Over the portrait, eight clip-path horizontal bands (datamosh slices) each hold their own shifted copy of the face and are randomly jolted sideways on a fast interval, so the image tears itself apart and reassembles. Every few frames the whole composition jumps and flashes (brightness/contrast burst); the headline "GL1TCH" in a heavy grotesque is triple-layered and periodically explodes its channels; a mono HUD readout (REC · 036, CH-NOISE / RGB) flickers between random hex frames; scanlines and a slow-moving highlight band sweep the screen; a vignette and HUD corner brackets frame it like a damaged monitor.
+
+MAJOR VISUAL TECHNIQUES:
+- clip-path: inset(...) on eight stacked horizontal bands, each containing a shifted SVG copy, for the datamosh tear effect (with -webkit- prefix).
+- RGB channel offset via three stacked layers (base white + cyan/magenta) using mix-blend-mode: screen for additive chromatic separation on black.
+- A single inline <symbol id="face"> reused through <use href> / xlink:href so the portrait is duplicated cheaply across base, RGB and slice layers.
+- requestAnimationFrame-free randomised datamosh loop (setInterval ~130ms) translating slice layers by random px; full-frame jump + brightness/contrast flash on a slower interval.
+- CSS scanlines (repeating-linear-gradient, multiply blend) plus an animated highlight sweep, radial vignette, and CSS HUD corner brackets / barcode (repeating-linear-gradient).
+- Blinking REC dot and status cursor via steps() keyframes; prefers-reduced-motion disables all motion and the intervals, leaving the static RGB-split composition.
+
+INTENDED INTERACTION MODEL:
+Passive, ambient — a self-corrupting "broken signal" wall. Nothing is clickable; the portrait continuously datamoshes, jumps and re-glitches on its own on a randomized cadence, adapting to the OS reduced-motion setting.

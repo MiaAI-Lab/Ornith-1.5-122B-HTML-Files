@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chromatic · RGB Channel Aberration</title>
+<style>
+  :root{
+    --r:#ff1a3c; --g:#12ff9a; --b:#3d7bff;
+    --ink:#f4f6ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:ui-sans-serif,-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:#05060a; color:var(--ink); overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
+    -webkit-font-smoothing:antialiased; cursor:crosshair;
+  }
+
+  /* ambient chromatic field — three additive blobs that separate with the pointer */
+  #field{position:fixed;inset:0;z-index:1;}
+
+  /* faint scanline / prism grid overlay */
+  .scan{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.5;
+    background:
+      repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 3px);
+    mix-blend-mode:overlay;}
+  .scan::after{content:"";position:absolute;inset:0;
+    background:radial-gradient(120% 120% at 50% 50%, transparent 52%, rgba(0,0,0,.55) 100%);}
+
+  /* thin lab frame with corner ticks */
+  .frame{position:fixed;inset:22px;z-index:7;pointer-events:none;}
+  .corner{position:absolute;width:26px;height:26px;}
+  .corner::before,.corner::after{content:"";position:absolute;background:rgba(220,230,255,.34);}
+  .corner::before{width:26px;height:2px;}
+  .corner::after{width:2px;height:26px;}
+  .corner.tl{top:0;left:0;}
+  .corner.tr{top:0;right:0;transform:scaleX(-1);}
+  .corner.bl{bottom:0;left:0;transform:scaleY(-1);}
+  .corner.br{bottom:0;right:0;transform:scale(-1,-1);}
+  .tick{position:absolute;font-size:.6rem;letter-spacing:.3em;color:rgba(220,230,255,.4);
+    font-family:'Courier New',ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;}
+  .tick.tl{top:8px;left:12px;}
+  .tick.tr{top:8px;right:12px;}
+  .tick.bl{bottom:8px;left:12px;}
+  .tick.br{bottom:8px;right:12px;}
+
+  .stage{position:relative;z-index:5;text-align:center;padding:0 6vw;transform:translateZ(0);}
+
+  .tag{font-family:'Courier New',ui-monospace,Menlo,Consolas,monospace;
+    font-size:clamp(.6rem,1.4vw,.8rem);letter-spacing:.5em;text-transform:uppercase;
+    color:rgba(220,230,255,.55);margin-bottom:clamp(14px,4vh,40px);
+    display:flex;justify-content:center;gap:.6em;}
+  .tag b{color:var(--g);font-weight:400;}
+
+  /* decorative RGB ring behind the word */
+  .ring{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);
+    width:min(74vw,720px);aspect-ratio:1;border-radius:50%;z-index:-1;
+    background:conic-gradient(from 0deg, var(--r), var(--g), var(--b), var(--r));
+    filter:blur(26px);opacity:.28;mix-blend-mode:screen;
+    animation:spin 18s linear infinite;}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg);}}
+
+  /* the word: stacked channel layers */
+  .word{position:relative;font-weight:900;font-size:clamp(3.4rem,19vw,16rem);
+    line-height:.86;letter-spacing:-0.03em;white-space:nowrap;}
+  .word .l{position:absolute;left:0;right:0;top:0;will-change:transform;text-shadow:0 0 40px rgba(0,0,0,0);}
+  .word .r{color:var(--r);mix-blend-mode:screen;}
+  .word .g{color:var(--g);mix-blend-mode:screen;}
+  .word .b{color:var(--b);mix-blend-mode:screen;}
+  .word .core{color:#fff;mix-blend-mode:screen;opacity:.0;}
+  .sub{margin-top:clamp(14px,3vh,28px);font-family:'Courier New',ui-monospace,Menlo,Consolas,monospace;
+    font-size:clamp(.6rem,1.5vw,.82rem);letter-spacing:.28em;text-transform:uppercase;
+    color:rgba(220,230,255,.5);}
+
+  @media (max-width:520px){ .tick{display:none} .frame{inset:14px} }
+  @media (prefers-reduced-motion:reduce){ .ring{animation:none} }
+</style>
+</head>
+<body>
+  <canvas id="field"></canvas>
+  <div class="scan"></div>
+
+  <div class="frame">
+    <span class="corner tl"></span><span class="corner tr"></span>
+    <span class="corner bl"></span><span class="corner br"></span>
+    <span class="tick tl">CHROMATIC</span>
+    <span class="tick tr" id="readout">dx 000 · dy 000</span>
+    <span class="tick bl">054 · RGB</span>
+    <span class="tick br">ABERRATION</span>
+  </div>
+
+  <div class="stage">
+    <div class="tag"><span>RGB CHANNEL</span><b>· 054 ·</b><span>DISPLACEMENT</span></div>
+    <div class="ring"></div>
+    <div class="word" id="word">
+      <span class="l r" data-c="r">PRISM</span>
+      <span class="l g" data-c="g">PRISM</span>
+      <span class="l b" data-c="b">PRISM</span>
+      <span class="l core">PRISM</span>
+    </div>
+    <div class="sub">move the pointer — channels separate · click to glitch</div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var rand = function(a,b){ return a + Math.random()*(b-a); };
+
+    /* ---------- ambient chromatic field ---------- */
+    var field = document.getElementById('field');
+    var fctx = field.getContext('2d');
+    var FW = 0, FH = 0, FD = Math.min(window.devicePixelRatio || 1, 2);
+    function fresize(){
+      FW = window.innerWidth; FH = window.innerHeight;
+      field.width = Math.max(1, Math.round(FW*FD));
+      field.height = Math.max(1, Math.round(FH*FD));
+      fctx.setTransform(FD,0,0,FD,0,0);
+    }
+    var blobs = [
+      {c:'#ff1a3c', a:0.0},
+      {c:'#12ff9a', a:2.094},
+      {c:'#3d7bff', a:4.189}
+    ];
+    function drawField(t){
+      fctx.clearRect(0,0,FW,FH);
+      fctx.globalCompositeOperation = 'lighter';
+      var cx = FW/2, cy = FH/2, R = Math.min(FW,FH)*0.14;
+      for(var i=0;i<blobs.length;i++){
+        var bl = blobs[i];
+        var ang = bl.a + t*0.00025;
+        // pointer separation: red pulled one way, blue the other
+        var sep = 1.6 * (i===0 ? 1 : i===2 ? -1 : 0.15);
+        var bx = cx + Math.cos(ang)*R + mx*60*sep;
+        var by = cy + Math.sin(ang)*R + my*60*sep;
+        var gr = fctx.createRadialGradient(bx,by,0,bx,by,R*2.4);
+        gr.addColorStop(0, bl.c);
+        gr.addColorStop(1, 'rgba(0,0,0,0)');
+        fctx.fillStyle = gr;
+        fctx.beginPath();
+        fctx.arc(bx,by,R*2.4,0,Math.PI*2);
+        fctx.fill();
+      }
+      fctx.globalCompositeOperation = 'source-over';
+    }
+
+    /* ---------- pointer ---------- */
+    var mx = 0, my = 0, tx = 0, ty = 0;
+    window.addEventListener('pointermove', function(e){
+      tx = (e.clientX / window.innerWidth  - 0.5) * 2;
+      ty = (e.clientY / window.innerHeight - 0.5) * 2;
+    });
+
+    /* ---------- the word ---------- */
+    var word = document.getElementById('word');
+    var Lr = word.querySelector('[data-c="r"]');
+    var Lg = word.querySelector('[data-c="g"]');
+    var Lb = word.querySelector('[data-c="b"]');
+    var glitchFrames = 0;
+
+    function normal(){
+      var w = word.clientWidth || 400;
+      var amp = w * 0.02;
+      var intensity = 1 + Math.hypot(mx, my) * 2.2;
+      var ix = Math.sin(t0 + t*0.0006) * 0.12;
+      var iy = Math.cos(t0 + t*0.0008) * 0.10;
+      var ox = (mx + ix), oy = (my + iy);
+      Lr.style.transform = 'translate('+( ox*amp*intensity).toFixed(2)+'px,'+( oy*amp*intensity).toFixed(2)+'px)';
+      Lg.style.transform = 'translate('+((-ox*0.35)*amp).toFixed(2)+'px,'+(( oy*0.25)*amp).toFixed(2)+'px)';
+      Lb.style.transform = 'translate('+((-ox*amp*intensity)).toFixed(2)+'px,'+((-oy*amp*intensity)).toFixed(2)+'px)';
+    }
+
+    function doGlitch(){
+      glitchFrames = 12 + Math.floor(Math.random()*12);
+    }
+    word.addEventListener('click', doGlitch);
+    window.addEventListener('keydown', function(e){ if(e.code==='Space'){ e.preventDefault(); doGlitch(); } });
+
+    var readout = document.getElementById('readout');
+    var t0 = Date.now();
+    function loop(t){
+      mx += (tx - mx) * 0.08;
+      my += (ty - my) * 0.08;
+      if(!reduce) drawField(t);
+      if(glitchFrames > 0){
+        glitchFrames--;
+        var jx = rand(-34, 34), jy = rand(-9, 9);
+        Lr.style.transform = 'translate('+jx.toFixed(1)+'px,'+jy.toFixed(1)+'px)';
+        Lg.style.transform = 'translate('+(-jx*0.3).toFixed(1)+'px,'+rand(-4,4).toFixed(1)+'px)';
+        Lb.style.transform = 'translate('+(-jx).toFixed(1)+'px,'+(-jy).toFixed(1)+'px)';
+        word.style.clipPath = Math.random()<0.55
+          ? 'inset('+rand(0,82).toFixed(1)+'% 0 '+rand(0,18).toFixed(1)+'% 0)' : 'none';
+      } else {
+        word.style.clipPath = 'none';
+        normal();
+      }
+      readout.textContent = 'dx ' + String(Math.round(mx*99)).padStart(3,'0')
+        + ' · dy ' + String(Math.round(my*99)).padStart(3,'0');
+      requestAnimationFrame(loop);
+    }
+
+    function boot(){
+      fresize();
+      requestAnimationFrame(loop);
+    }
+    window.addEventListener('resize', fresize);
+    if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  </script>
+</body>
+</html>

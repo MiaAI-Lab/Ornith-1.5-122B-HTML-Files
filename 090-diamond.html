@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diamond — Spectral Fire</title>
+<style>
+  :root{
+    --bg0:#04061a; --bg1:#0b1240; --bg2:#131c5e;
+    --ice:#eaf5ff; --ice2:#bfe6ff; --ice3:#8fd0ff;
+    --violet:#c9b6ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 8%, var(--bg2) 0%, var(--bg1) 38%, var(--bg0) 78%);
+    color:#eaf2ff;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+    position:relative;
+  }
+  /* fine starfield dust */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.7), transparent),
+      radial-gradient(1px 1px at 70% 20%, rgba(255,255,255,.55), transparent),
+      radial-gradient(1px 1px at 40% 70%, rgba(255,255,255,.5), transparent),
+      radial-gradient(1.5px 1.5px at 85% 60%, rgba(200,225,255,.6), transparent),
+      radial-gradient(1px 1px at 12% 80%, rgba(255,255,255,.45), transparent),
+      radial-gradient(1px 1px at 55% 45%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1.5px 1.5px at 33% 12%, rgba(200,225,255,.5), transparent);
+    opacity:.7;
+    animation:dust 9s linear infinite;
+  }
+  @keyframes dust{from{transform:translateY(0)}to{transform:translateY(-14px)}}
+
+  .stage{
+    position:relative;
+    width:min(78vw,420px);
+    aspect-ratio:1/1.08;
+    display:flex;align-items:center;justify-content:center;
+    perspective:1200px;
+  }
+
+  /* contact / ambient glow beneath & behind the stone */
+  .glow{
+    position:absolute;left:50%;bottom:6%;
+    width:70%;height:42%;transform:translateX(-50%);
+    background:radial-gradient(ellipse 60% 70% at 50% 40%,
+       rgba(150,210,255,.55), rgba(120,160,255,.18) 45%, transparent 72%);
+    filter:blur(6px);
+    mix-blend-mode:screen;
+    animation:pulse 5s ease-in-out infinite;
+    z-index:2;
+  }
+  @keyframes pulse{0%,100%{opacity:.75;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.06)}}
+
+  /* rotating spectral aura — the dispersion halo */
+  .aura{
+    position:absolute;left:50%;top:46%;
+    width:150%;height:150%;transform:translate(-50%,-50%);
+    background:conic-gradient(from 0deg,
+       #ff5a5a 0deg, #ff9e5a 45deg, #ffe15a 90deg, #7dff9e 140deg,
+       #5affe6 180deg, #5a9eff 230deg, #b05aff 285deg, #ff5a5a 340deg, #ff5a5a 360deg);
+    -webkit-mask:radial-gradient(60% 60% at 50% 46%, transparent 40%, #000 62%, transparent 78%);
+            mask:radial-gradient(60% 60% at 50% 46%, transparent 40%, #000 62%, transparent 78%);
+    filter:blur(16px) saturate(1.2);
+    mix-blend-mode:screen;
+    opacity:.55;
+    animation:spin 18s linear infinite;
+    z-index:1;
+  }
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  /* prism beams thrown from the stone */
+  .beams{position:absolute;inset:0;z-index:4;pointer-events:none}
+  .beam{
+    position:absolute;left:50%;top:46%;
+    width:3px;height:52%;
+    margin-left:-1.5px;margin-top:-52%;
+    background:linear-gradient(to top, rgba(255,255,255,0), rgba(255,255,255,.85) 40%, rgba(255,255,255,0) 78%);
+    filter:blur(.4px);
+    mix-blend-mode:screen;
+    transform-origin:bottom center;
+    opacity:0;
+    animation:throw 4.5s ease-in-out infinite;
+  }
+  @keyframes throw{0%,100%{opacity:0;filter:blur(.4px)}
+                    30%{opacity:.9}
+                    55%{opacity:.35}
+                    70%{opacity:.8}}
+
+  /* the gem */
+  .gem{
+    position:relative;z-index:5;
+    width:70%;height:70%;
+    transform-style:preserve-3d;
+    animation:turn 9s ease-in-out infinite;
+    filter:drop-shadow(0 26px 34px rgba(60,110,255,.35));
+  }
+  @keyframes turn{
+    0%{transform:rotateY(-16deg) rotateX(4deg) scale(1)}
+    50%{transform:rotateY(16deg) rotateX(-3deg) scale(1.015)}
+    100%{transform:rotateY(-16deg) rotateX(4deg) scale(1)}
+  }
+  .gem svg{width:100%;height:100%;overflow:visible;display:block}
+  .facet{
+    stroke:rgba(230,244,255,.55);
+    stroke-width:1.1;
+    stroke-linejoin:round;
+    animation:facetShimmer 6s ease-in-out infinite;
+  }
+  .f1{fill:#eaf7ff} .f2{fill:#cfeaff} .f3{fill:#bcdcfb}
+  .f4{fill:#dcefff} .f5{fill:#a9d6fb} .f6{fill:#9fc9f4} .f7{fill:#86bdf0}
+  @keyframes facetShimmer{
+    0%,100%{filter:brightness(1)}
+    50%{filter:brightness(1.35)}
+  }
+  /* spectral fire wash that sweeps across the whole stone */
+  .firewash{
+    fill:url(#firegrad);
+    mix-blend-mode:screen;
+    opacity:0;
+    animation:fireSweep 7s ease-in-out infinite;
+  }
+  @keyframes fireSweep{0%{opacity:0}18%{opacity:.55}50%{opacity:.15}82%{opacity:.5}100%{opacity:0}}
+
+  /* sparkle glints */
+  .glints{position:absolute;inset:0;z-index:7;pointer-events:none}
+  .glint{position:absolute;transform:translate(-50%,-50%);opacity:0;
+    animation:twinkle 3.4s ease-in-out infinite}
+  .glint svg{display:block;filter:drop-shadow(0 0 6px rgba(255,255,255,.9))}
+  @keyframes twinkle{0%,100%{opacity:0;transform:translate(-50%,-50%) scale(.4)}
+                     45%{opacity:1;transform:translate(-50%,-50%) scale(1)}
+                     60%{opacity:.5;transform:translate(-50%,-50%) scale(.85)}}
+
+  .caption{
+    position:absolute;bottom:5.5%;left:0;right:0;text-align:center;z-index:8;
+    padding:0 1rem;
+  }
+  .caption .t{
+    font-family:Georgia,'Segoe UI',serif;font-weight:400;
+    font-size:clamp(1.5rem,5vw,2.6rem);letter-spacing:.28em;
+    text-transform:uppercase;
+    background:linear-gradient(92deg,#eaf7ff,#bfe6ff 40%,#c9b6ff 70%,#9fd8ff);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 30px rgba(150,200,255,.25);
+  }
+  .caption .s{
+    display:block;margin-top:.6rem;font-size:clamp(.66rem,2.2vw,.86rem);
+    letter-spacing:.34em;text-transform:uppercase;color:rgba(200,220,255,.6);
+  }
+  .credit{position:absolute;top:4%;left:0;right:0;text-align:center;z-index:8;
+    font-size:.62rem;letter-spacing:.32em;text-transform:uppercase;color:rgba(180,200,240,.4)}
+
+  @media (prefers-reduced-motion: reduce){
+    .aura,.gem,.beam,.glow,.facet,.firewash,.glint,body::before{animation:none !important}
+    .glow{opacity:1}
+  }
+</style>
+</head>
+<body>
+  <div class="credit">1.00 ct · ideal cut · spectral fire</div>
+  <div class="stage">
+    <div class="aura"></div>
+
+    <div class="glow"></div>
+
+    <div class="beams" id="beams"></div>
+
+    <!-- the faceted diamond -->
+    <div class="gem" id="gem">
+      <svg viewBox="0 0 400 430" role="img" aria-label="Faceted diamond throwing spectral fire">
+        <defs>
+          <linearGradient id="firegrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0"   stop-color="#ff4d4d"/>
+            <stop offset="0.16" stop-color="#ff9e3d"/>
+            <stop offset="0.32" stop-color="#ffe14d"/>
+            <stop offset="0.48" stop-color="#5dff9e"/>
+            <stop offset="0.64" stop-color="#4dffe6"/>
+            <stop offset="0.80" stop-color="#4d9eff"/>
+            <stop offset="0.94" stop-color="#a44dff"/>
+            <stop offset="1"   stop-color="#ff4d4d"/>
+          </linearGradient>
+          <radialGradient id="tableG" cx="50%" cy="35%" r="75%">
+            <stop offset="0" stop-color="#ffffff"/>
+            <stop offset="1" stop-color="#cfeaff"/>
+          </radialGradient>
+        </defs>
+
+        <g id="facets">
+          <polygon class="facet f1" points="150,80 250,80 225,120 175,120" fill="url(#tableG)"/>
+          <polygon class="facet f2" points="150,80 175,120 80,165"/>
+          <polygon class="facet f3" points="250,80 320,165 225,120"/>
+          <polygon class="facet f4" points="175,120 225,120 80,165"/>
+          <polygon class="facet f5" points="225,120 320,165 80,165"/>
+          <polygon class="facet f6" points="80,165 200,165 200,345"/>
+          <polygon class="facet f7" points="200,165 320,165 200,345"/>
+        </g>
+
+        <!-- moving spectrum fire, clipped to the stone by living inside the same silhouette -->
+        <polygon class="firewash" points="150,80 250,80 320,165 200,345 80,165"/>
+
+        <!-- bright table highlight -->
+        <polygon points="150,80 250,80 225,120 175,120" fill="#ffffff" opacity=".18"/>
+        <line x1="175" y1="120" x2="225" y2="120" stroke="#ffffff" stroke-width="1.4" opacity=".7"/>
+      </svg>
+    </div>
+
+    <div class="glints" id="glints"></div>
+
+    <div class="caption">
+      <div class="t">Brilliance</div>
+      <span class="s">spectral fire · light dispersion</span>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      // ---- prism beams thrown from the stone (staggered spectrum) ----
+      var spectrum = ['#ff5a5a','#ff9e5a','#ffe15a','#7dff9e','#5affe6','#5a9eff','#b05aff'];
+      var beams = document.getElementById('beams');
+      var N = 9;
+      for (var i = 0; i < N; i++){
+        var b = document.createElement('div');
+        b.className = 'beam';
+        var ang = -70 + (i / (N - 1)) * 140;      // fan across the upper hemisphere
+        var col = spectrum[i % spectrum.length];
+        b.style.transform = 'rotate(' + ang + 'deg)';
+        b.style.background = 'linear-gradient(to top, rgba(255,255,255,0), ' +
+          col + ' 42%, rgba(255,255,255,0) 80%)';
+        b.style.animationDelay = (i * 0.28).toFixed(2) + 's';
+        b.style.height = (44 + (i % 3) * 12) + '%';
+        beams.appendChild(b);
+      }
+
+      // ---- sparkle glints at facet vertices ----
+      var glints = document.getElementById('glints');
+      var spots = [
+        {x:37.5,y:19},{x:62.5,y:19},{x:22,y:28},{x:78,y:38},
+        {x:44,y:38},{x:56,y:38},{x:50,y:80},{x:20,y:40},{x:80,y:40}
+      ];
+      function star(size, col){
+        var s = document.createElement('div');
+        s.className = 'glint';
+        s.style.left = size + 'px'; s.style.top = size + 'px';
+        var c = col || 'rgba(255,255,255,.95)';
+        s.innerHTML =
+          '<svg width="'+(size*2)+'" height="'+(size*2)+'" viewBox="0 0 24 24">' +
+          '<path d="M12 0 L13.6 9.2 L24 12 L13.6 14.8 L12 24 L10.4 14.8 L0 12 L10.4 9.2 Z" ' +
+          'fill="'+c+'"/></svg>';
+        glints.appendChild(s);
+        return s;
+      }
+      spots.forEach(function(sp, i){
+        var el = star(6 + (i % 3) * 2, i % 4 === 0 ? spectrum[i % spectrum.length] : null);
+        el.style.left = sp.x + '%';
+        el.style.top = sp.y + '%';
+        el.style.animationDelay = (i * 0.4).toFixed(2) + 's';
+        el.style.animationDuration = (2.8 + (i % 4) * 0.6).toFixed(2) + 's';
+      });
+
+      // ---- interactive: drag / pointer nudges the rotation & throws a flash ----
+      var gem = document.getElementById('gem');
+      var stage = document.querySelector('.stage');
+      var rx = 4, ry = 0, tx = 0, ty = 0, dragging = false, lx = 0, ly = 0;
+      function commit(){
+        gem.style.animation = 'none';
+        gem.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(1.02)';
+      }
+      function release(){
+        if (!dragging) return;
+        dragging = false;
+        gem.style.transition = 'transform .9s cubic-bezier(.2,.8,.2,1)';
+        gem.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg)';
+        setTimeout(function(){ gem.style.transition = ''; }, 950);
+      }
+      function down(x,y){ dragging = true; lx = x; ly = y; gem.style.animation = 'none'; }
+      function move(x,y){
+        if (!dragging) return;
+        ry += (x - lx) * 0.4; rx -= (y - ly) * 0.4;
+        rx = Math.max(-30, Math.min(30, rx));
+        lx = x; ly = y;
+        gem.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(1.03)';
+      }
+      stage.addEventListener('pointerdown', function(e){ down(e.clientX, e.clientY); stage.setPointerCapture && stage.setPointerCapture(e.pointerId); });
+      window.addEventListener('pointermove', function(e){ move(e.clientX, e.clientY); });
+      window.addEventListener('pointerup', release);
+      // touch-free "throw a flash" on double tap / double click
+      stage.addEventListener('dblclick', function(){
+        var beamsEl = document.getElementById('beams');
+        beamsEl.style.transition = 'filter .15s';
+        beamsEl.style.filter = 'brightness(2.2)';
+        setTimeout(function(){ beamsEl.style.filter = 'brightness(1)'; }, 180);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+RECREATION PROMPT
+=================
+Build these standalone HTML page(s) as files in the current working directory.
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one
+  <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only),
+  no external images, no external SVG files, no libraries. Build all visuals
+  with CSS, HTML, inline SVG, or <canvas>.
+- Works fully offline by double-clicking. No network requests. Responsive
+  320px->4K; include <meta name="viewport" content="width=device-width,
+  initial-scale=1">. Valid HTML5.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic.
+  Distinctive art direction, curated palette, refined typography, deliberate
+  composition, real intentional motion, delightful details, one signature
+  effect. Handcrafted, unique, take design risks.
+- For each page also create a matching .txt with the SAME base name.
+
+PROMPT FOR THIS PAGE
+--------------------
+An autumn forest with falling, swirling leaves and warm low sun. Palette:
+crimson, amber, gold, deep brown. Signature: canvas leaves that fall and tumble
+with wind, layered tree silhouettes, sun rays through branches, warm haze.
+
+TITLE
+=====
+THE GOLDEN HOUR — Autumn Forest
+
+DESIGN DESCRIPTION
+==================
+A cinematic autumn scene built entirely on one canvas over a warm CSS sky
+gradient. A low golden sun sits just above the horizon, wrapped in a large
+additive glow and a fan of 46 shimmering volumetric rays whose opacity is
+modulated by a gap pattern so they read as light leaking "through branches".
+The forest is composed in receding layers for real depth: a hazy, warm-tinted
+far canopy ridge, a mid ridge, and two large bare branching trees in the
+foreground that frame the composition left and right. Between the layers,
+roughly a hundred leaves fall and tumble — each a small gradient leaf silhouette
+with a midrib, spinning and swaying on a per-leaf wind oscillation, drifting
+faster and larger in the near plane than the far. Faint birds drift across the
+upper sky. A warm atmospheric haze wash, a golden horizon bloom and an inset
+vignette tie it together. Over it sits a serif italic wordmark ("The Golden
+Hour") and a small mono meta readout of wind state and leaf count.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- Procedural bare trees via recursive branching (trunk splits into swept
+  branches, tapering width/length, depth ~7), drawn every frame with a
+  length-scaled sinusoidal sway so the canopy breathes in the wind.
+- Layered parallax forest: far/mid canopy ridges built from filled circles
+  along a wavy baseline plus a base fill; far ridge drawn lighter/warmer with a
+  lighter-blend haze veil for atmospheric perspective.
+- Volumetric sun rays: 46 additive triangular wedges radiating from the sun,
+  each with a directional gradient, a per-ray "gap" value (light-through-
+  branches) and a shimmer term; slow rotation.
+- Radial-gradient sun with a hot white core and wide additive glow disc.
+- Tumbling leaves: per-leaf position/rotation/sway phase, horizontal drift =
+  global wind + sinusoidal sway, vertical fall scaled by depth; respawn at top
+  when they leave the bottom for an endless drift.
+- Depth sorting by draw order (far leaves behind mid ridge, near leaves in
+  front) with depth-based alpha so near leaves are crisp and far leaves hazy.
+- Wind model: eased target driven by cursor + slow sine + decaying "gust"
+  envelope; clicks inject a gust that perturbs nearby leaves' spin/sway.
+- CSS linear-gradient sky (crimson→amber→gold), screen-blend haze ::before,
+  vignette ::after, custom screen-blend cursor, DPR-aware canvas.
+- Editorial serif italic gradient wordmark + mono meta panel.
+- prefers-reduced-motion freezes the animation loop; touch support included.
+
+INTENDED INTERACTION MODEL
+==========================
+Ambient scene with gentle pointer interaction. Leaves fall, sway and tumble
+forever; birds drift; the sun rays shimmer and the trees breathe on their own.
+Moving the cursor bends the wind (left/right changes the drift direction and
+strength, reflected in the live "wind" readout). Clicking / tapping sends a
+gust through the canopy — a burst of wind that flings nearby leaves and adds
+spin. A custom sunlit cursor follows the pointer on fine-pointing devices and
+hides on touch. Fully responsive, offline, and motion-sensitive friendly
+(animation halts under prefers-reduced-motion).

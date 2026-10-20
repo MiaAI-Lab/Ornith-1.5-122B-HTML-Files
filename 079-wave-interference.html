@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>INTERFERENCE — Two-Source Ripple Field</title>
+<style>
+  :root{
+    --ink:#eaf6ff; --ink-dim:rgba(214,236,250,.66);
+    --cyan:#39d6ff; --aqua:#7ff0ff;
+    --panel:rgba(7,18,38,.62); --panel-brd:rgba(120,200,255,.16);
+    --line:rgba(150,210,255,.10);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:#030712; color:var(--ink);
+    font:14px/1.5 system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #wrap{position:fixed; inset:0}
+  canvas{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none}
+  #grain{pointer-events:none; mix-blend-mode:screen; opacity:.05}
+
+  .wordmark{
+    position:absolute; top:clamp(18px,4vw,46px); left:clamp(18px,4vw,46px);
+    z-index:5; pointer-events:none;
+  }
+  .wordmark .kicker{
+    font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.42em;
+    text-transform:uppercase; color:var(--cyan); opacity:.85; margin-bottom:12px;
+  }
+  .wordmark h1{
+    margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:400;
+    font-size:clamp(30px,6vw,64px); letter-spacing:.01em; line-height:.98;
+    text-shadow:0 2px 30px rgba(57,214,255,.28);
+  }
+  .wordmark h1 b{font-weight:400; color:var(--aqua)}
+  .wordmark .sub{
+    margin-top:10px; max-width:46ch; color:var(--ink-dim); font-size:13px;
+  }
+
+  .panel{
+    position:absolute; right:clamp(14px,3vw,40px); bottom:clamp(14px,3vw,40px);
+    z-index:6; width:min(330px,86vw);
+    background:var(--panel); backdrop-filter:blur(14px) saturate(1.2);
+    border:1px solid var(--panel-brd); border-radius:16px;
+    padding:16px 18px 14px; box-shadow:0 18px 50px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.04);
+  }
+  .panel h2{
+    margin:0 0 12px; font:600 11px/1 system-ui,'Segoe UI',sans-serif;
+    letter-spacing:.28em; text-transform:uppercase; color:var(--cyan); opacity:.9;
+  }
+  .ctrl{margin:0 0 14px}
+  .ctrl:last-child{margin-bottom:0}
+  .ctrl .row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:7px}
+  .ctrl label{font-size:12.5px; color:var(--ink); letter-spacing:.02em}
+  .ctrl .val{
+    font:500 12px/1 'Segoe UI',system-ui,monospace; color:var(--aqua);
+    letter-spacing:.04em;
+  }
+  input[type=range]{
+    -webkit-appearance:none; appearance:none; width:100%; height:4px; margin:0;
+    background:linear-gradient(90deg,var(--cyan),rgba(127,240,255,.35));
+    border-radius:3px; outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; appearance:none; width:16px; height:16px; border-radius:50%;
+    background:#eaf6ff; border:2px solid var(--cyan); cursor:pointer;
+    box-shadow:0 0 12px rgba(57,214,255,.7);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%; background:#eaf6ff;
+    border:2px solid var(--cyan); cursor:pointer; box-shadow:0 0 12px rgba(57,214,255,.7);
+  }
+  .readout{
+    display:flex; gap:14px; margin-top:4px; padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+  .readout .cell{flex:1}
+  .readout .cell .n{font:500 15px/1.1 'Segoe UI',system-ui,monospace; color:var(--ink)}
+  .readout .cell .l{font-size:10px; letter-spacing:.18em; text-transform:uppercase; color:var(--ink-dim); margin-top:5px}
+  .hint{
+    position:absolute; left:clamp(18px,4vw,46px); bottom:clamp(14px,3vw,40px); z-index:6;
+    font-size:12px; color:var(--ink-dim); letter-spacing:.02em; max-width:34ch;
+    display:flex; align-items:center; gap:9px;
+  }
+  .hint .dot{width:9px; height:9px; border-radius:50%; background:var(--cyan); box-shadow:0 0 12px var(--cyan); flex:none}
+  .toggle{
+    display:inline-flex; align-items:center; gap:8px; margin-top:2px;
+    font-size:12px; color:var(--ink-dim); cursor:pointer; user-select:none;
+  }
+  .toggle input{accent-color:var(--cyan); width:14px; height:14px; cursor:pointer}
+  @media (max-width:520px){
+    .wordmark .sub{display:none}
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="field"></canvas>
+  <canvas id="grain"></canvas>
+
+  <div class="wordmark">
+    <div class="kicker">Wave Optics · Double Slit</div>
+    <h1>Two <b>sources</b>,<br>one <b>pattern</b>.</h1>
+    <div class="sub">Every point on the water is the sum of two expanding ripples. Where crests meet crests the field flares white-cyan; where a crest meets a trough it cancels to black. Drag the glowing sources to move them.</div>
+  </div>
+
+  <div class="hint"><span class="dot"></span>Drag either source · sliders reshape the interference field</div>
+
+  <div class="panel">
+    <h2>Field Controls</h2>
+    <div class="ctrl">
+      <div class="row"><label>Frequency</label><span class="val" id="freqV">0.30</span></div>
+      <input type="range" id="freq" min="8" max="60" value="30">
+    </div>
+    <div class="ctrl">
+      <div class="row"><label>Source spacing</label><span class="val" id="spaceV">180 px</span></div>
+      <input type="range" id="space" min="20" max="360" value="180">
+    </div>
+    <div class="ctrl">
+      <div class="row"><label>Speed</label><span class="val" id="speedV">1.0×</span></div>
+      <input type="range" id="speed" min="0" max="250" value="100">
+    </div>
+    <div class="ctrl">
+      <label class="toggle"><input type="checkbox" id="phase"> Show anti-phase (out-of-phase sources)</label>
+    </div>
+    <div class="readout">
+      <div class="cell"><div class="n" id="wlN">—</div><div class="l">Wavelength</div></div>
+      <div class="cell"><div class="n" id="kN">—</div><div class="l">Wave number</div></div>
+      <div class="cell"><div class="n" id="ampN">—</div><div class="l">Peak amplitude</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var field = document.getElementById('field');
+  var fx = field.getContext('2d');
+  var grain = document.getElementById('grain');
+  var gx = grain.getContext('2d');
+
+  var freqEl = document.getElementById('freq');
+  var spaceEl = document.getElementById('space');
+  var speedEl = document.getElementById('speed');
+  var phaseEl = document.getElementById('phase');
+  var freqV = document.getElementById('freqV');
+  var spaceV = document.getElementById('spaceV');
+  var speedV = document.getElementById('speedV');
+  var wlN = document.getElementById('wlN');
+  var kN = document.getElementById('kN');
+  var ampN = document.getElementById('ampN');
+
+  var W = 0, H = 0, DPR = 1, cell = 6, maxDim = 230;
+  var off = document.createElement('canvas');
+  var octx = off.getContext('2d');
+  var offW = 0, offH = 0, img = null, data = null;
+  var palette = new Uint8ClampedArray(256*3);
+
+  // ---- color map: deep water troughs -> cyan crests -> white peaks ----
+  var stops = [
+    [0.00,[4,10,30]],   [0.18,[8,22,58]],   [0.36,[14,52,100]],
+    [0.50,[30,108,150]],[0.62,[60,170,206]], [0.74,[112,222,242]],
+    [0.86,[182,246,255]],[1.00,[255,255,255]]
+  ];
+  (function buildPalette(){
+    var i, t, j, k, f, a, b, c1, c2, o;
+    for(i=0;i<256;i++){
+      t = i/255;
+      for(j=0;j<stops.length-1;j++){
+        if(t<=stops[j+1][0]){
+          k = (stops[j+1][0]-stops[j][0]);
+          f = k>0 ? (t-stops[j][0])/k : 0;
+          c1=stops[j][1]; c2=stops[j+1][1];
+          o=i*3;
+          a = c1[0]+(c2[0]-c1[0])*f;
+          b = c1[1]+(c2[1]-c1[1])*f;
+          palette[o] = a; palette[o+1] = b; palette[o+2] = c1[2]+(c2[2]-c1[2])*f;
+          break;
+        }
+      }
+    }
+  })();
+
+  // two point sources, symmetric about center by default
+  var src = [{x:0,y:0},{x:0,y:0}];
+  var drag = -1;
+  var time = 0, speedMul = 1.0;
+  var waveNum = 0.30, spacing = 180, antiPhase = false;
+
+  function layout(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = field.clientWidth; H = field.clientHeight;
+    field.width = Math.round(W*DPR); field.height = Math.round(H*DPR);
+    fx.setTransform(DPR,0,0,DPR,0,0);
+    grain.width = field.width; grain.height = field.height;
+    gx.setTransform(DPR,0,0,DPR,0,0);
+
+    var scale = Math.max(1, W/maxDim);
+    offW = Math.max(40, Math.round(W/scale));
+    offH = Math.max(30, Math.round(H/scale));
+    off.width = offW; off.height = offH;
+    img = octx.createImageData(offW, offH);
+    data = img.data;
+
+    centerSources();
+    paintGrain();
+  }
+
+  function centerSources(){
+    var cx = W*0.5, cy = H*0.5;
+    var d = Math.min(spacing*0.5, Math.min(W,H)*0.42);
+    src[0].x = cx - d; src[0].y = cy;
+    src[1].x = cx + d; src[1].y = cy;
+  }
+
+  function compute(){
+    var cx = W*0.5, cy = H*0.5;
+    var k = waveNum * 6.2831853;
+    var omega = waveNum * 6.6 * speedMul;
+    var s0 = src[0], s1 = src[1];
+    var ph = antiPhase ? Math.PI : 0;
+    var cw = offW, ch = offH;
+    var px = data, idx = 0, x, y, dx, dy, d1, d2, amp, t, ci, i3;
+    var maxAmp = 0;
+    for(y=0;y<ch;y++){
+      var yy = (y/ch)*H;
+      for(x=0;x<cw;x++){
+        var xx = (x/cw)*W;
+        dx = xx - s0.x; dy = yy - s0.y; d1 = Math.sqrt(dx*dx+dy*dy)+1.2;
+        dx = xx - s1.x; dy = yy - s1.y; d2 = Math.sqrt(dx*dx+dy*dy)+1.2;
+        amp = Math.sin(k*d1 - omega*time)/Math.sqrt(d1)
+            + Math.sin(k*d2 - omega*time + ph)/Math.sqrt(d2);
+        // normalize: max constructive ~ 2 / sqrt(min dist)
+        t = amp*0.55 + 0.5; if(t<0)t=0; if(t>1)t=1;
+        if(amp>maxAmp) maxAmp=amp;
+        ci = (t*255 + 0.5)|0; if(ci>255)ci=255; if(ci<0)ci=0;
+        i3 = idx*3;
+        px[idx*4]   = palette[i3];
+        px[idx*4+1] = palette[i3+1];
+        px[idx*4+2] = palette[i3+2];
+        px[idx*4+3] = 255;
+        idx++;
+      }
+    }
+    octx.putImageData(img,0,0);
+    fx.imageSmoothingEnabled = true;
+    fx.imageSmoothingQuality = 'high';
+    fx.clearRect(0,0,W,H);
+    fx.drawImage(off,0,0,W,H);
+    // vignette
+    var vg = fx.createRadialGradient(cx,cy,Math.min(W,H)*0.25, cx,cy,Math.max(W,H)*0.72);
+    vg.addColorStop(0,'rgba(3,7,18,0)');
+    vg.addColorStop(1,'rgba(3,7,18,0.72)');
+    fx.fillStyle = vg; fx.fillRect(0,0,W,H);
+    drawSources();
+    return maxAmp;
+  }
+
+  function drawSources(){
+    var t = performance.now()*0.003;
+    for(var s=0;s<src.length;s++){
+      var p = src[s];
+      fx.save();
+      fx.globalCompositeOperation='lighter';
+      var r = 10 + Math.sin(t + s)*2;
+      var g = fx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*3);
+      g.addColorStop(0,'rgba(255,255,255,0.95)');
+      g.addColorStop(0.35,'rgba(127,240,255,0.7)');
+      g.addColorStop(1,'rgba(57,214,255,0)');
+      fx.fillStyle=g; fx.beginPath(); fx.arc(p.x,p.y,r*3,0,6.2832); fx.fill();
+      fx.globalCompositeOperation='source-over';
+      fx.beginPath(); fx.arc(p.x,p.y,5,0,6.2832);
+      fx.fillStyle='#eaf6ff'; fx.fill();
+      fx.lineWidth=2; fx.strokeStyle='rgba(57,214,255,0.9)'; fx.stroke();
+      fx.restore();
+    }
+  }
+
+  // ---- grain overlay ----
+  function paintGrain(){
+    var g = gx, cw = Math.min(220, Math.round(W/2)), ch = Math.min(220, Math.round(H/2));
+    var cm = g.createImageData(cw,ch), cd = cm.data, i, v;
+    for(i=0;i<cd.length;i+=4){ v=(Math.random()*255)|0; cd[i]=cd[i+1]=cd[i+2]=v; cd[i+3]=255; }
+    g.putImageData(cm,0,0);
+    // scale up to full via temp canvas
+    var tmp = document.createElement('canvas');
+    tmp.width=cw; tmp.height=ch; tmp.getContext('2d').putImageData(cm,0,0);
+    g.clearRect(0,0,W,H);
+    g.imageSmoothingEnabled=false;
+    g.drawImage(tmp,0,0,W,H);
+  }
+
+  // ---- interaction ----
+  function pos(e){
+    var r = field.getBoundingClientRect();
+    var cx = (e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    var cy = (e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    return {x:cx,y:cy};
+  }
+  function nearest(p){
+    var bi=-1, bd=1e9;
+    for(var i=0;i<src.length;i++){
+      var dx=p.x-src[i].x, dy=p.y-src[i].y, d=dx*dx+dy*dy;
+      if(d<bd){bd=d;bi=i;}
+    }
+    return bi;
+  }
+  function down(e){
+    var p=pos(e); var i=nearest(p);
+    if(i>=0){ drag=i; e.preventDefault(); }
+  }
+  function move(e){
+    if(drag<0) return;
+    var p=pos(e);
+    src[drag].x = Math.max(0,Math.min(W,p.x));
+    src[drag].y = Math.max(0,Math.min(H,p.y));
+    e.preventDefault();
+  }
+  function up(){ drag=-1; }
+
+  field.addEventListener('mousedown',down);
+  window.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',up);
+  field.addEventListener('touchstart',down,{passive:false});
+  field.addEventListener('touchmove',move,{passive:false});
+  window.addEventListener('touchend',up);
+
+  function onFreq(){
+    waveNum = freqEl.value/100; // 0.08 .. 0.60
+    freqV.textContent = waveNum.toFixed(2);
+    updateReadout();
+  }
+  function onSpace(){
+    spacing = +spaceEl.value;
+    spaceV.textContent = spacing + ' px';
+    centerSources();
+  }
+  function onSpeed(){
+    speedMul = speedEl.value/100;
+    speedV.textContent = speedMul.toFixed(1) + '×';
+  }
+  function onPhase(){ antiPhase = phaseEl.checked; }
+  function updateReadout(){
+    var wl = (6.2831853/waveNum);
+    wlN.textContent = wl.toFixed(0) + ' px';
+    kN.textContent = waveNum.toFixed(3);
+  }
+
+  freqEl.addEventListener('input',onFreq);
+  spaceEl.addEventListener('input',onSpace);
+  speedEl.addEventListener('input',onSpeed);
+  phaseEl.addEventListener('change',onPhase);
+
+  var last = performance.now();
+  var running = true;
+  function frame(now){
+    if(reduce){
+      // static field, single frame
+      if(frame._done){ return; }
+    }
+    var dt = Math.min(0.05,(now-last)/1000)* (reduce?0.15:1);
+    last = now;
+    time += dt * speedMul * 1.6;
+    var ma = compute();
+    ampN.textContent = (ma*1.7).toFixed(2);
+    if(reduce) frame._done = true;
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize',function(){
+    layout(); updateReadout();
+  });
+
+  layout();
+  onFreq(); onSpace(); onSpeed(); onPhase();
+  updateReadout();
+  paintGrain();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

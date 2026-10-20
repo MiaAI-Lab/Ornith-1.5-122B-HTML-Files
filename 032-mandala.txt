@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 032-mandala.html + 032-mandala.txt — Meditative animated geometric mandala with rotating concentric symmetry. Palette: indigo, gold, rose. Signature: SVG/CSS radial symmetry, slow counter-rotating rings, breathing scale.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+MANDALA — Still the Center
+
+DESIGN DESCRIPTION:
+A square, perfectly symmetric mandala floats in the center of a deep indigo void, breathing slowly as if alive. Nine concentric rings of motifs — beads, teardrop petals, kites, radiating rays, fine ticks and an outer ring of hairline strokes — are generated with exact N-fold radial symmetry and spun at different speeds, with adjacent rings counter-rotating so the pattern perpetually weaves against itself. A soft gold-and-rose aura glows behind it, faint guide circles trace the rings, and a scattered starfield twinks at random. At the heart sits a central lotus of eight petals around a radiant gold core, the still point around which the whole field turns. Serif wordmarks — "Still the Center" above, "breathe in · and out" below — frame it as a meditative object rather than a decoration.
+
+MAJOR VISUAL TECHNIQUES:
+- Single inline <svg viewBox="0 0 1000 1000"> in a 1/1 aspect-ratio frame that scales fluidly from 320px to 4K with no external assets.
+- Radial symmetry built procedurally in JS: each ring is N copies of a motif placed by rotate(angle) + translate(0,-radius), so the geometry is mathematically exact and lightweight.
+- Counter-rotation via two CSS animation classes (.rL / .rR) whose duration is set per-ring with a CSS custom property (--d), giving each ring its own slow, opposing period.
+- A breathing wrapper group scales 1 → 1.04 on a 10s ease-in-out loop; a radial-gradient aura pulses behind the whole field.
+- Motifs drawn as hand-authored SVG paths/polygons (teardrop petals, kite diamonds, ray lines with tip beads) in a curated indigo / gold / rose palette, plus a radial-gradient glowing core.
+- A gentle pointer-driven drift on the background aura (smoothed with requestAnimationFrame easing), and a prefers-reduced-motion branch that stops every animation.
+
+INTENDED INTERACTION MODEL:
+Essentially contemplative and self-playing — the mandala rotates, counter-weaves and breathes on its own, inviting the viewer to pause. There are no buttons or controls; the only input is subtle — moving the pointer (or dragging on touch) gently nudges the luminous aura so it seems to follow the eye, like light shifting across a surface. When left alone, the piece performs its slow, endless, hypnotic rotation indefinitely. On prefers-reduced-motion, all rotation, breathing, glow and twinkle stop, leaving a fully symmetric, static mandala that still reads as a complete composition.

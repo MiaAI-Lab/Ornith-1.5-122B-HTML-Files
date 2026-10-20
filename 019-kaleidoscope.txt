@@ -1,0 +1,68 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: an interactive kaleidoscope whose
+mirror-symmetric canvas drawing follows the mouse/touch. Palette: vivid jewel
+tones. Signature: canvas radial mirror (multiple reflections), trailing coloured
+strokes. Hard constraints: one self-contained .html, all CSS in one <style>, all
+JS in one <script>, zero external dependencies (system fonts only, no CDN, no
+external images/SVG files), responsive 320px→4K, valid HTML5, must run by
+double-click with no network requests. WOW bar: Awwwards/SiteInspire-caliber,
+distinctive art direction, real motion, one signature effect. A matching .txt
+with the same base name must accompany it.
+
+
+TITLE
+-----
+Prisma — a living kaleidoscope that paints light in perfect symmetry.
+
+
+DESIGN DESCRIPTION
+------------------
+A full-viewport canvas of near-black glass becomes a modern kaleidoscope: every
+dot you draw is reflected around the centre into a radiant mandala of mirrored
+wedges. Moving or dragging the pointer lays down a luminous trail of jewel-toned
+dots — ruby, emerald, sapphire, topaz, amethyst and rose — each rendered with an
+additive glow so overlapping strokes bloom into molten colour. The trail breathes:
+the canvas is continuously wiped toward night at a soft rate, so strokes linger as
+a phosphorescent afterglow and fade like embers. A gentle vignette and a screen-
+blended central core add depth, while a slim glass control bar lets you choose the
+mirror count (4, 6, 8, 12 or 16 wedges), the colour logic (slow Jewel cycle,
+full-spectrum rainbow, Random gems or a Monochrome haze), toggle the glow and
+clear the field. A single tap or click throws a radial burst of light that ripples
+out through every mirror at once.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- True radial mirror symmetry: each stroke is drawn 2×segments times — once rotated
+  into each wedge and once reflected across the wedge line — via per-wedge canvas
+  transforms (translate → optional scale(1,-1) → rotate), giving a real kaleidoscope.
+- devicePixelRatio-aware canvas (clamped to 2×) so reflections stay crisp on HiDPI
+  and everything rescales live on resize/orientation with a clean re-clear.
+- Trailing glow: instead of clearing, each frame fades the whole canvas toward the
+  background with a translucent fill, so strokes persist as a decaying afterglow.
+- Additive bloom via per-dot shadowBlur + shadowColor and round, jittered dot sizes,
+  giving strokes a soft luminous, molten quality.
+- Interpolated stroke sampling (lerp between pointer samples, capped) so fast swipes
+  still lay a continuous, gap-free trail.
+- Pointer-driven input (mouse, touch, pen) with touch-action:none so it paints on
+  touch without scrolling; a click/tap fires a radial burst of mirrored dots.
+- Four colour modes including a slow jewel cycle, full HSL spectrum, random gems and
+  a single-hue monochrome, all selectable from a glass pill control bar.
+- Help title fades out on first interaction; layout collapses gracefully under 560px.
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Paint by moving the pointer anywhere — no click required; the mandala forms live
+  and follows the cursor/finger with mirrored, glowing, fading trails.
+- Click or tap to throw a burst of light that radiates through all the mirrors.
+- Mirror control: pick 4/6/8/12/16 wedges to change the symmetry order in real time.
+- Colour control: switch between Jewel (slow palette cycle), Spectrum (rainbow),
+  Random and Monochrome; the current mode is highlighted on its pill.
+- Glow toggle turns the soft bloom on/off; Clear wipes the canvas to black.
+- Responsive: the canvas fills the viewport and all coordinates are computed from
+  the live DPR-scaled center, so the kaleidoscope is pixel-crisp and correctly
+  centred from 320px phones to 4K displays.
+- Motion is entirely user-driven, so there is no ambient animation to annoy; the
+  fade is the only continuous change and it simply ages the artwork you make.

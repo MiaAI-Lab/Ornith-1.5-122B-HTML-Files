@@ -1,0 +1,55 @@
+PROMPT:
+Create a single, fully self-contained HTML5 page (all CSS and JavaScript inline, no
+CDN, no external fonts, no external images, no external SVG files, no libraries)
+titled "Somnium — the Dreaming Jellyfish". It is an immersive, full-bleed canvas
+scene of a surreal jellyfish made of vapor and half-remembered light: a softly
+pulsing bell with ten thousand thread-like tentacles drifting through a sea of
+out-of-focus bokeh stars. Moving the pointer looks around (parallax); tapping makes
+the creature contract and bloom. The palette is dreamlike violet, peach and cyan on
+a deep indigo night. Make it hypnotic, luminous and beautiful; the entire
+experience — render loop included — must live inside one file and work offline.
+
+TITLE:
+Somnium — the Dreaming Jellyfish (Dream Fauna · No. 096)
+
+DESIGN DESCRIPTION:
+A fixed, edge-to-edge dark canvas on a layered indigo radial-gradient background
+(#2a1a55 sinking to #120a33), softened by two full-screen overlays: a `screen`-
+blended haze of peach/cyan/violet glows and an inset vignette. Over the canvas sits
+a fixed UI frame with generous padding — a spaced cyan eyebrow ("Dream Fauna ·
+No. 096"), a large serif headline ("Somnium") filled with a white→peach→violet
+gradient and a purple drop-shadow, and a caption with italic peach emphasis. The
+bottom bar carries a "breathing" status dot beside the hints "drift · move pointer"
+and "tap to pulse", plus a small "Oneiric Series" credit. The creature itself is
+drawn in pure Canvas 2D: a scalloped bell with a luminous cyan rim, a wet-glass
+inner highlight, four soft gonad glows, a fringe of short dancing filaments around
+the margin, and dozens of extremely long, tapering, gently swaying tentacles in
+peach/cyan/violet tints with glowing nematocyst dots near their tips.
+
+MAJOR VISUAL TECHNIQUES:
+- Angle-steered tentacles: each tentacle is a chain of segments whose heading is
+  nudged every step by layered sine sways (a function of depth and time), then
+  smoothed with quadratic curves and stroked twice — a wide soft glow pass plus a
+  thin bright core — using globalCompositeOperation "lighter" for additive bloom.
+- Bell geometry built from sampled dome arc points plus a scalloped skirt traced
+  with quadratic curves; a beat envelope (cosine power curve) drives a sharp
+  contraction that widens, squashes and ripples the bell each power stroke.
+- A parallax bokeh field of radial-gradient discs (some hollow rings) that twinkle,
+  drift and shift with eased pointer position at depths proportional to their size,
+  with a sparse layer of large near-field bokeh drawn in front of the creature.
+- Tap physics: a click/tap sets a decaying pulse-flash (extra hard contraction +
+  bloom) and spawns expanding ripple rings that fade as they grow.
+- Canvas 2D only (no libraries): radial/linear gradients, shadowBlur glow, additive
+  blending, DPR-aware sizing, and a prefers-reduced-motion path that renders a single
+  static dream frame instead of animating.
+
+INTENDED INTERACTION MODEL:
+Fully ambient and interactive. The jellyfish drifts and breathes on its own in a
+continuous requestAnimationFrame loop. Moving the pointer (or dragging a finger)
+steers the parallax so the whole scene — bokeh and creature — shifts as if you are
+looking around inside the tank. Tapping/clicking anywhere makes the bell contract
+harder and bloom brighter, sending an expanding ripple through the water, then it
+relaxes back into its slow natural beat. The experience is calm and hypnotic,
+responsive across screen sizes (fewer, longer tentacles on narrow screens), and
+respects reduced-motion by showing one still, dreamlike frame. Everything is
+self-contained and offline.

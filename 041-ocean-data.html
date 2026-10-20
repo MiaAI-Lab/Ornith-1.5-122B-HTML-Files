@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PELAGIA · Stratification of the Sea</title>
+<style>
+  :root{
+    --ink:#dff6f2; --ink-dim:#8fb6bd; --line:rgba(150,205,210,.28);
+    --teal:#14b8a6; --deep:#0b3344; --abyss:#04121b;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#02060a;
+    font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--ink);
+    touch-action:none}
+
+  /* ---------- the water column ---------- */
+  .stage{position:fixed;inset:0;overflow:hidden}
+  .water{position:absolute;inset:0;
+    background:
+      linear-gradient(180deg,
+        #1fb7a6 0%, #129a8c 9%, #0d766b 18%, #0a5552 30%,
+        #0a3c48 46%, #082a38 62%, #051a26 78%, #03101a 90%, #02080e 100%);}
+  /* sunlit caustics near the surface */
+  .surface{position:absolute;left:-10%;right:-10%;top:-6%;height:46%;
+    background:
+      radial-gradient(140% 80% at 50% -10%, rgba(180,255,240,.30), transparent 42%),
+      radial-gradient(120% 60% at 20% 0%, rgba(120,240,220,.18), transparent 55%),
+      radial-gradient(120% 60% at 80% 0%, rgba(120,240,220,.14), transparent 55%);
+    mix-blend-mode:screen;pointer-events:none;
+    animation:shimmer 9s ease-in-out infinite}
+  @keyframes shimmer{0%,100%{opacity:.85;transform:translateY(0)}50%{opacity:1;transform:translateY(6px)}}
+  /* god rays */
+  .rays{position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:screen;
+    background:repeating-linear-gradient(102deg,
+      rgba(190,255,245,.10) 0px, rgba(190,255,245,.10) 2px, transparent 2px, transparent 64px),
+      repeating-linear-gradient(78deg,
+      rgba(190,255,245,.07) 0px, rgba(190,255,245,.07) 2px, transparent 2px, transparent 96px);
+    -webkit-mask-image:linear-gradient(180deg,rgba(0,0,0,.85),transparent 55%);
+            mask-image:linear-gradient(180deg,rgba(0,0,0,.85),transparent 55%);
+    animation:raydrift 14s ease-in-out infinite}
+  @keyframes raydrift{0%,100%{transform:translateX(-2%)}50%{transform:translateX(3%)}}
+
+  /* stratified water-mass bands that drift at their own pace (parallax) */
+  .strata{position:absolute;left:-30%;width:160%;pointer-events:none;will-change:transform}
+  .strata svg{display:block;width:100%;height:auto}
+  .s1{top:20%;  animation:drift1 46s linear infinite}
+  .s2{top:38%;  animation:drift2 62s linear infinite}
+  .s3{top:58%;  animation:drift3 84s linear infinite}
+  .s4{top:76%;  animation:drift4 110s linear infinite}
+  @keyframes drift1{from{transform:translateX(0)}to{transform:translateX(-33%)}}
+  @keyframes drift2{from{transform:translateX(-20%)}to{transform:translateX(12%)}}
+  @keyframes drift3{from{transform:translateX(8%)}to{transform:translateX(-14%)}}
+  @keyframes drift4{from{transform:translateX(-6%)}to{transform:translateX(10%)}}
+
+  /* vignette + deepening at the bottom */
+  .deep{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(130% 90% at 50% 8%, transparent 40%, rgba(1,6,10,.55) 100%),
+              linear-gradient(180deg, transparent 55%, rgba(1,6,10,.7) 100%);}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+
+  /* marine snow canvas */
+  #snow{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.7}
+
+  /* ---------- creatures ---------- */
+  .creature{position:absolute;pointer-events:none;will-change:transform}
+  .drift{animation-name:swim;animation-timing-function:linear;animation-iteration-count:infinite}
+  @keyframes swim{from{transform:translateX(-180px)}to{transform:translateX(calc(100vw + 220px))}}
+  .drift.rev{animation-direction:reverse}
+
+  /* jellyfish */
+  .bell{transform-box:fill-box;transform-origin:50% 60%;animation:pulse 3.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scaleY(1) scaleX(1)}45%{transform:scaleY(.82) scaleX(1.08)}
+                   60%{transform:scaleY(1.06) scaleX(.95)}}
+  .tent{transform-box:fill-box;transform-origin:50% 0%;animation:sway 5s ease-in-out infinite}
+  @keyframes sway{0%,100%{transform:skewX(-5deg)}50%{transform:skewX(6deg)}}
+  .j1{top:30%;  animation-duration:58s} .j1 .bell{animation-duration:3.2s}
+  .j2{top:47%;  animation-duration:74s; animation-delay:-20s} .j2 .bell{animation-duration:4.1s;transform:scale(.7)}
+  .j3{top:64%;  animation-duration:96s; animation-delay:-40s} .j3 .bell{animation-duration:3.7s;transform:scale(.5)}
+
+  /* lanternfish school bob */
+  .bob{animation:bob 6s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+  .fish{transform-box:fill-box;transform-origin:center;animation:fins .7s ease-in-out infinite}
+  @keyframes fins{0%,100%{transform:scaleX(1)}50%{transform:scaleX(.86)}}
+  .lit{animation:glow 2.6s ease-in-out infinite}
+  @keyframes glow{0%,100%{opacity:.4}50%{opacity:1}}
+
+  /* bubbles */
+  .bubble{position:absolute;bottom:-20px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, rgba(220,255,250,.7), rgba(160,220,220,.18) 60%, transparent 70%);
+    animation:rise linear infinite}
+  @keyframes rise{from{transform:translateY(0);opacity:0}12%{opacity:.7}to{transform:translateY(-104vh);opacity:0}}
+
+  /* ---------- depth scale (right) ---------- */
+  .scale{position:absolute;right:clamp(14px,3.2vw,42px);top:6%;bottom:6%;width:clamp(90px,14vw,180px);
+    z-index:6;pointer-events:none}
+  .scale .axis{position:absolute;left:0;top:0;bottom:0;width:1px;background:var(--line)}
+  .scale .axis::before{content:"";position:absolute;left:-1px;top:0;width:3px;height:100%;
+    background:linear-gradient(180deg,rgba(180,255,245,.1),rgba(180,255,245,.4) 50%,rgba(180,255,245,.05))}
+  .mark{position:absolute;right:0;transform:translateY(-50%);text-align:right;white-space:nowrap}
+  .mark .tick{position:absolute;right:0;width:10px;height:1px;background:var(--line)}
+  .mark .name{display:block;font-size:clamp(.5rem,1.2vw,.66rem);letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
+  .mark .dep{display:block;font-family:var(--mono);font-size:clamp(.62rem,1.4vw,.8rem);color:var(--ink);letter-spacing:.04em}
+  .mark .temp{display:block;font-family:var(--mono);font-size:clamp(.5rem,1.05vw,.6rem);color:#6fd6c6;opacity:.85}
+
+  /* ---------- type / chrome ---------- */
+  .kicker{position:absolute;left:clamp(18px,4vw,52px);top:clamp(16px,3.4vh,40px);z-index:7;pointer-events:none}
+  .kicker .tag{font-family:var(--mono);font-size:clamp(.56rem,1.3vw,.72rem);letter-spacing:.4em;text-transform:uppercase;color:#5fb7ac}
+  .kicker h1{margin:.4em 0 0;font-family:var(--serif);font-weight:400;
+    font-size:clamp(1.7rem,5.6vw,3.5rem);line-height:.96;letter-spacing:.01em;color:var(--ink);
+    text-shadow:0 2px 30px rgba(0,0,0,.5)}
+  .kicker h1 em{font-style:italic;color:#7fe6d2;font-weight:300}
+
+  .legend{position:absolute;left:clamp(18px,4vw,52px);bottom:clamp(16px,3.4vh,38px);z-index:7;
+    max-width:min(360px,74vw);pointer-events:none}
+  .legend p{margin:0;color:var(--ink-dim);font-size:clamp(.7rem,1.55vw,.86rem);line-height:1.55;letter-spacing:.01em;
+    text-shadow:0 1px 16px rgba(0,0,0,.6)}
+  .bar{display:flex;align-items:center;gap:12px;margin-top:.9em}
+  .gradient{flex:1;height:9px;border-radius:6px;overflow:hidden;
+    background:linear-gradient(90deg,#22d3c4 0%,#0f8f82 26%,#0a5552 50%,#0a3550 74%,#051520 100%);
+    box-shadow:0 0 0 1px rgba(150,205,210,.25)}
+  .bar .lo,.bar .hi{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;color:#6fd6c6;white-space:nowrap}
+  .bar .hi{color:#7aa6c0}
+  .hint{margin-top:.7em;font-size:.62em;letter-spacing:.16em;text-transform:uppercase;color:#5f9a9f}
+
+  .readout{position:absolute;right:clamp(14px,3.2vw,42px);top:clamp(16px,3.4vh,38px);z-index:7;text-align:right;pointer-events:none}
+  .readout .lab{font-family:var(--mono);font-size:.56rem;letter-spacing:.28em;text-transform:uppercase;color:#5fb7ac}
+  .readout .big{display:block;font-family:var(--mono);font-size:clamp(1.4rem,4vw,2.3rem);color:var(--ink);letter-spacing:.02em;margin-top:.15em;
+    text-shadow:0 0 20px rgba(120,240,220,.3)}
+  .readout .unit{font-size:.55rem;letter-spacing:.2em;color:#5fb7ac}
+
+  @media (max-width:600px){
+    .scale{display:none}
+    .readout{top:auto;bottom:clamp(64px,12vh,96px);right:clamp(12px,4vw,20px)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .surface,.rays,.strata,.drift,.bell,.tent,.bob,.bubble,.lit{animation:none!important}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="water"></div>
+
+  <!-- stratified water-mass bands (parallax) -->
+  <div class="strata s1"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,60 C150,20 300,100 450,70 C600,40 750,110 900,75 C1050,45 1150,90 1200,65 L1200,120 L0,120 Z" fill="rgba(30,180,170,.14)"/></svg></div>
+  <div class="strata s2"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,70 C160,110 320,30 480,65 C640,100 800,35 960,70 C1100,98 1160,55 1200,72 L1200,120 L0,120 Z" fill="rgba(12,120,120,.16)"/></svg></div>
+  <div class="strata s3"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,80 C200,40 400,100 600,72 C800,46 1000,96 1200,70 L1200,120 L0,120 Z" fill="rgba(8,70,92,.20)"/></svg></div>
+  <div class="strata s4"><svg viewBox="0 0 1200 120" preserveAspectRatio="none"><path d="M0,72 C180,96 360,44 540,74 C720,102 960,50 1200,80 L1200,120 L0,120 Z" fill="rgba(5,32,48,.28)"/></svg></div>
+
+  <div class="rays"></div>
+  <canvas id="snow" aria-hidden="true"></canvas>
+
+  <!-- jellyfish -->
+  <div class="creature jelly j1 drift">
+    <svg width="96" height="130" viewBox="0 0 96 130" aria-hidden="true">
+      <defs>
+        <radialGradient id="bell1" cx="50%" cy="35%" r="70%">
+          <stop offset="0%" stop-color="rgba(210,255,248,.9)"/>
+          <stop offset="55%" stop-color="rgba(120,230,220,.5)"/>
+          <stop offset="100%" stop-color="rgba(60,180,190,0)"/>
+        </radialGradient>
+      </defs>
+      <g class="bell">
+        <path d="M12,52 C12,20 84,20 84,52 C84,66 12,66 12,52 Z" fill="url(#bell1)"/>
+        <path d="M12,52 C30,62 66,62 84,52 L84,58 C66,68 30,68 12,58 Z" fill="rgba(180,255,245,.35)"/>
+      </g>
+      <g class="tent" stroke="rgba(190,255,245,.45)" stroke-width="1.4" fill="none" stroke-linecap="round">
+        <path d="M30,60 C26,86 36,96 30,124"/>
+        <path d="M42,62 C46,90 36,100 42,128"/>
+        <path d="M54,62 C50,90 60,100 54,128"/>
+        <path d="M66,60 C70,86 60,96 66,124"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="creature jelly j2 drift rev">
+    <svg width="96" height="130" viewBox="0 0 96 130" aria-hidden="true">
+      <g class="bell">
+        <path d="M12,52 C12,20 84,20 84,52 C84,66 12,66 12,52 Z" fill="rgba(160,240,235,.55)"/>
+      </g>
+      <g class="tent" stroke="rgba(180,245,240,.4)" stroke-width="1.2" fill="none" stroke-linecap="round">
+        <path d="M32,60 C28,84 38,94 32,120"/>
+        <path d="M48,62 C52,88 42,98 48,124"/>
+        <path d="M64,60 C68,84 58,94 64,120"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="creature jelly j3 drift">
+    <svg width="96" height="130" viewBox="0 0 96 130" aria-hidden="true">
+      <g class="bell">
+        <path d="M12,52 C12,20 84,20 84,52 C84,66 12,66 12,52 Z" fill="rgba(120,200,220,.4)"/>
+      </g>
+      <g class="tent" stroke="rgba(150,210,235,.35)" stroke-width="1" fill="none" stroke-linecap="round">
+        <path d="M34,60 C30,84 40,92 34,116"/>
+        <path d="M50,62 C54,86 44,94 50,118"/>
+        <path d="M66,60 C62,84 72,92 66,116"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- lanternfish school (meso/bathypelagic) with bioluminescent lures -->
+  <div class="creature bob" style="left:8%;top:54%;animation-duration:11s">
+    <svg width="170" height="70" viewBox="0 0 170 70" aria-hidden="true">
+      <g fill="#0b2a3a">
+        <g class="fish" transform="translate(18,18)"><path d="M0,8 C10,2 26,2 34,8 C26,14 10,14 0,8 Z"/><path d="M34,8 l10,-6 l0,12 Z"/></g>
+        <g class="fish" transform="translate(58,30)" style="animation-delay:-.2s"><path d="M0,8 C10,2 26,2 34,8 C26,14 10,14 0,8 Z"/><path d="M34,8 l10,-6 l0,12 Z"/></g>
+        <g class="fish" transform="translate(30,40)" style="animation-delay:-.4s"><path d="M0,6 C8,1 22,1 28,6 C22,11 8,11 0,6 Z"/><path d="M28,6 l8,-5 l0,10 Z"/></g>
+        <g class="fish" transform="translate(96,20)" style="animation-delay:-.1s"><path d="M0,8 C10,2 26,2 34,8 C26,14 10,14 0,8 Z"/><path d="M34,8 l10,-6 l0,12 Z"/></g>
+        <g class="fish" transform="translate(78,44)" style="animation-delay:-.5s"><path d="M0,6 C8,1 22,1 28,6 C22,11 8,11 0,6 Z"/><path d="M28,6 l8,-5 l0,10 Z"/></g>
+      </g>
+      <g fill="#7df0d8">
+        <circle class="lit" cx="30" cy="12" r="1.6"/>
+        <circle class="lit" cx="70" cy="34" r="1.6" style="animation-delay:-.8s"/>
+        <circle class="lit" cx="42" cy="44" r="1.4" style="animation-delay:-1.4s"/>
+        <circle class="lit" cx="108" cy="24" r="1.6" style="animation-delay:-.4s"/>
+        <circle class="lit" cx="90" cy="48" r="1.4" style="animation-delay:-2s"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- surface reef fish -->
+  <div class="creature drift" style="top:15%;animation-duration:26s">
+    <svg width="70" height="42" viewBox="0 0 70 42" aria-hidden="true">
+      <path d="M4,21 C16,8 44,8 56,21 C44,34 16,34 4,21 Z" fill="#f2c14e"/>
+      <path d="M56,21 l12,-9 l0,18 Z" fill="#e09a34"/>
+      <circle cx="18" cy="18" r="2.4" fill="#0b3344"/>
+      <path d="M30,12 l6,18 M38,11 l5,18" stroke="#b5732a" stroke-width="1.4" fill="none"/>
+    </svg>
+  </div>
+
+  <!-- abyss silhouette (giant squid / leviathan) barely visible -->
+  <div class="creature drift rev" style="top:82%;animation-duration:120s;opacity:.5">
+    <svg width="320" height="120" viewBox="0 0 320 120" aria-hidden="true">
+      <path d="M20,60 C60,30 150,30 210,55 C250,70 290,64 310,70 C280,74 250,80 210,74 C150,90 60,90 20,60 Z" fill="#020a10"/>
+      <path d="M210,55 C250,40 285,46 305,40" stroke="#020a10" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M205,66 C250,70 285,82 300,92" stroke="#020a10" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <circle cx="60" cy="54" r="3" fill="#0a2230"/>
+    </svg>
+  </div>
+
+  <!-- bubbles -->
+  <div class="bubble" style="left:22%;width:8px;height:8px;animation-duration:12s;animation-delay:-2s"></div>
+  <div class="bubble" style="left:47%;width:5px;height:5px;animation-duration:15s;animation-delay:-6s"></div>
+  <div class="bubble" style="left:68%;width:11px;height:11px;animation-duration:18s;animation-delay:-1s"></div>
+  <div class="bubble" style="left:83%;width:6px;height:6px;animation-duration:13s;animation-delay:-9s"></div>
+  <div class="bubble" style="left:34%;width:4px;height:4px;animation-duration:16s;animation-delay:-11s"></div>
+
+  <div class="deep"></div>
+  <div class="grain"></div>
+
+  <!-- depth scale -->
+  <div class="scale" aria-hidden="true">
+    <div class="axis"></div>
+    <div class="mark" style="top:0%"><span class="tick"></span><span class="name">Epipelagic</span><span class="dep">0 m</span><span class="temp">24 °C</span></div>
+    <div class="mark" style="top:30%"><span class="tick"></span><span class="name">Mesopelagic</span><span class="dep">200 m</span><span class="temp">10 °C</span></div>
+    <div class="mark" style="top:58%"><span class="tick"></span><span class="name">Bathypelagic</span><span class="dep">1,000 m</span><span class="temp">4 °C</span></div>
+    <div class="mark" style="top:80%"><span class="tick"></span><span class="name">Abyssopelagic</span><span class="dep">4,000 m</span><span class="temp">2 °C</span></div>
+    <div class="mark" style="top:98%"><span class="tick"></span><span class="name">Hadal</span><span class="dep">6,000 m</span><span class="temp">1.5 °C</span></div>
+  </div>
+
+  <!-- chrome -->
+  <div class="kicker">
+    <div class="tag">Pelagic Survey · No. 041</div>
+    <h1>Stratification<br>of the <em>sea</em>.</h1>
+  </div>
+
+  <div class="readout">
+    <div class="lab">Surface Temp</div>
+    <span class="big" id="surfTemp">24.0</span>
+    <span class="unit">°C · 12 m</span>
+  </div>
+
+  <div class="legend">
+    <p>Light dissolves within the first hundred metres, heat within the first thousand.
+       Each band is a water mass — a layer of the sea that keeps its own temperature, density and silence.</p>
+    <div class="bar">
+      <span class="lo">warm · 24°C</span>
+      <span class="gradient"></span>
+      <span class="hi">cold · 1.5°C</span>
+    </div>
+    <div class="hint">Scroll or move to stir the water · creatures drift on their own currents</div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("snow");
+  var ctx=canvas.getContext("2d");
+  var surfTemp=document.getElementById("surfTemp");
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var W=0,H=0,DPR=1;
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",resize);
+  resize();
+
+  // marine snow — slow settling particles that sway
+  var N=Math.round(Math.min(W*H/5200,150));
+  var p=[];
+  for(var i=0;i<N;i++){
+    p.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:Math.random()*1.6+0.4,
+      vy:Math.random()*0.28+0.08,
+      sway:Math.random()*0.5+0.1,
+      ph:Math.random()*6.28,
+      a:Math.random()*0.4+0.15
+    });
+  }
+
+  // scroll to stir: a gentle upward current that pushes snow up briefly
+  var current=0, currentTarget=0;
+  window.addEventListener("wheel",function(e){
+    currentTarget += (e.deltaY>0?1:-1)*0.6;
+    currentTarget = Math.max(-1.4, Math.min(1.4, currentTarget));
+  },{passive:true});
+
+  var time=0, last=0;
+  function step(ts){
+    if(!last) last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.2;
+    time+=dt;
+
+    current += (currentTarget-current)*0.06;
+    currentTarget *= 0.985;
+
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<p.length;i++){
+      var q=p[i];
+      q.y += q.vy*12*dt*8 - current*0.6;
+      q.x += Math.sin(time*q.sway+q.ph)*0.22;
+      if(q.y>H+4){ q.y=-4; q.x=Math.random()*W; }
+      if(q.y<-4){ q.y=H+4; }
+      ctx.beginPath();
+      ctx.fillStyle="rgba(210,240,240,"+q.a.toFixed(3)+")";
+      ctx.arc(q.x,q.y,q.r,0,6.2832);
+      ctx.fill();
+    }
+    requestAnimationFrame(step);
+  }
+  if(reduce){ /* keep snow static but visible */ }
+  requestAnimationFrame(step);
+
+  // gentle live surface temperature drift (delight)
+  var base=24.0;
+  function tempLoop(){
+    var v=base + Math.sin(Date.now()/18000)*0.35 + Math.sin(Date.now()/7300)*0.12;
+    surfTemp.textContent=v.toFixed(1);
+    setTimeout(tempLoop, 220);
+  }
+  tempLoop();
+})();
+</script>
+</body>
+</html>

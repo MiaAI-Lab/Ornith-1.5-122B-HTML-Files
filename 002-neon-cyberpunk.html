@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON//DRIVE — Night City</title>
+<style>
+  :root{
+    --void:#06030d;
+    --void-2:#0d0620;
+    --magenta:#ff2bd6;
+    --cyan:#2bf6ff;
+    --purple:#8a2bff;
+    --ink:#e9f6ff;
+    --muted:#9a86c9;
+    --grid:rgba(138,43,255,.55);
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);background:var(--void);min-height:100vh;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;position:relative;
+  }
+
+  /* ---------- SCENE ---------- */
+  .scene{position:fixed;inset:0;z-index:0;overflow:hidden;
+    background:
+      radial-gradient(900px 500px at 50% 66%, rgba(255,43,214,.28), transparent 62%),
+      radial-gradient(700px 400px at 50% 30%, rgba(138,43,255,.22), transparent 60%),
+      linear-gradient(180deg,#06030d 0%,#12042a 42%,#1a0740 60%,#240a3e 100%);}
+
+  /* stars */
+  .stars{position:absolute;inset:0 0 42% 0;opacity:.7}
+
+  /* retro sun */
+  .sun{position:absolute;left:50%;top:26%;width:min(46vw,420px);aspect-ratio:1/1;
+    transform:translateX(-50%);border-radius:50%;
+    background:linear-gradient(180deg,#fff36b 0%,#ff7a2f 40%,#ff2bd6 100%);
+    box-shadow:0 0 90px rgba(255,122,47,.55),0 0 160px rgba(255,43,214,.45);
+    overflow:hidden;}
+  .sun::after{content:"";position:absolute;left:0;right:0;bottom:0;height:56%;
+    background:repeating-linear-gradient(180deg,transparent 0 9px,var(--void) 9px 15px);
+    -webkit-mask:linear-gradient(180deg,transparent,#000 30%);
+            mask:linear-gradient(180deg,transparent,#000 30%);}
+  .halo{position:absolute;left:50%;top:26%;width:min(60vw,560px);aspect-ratio:1/1;
+    transform:translateX(-50%);border-radius:50%;pointer-events:none;
+    border:1px solid rgba(255,43,214,.25);box-shadow:0 0 120px 30px rgba(255,43,214,.18);
+    animation:breathe 6s var(--ease) infinite;}
+  @keyframes breathe{0%,100%{opacity:.5;transform:translateX(-50%) scale(1)}
+    50%{opacity:.9;transform:translateX(-50%) scale(1.04)}}
+
+  /* city silhouette */
+  .city{position:absolute;left:0;right:0;bottom:38%;width:100%;height:34%;
+    filter:drop-shadow(0 0 14px rgba(138,43,255,.6));}
+  .city svg{width:100%;height:100%;display:block}
+  .bld{fill:#0a0518;}
+  .bld.lit{animation:flick 5s steps(1) infinite}
+  @keyframes flick{0%,92%,100%{opacity:1}93%{opacity:.6}96%{opacity:.9}}
+
+  /* perspective grid floor */
+  .floor{position:absolute;left:-25%;right:-25%;bottom:0;height:42%;
+    transform:perspective(340px) rotateX(68deg);transform-origin:bottom center;
+    background:
+      linear-gradient(180deg, rgba(26,7,64,0) 0%, var(--void) 78%),
+      repeating-linear-gradient(90deg, transparent 0 46px, var(--grid) 46px 48px),
+      repeating-linear-gradient(0deg, transparent 0 40px, var(--grid) 40px 42px);
+    background-size:100% 100%, 100% 100%, 100% 220%;
+    animation:flow 2.6s linear infinite;
+    box-shadow:inset 0 80px 120px rgba(6,3,13,0);}
+  @keyframes flow{from{background-position:0 0,0 0,0 0}to{background-position:0 0,0 0,0 200px}}
+  .floor::before{content:"";position:absolute;inset:0;
+    background:repeating-linear-gradient(0deg,transparent 0 40px,rgba(43,246,255,.28) 40px 41px);
+    background-size:100% 220%;animation:flow 2.6s linear infinite;
+    mix-blend-mode:screen;}
+  .horizon{position:absolute;left:0;right:0;bottom:38%;height:2px;
+    background:linear-gradient(90deg,transparent,var(--cyan),var(--magenta),transparent);
+    box-shadow:0 0 22px 4px rgba(43,246,255,.6);}
+
+  /* scanlines + flicker overlay */
+  .scan{position:fixed;inset:0;z-index:6;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(0,0,0,.0) 0 2px,rgba(0,0,0,.28) 2px 4px);
+    mix-blend-mode:multiply;}
+  .scan::after{content:"";position:absolute;left:0;right:0;height:22vh;
+    background:linear-gradient(180deg,rgba(43,246,255,0),rgba(43,246,255,.12),rgba(43,246,255,0));
+    animation:roll 7s linear infinite;}
+  @keyframes roll{from{top:-24vh}to{top:124vh}}
+  .vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+    box-shadow:inset 0 0 220px 40px rgba(0,0,0,.75);}
+
+  /* ---------- UI ---------- */
+  .wrap{position:relative;z-index:3;max-width:1120px;margin:0 auto;padding:0 clamp(16px,4vw,40px);}
+  nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 0;}
+  .logo{font-weight:800;letter-spacing:.14em;font-size:18px;
+    display:flex;align-items:center;gap:10px}
+  .logo b{color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
+  .logo .chip{width:14px;height:14px;border-radius:3px;background:var(--magenta);
+    box-shadow:0 0 12px var(--magenta);transform:rotate(45deg);
+    animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .navlinks{display:flex;gap:28px;font-size:14px;letter-spacing:.06em}
+  .navlinks a{color:var(--muted);text-decoration:none;transition:color .2s,text-shadow .2s}
+  .navlinks a:hover{color:var(--ink);text-shadow:0 0 10px var(--cyan)}
+  @media(max-width:640px){.navlinks{display:none}}
+  .go{font-size:13px;font-weight:700;letter-spacing:.1em;padding:11px 20px;border:none;cursor:pointer;
+    color:#06030d;border-radius:4px;
+    background:linear-gradient(120deg,var(--cyan),var(--magenta));
+    box-shadow:0 0 22px rgba(255,43,214,.5);}
+
+  /* hero */
+  .hero{min-height:74vh;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;text-align:center;gap:22px;padding:40px 0;}
+  .tag{font-size:12.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--cyan);
+    padding:8px 16px;border:1px solid rgba(43,246,255,.4);border-radius:100px;
+    box-shadow:0 0 18px rgba(43,246,255,.25)}
+  h1{margin:0;font-weight:900;line-height:.92;letter-spacing:.01em;
+    font-size:clamp(46px,12vw,140px);text-transform:uppercase;
+    color:#fff;
+    text-shadow:0 0 8px #fff,0 0 22px var(--magenta),0 0 46px var(--magenta),0 0 80px var(--purple);
+    animation:neon 4.5s steps(1) infinite;}
+  @keyframes neon{0%,19%,21%,23%,80%,100%{opacity:1}
+    20%,22%,81%{opacity:.55}}
+  h1 .cut{background:linear-gradient(180deg,#fff 0%,#c9f6ff 42%,#2bf6ff 60%,#0a3b66 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    -webkit-text-fill-color:transparent;text-shadow:none;
+    filter:drop-shadow(0 2px 0 rgba(255,43,214,.5));}
+  .sub{max-width:52ch;font-size:clamp(14px,1.8vw,18px);line-height:1.6;color:var(--muted);}
+  .cta{display:flex;gap:16px;flex-wrap:wrap;justify-content:center}
+  .btn{font-size:14px;font-weight:700;letter-spacing:.08em;padding:15px 30px;border-radius:5px;
+    cursor:pointer;text-decoration:none;display:inline-block;transition:transform .2s var(--ease)}
+  .btn.ghost{color:var(--cyan);border:1px solid var(--cyan);
+    box-shadow:0 0 18px rgba(43,246,255,.3),inset 0 0 18px rgba(43,246,255,.12);
+    background:rgba(43,246,255,.05)}
+  .btn.ghost:hover{transform:translateY(-3px);box-shadow:0 0 30px rgba(43,246,255,.6)}
+  .btn.solid{color:#06030d;border:none;background:linear-gradient(120deg,var(--magenta),var(--purple));
+    box-shadow:0 0 26px rgba(255,43,214,.55)}
+  .btn.solid:hover{transform:translateY(-3px);box-shadow:0 0 42px rgba(138,43,255,.7)}
+
+  /* marquee ticker */
+  .ticker{position:relative;z-index:3;margin-top:20px;border-top:1px solid rgba(138,43,255,.4);
+    border-bottom:1px solid rgba(138,43,255,.4);overflow:hidden;
+    -webkit-mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);
+            mask:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);}
+  .ticker .track{display:inline-flex;gap:44px;white-space:nowrap;padding:14px 0;
+    animation:scroll-x 24s linear infinite;font-weight:700;letter-spacing:.18em;
+    text-transform:uppercase;color:var(--muted);font-size:14px;}
+  .ticker .track b{color:var(--cyan);text-shadow:0 0 10px var(--cyan)}
+  @keyframes scroll-x{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  .foot{position:relative;z-index:3;text-align:center;color:var(--muted);
+    font-size:12px;letter-spacing:.1em;padding:26px 0 40px}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s var(--ease),transform .9s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion: reduce){
+    .floor,.floor::before,.scan::after,.ticker .track,.bld,.halo{animation:none}
+    h1{animation:none;opacity:1}
+  }
+</style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <svg class="stars" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+      <g fill="#cfefff">
+        <circle cx="90" cy="60" r="1.2"/><circle cx="220" cy="120" r="1"/><circle cx="360" cy="40" r="1.5"/>
+        <circle cx="520" cy="90" r="1"/><circle cx="700" cy="55" r="1.3"/><circle cx="880" cy="110" r="1"/>
+        <circle cx="1040" cy="70" r="1.4"/><circle cx="1150" cy="130" r="1"/><circle cx="150" cy="200" r="1"/>
+        <circle cx="430" cy="180" r="1.2"/><circle cx="640" cy="210" r="1"/><circle cx="960" cy="190" r="1.3"/>
+        <circle cx="300" cy="250" r="1"/><circle cx="780" cy="240" r="1"/><circle cx="1100" cy="260" r="1.1"/>
+      </g>
+    </svg>
+    <div class="halo"></div>
+    <div class="sun"></div>
+    <div class="horizon"></div>
+    <div class="city" aria-hidden="true">
+      <svg viewBox="0 0 1440 380" preserveAspectRatio="xMidYMid slice">
+        <g fill="#120a2e">
+          <rect x="40" y="150" width="70" height="230"/><rect x="140" y="90" width="54" height="290"/>
+          <rect x="230" y="170" width="80" height="210"/><rect x="340" y="60" width="46" height="320"/>
+          <rect x="420" y="140" width="90" height="240"/><rect x="560" y="110" width="60" height="270"/>
+          <rect x="660" y="180" width="100" height="200"/><rect x="820" y="80" width="52" height="300"/>
+          <rect x="900" y="150" width="86" height="230"/><rect x="1040" y="120" width="64" height="260"/>
+          <rect x="1140" y="170" width="92" height="210"/><rect x="1280" y="70" width="48" height="310"/>
+          <rect x="1360" y="150" width="70" height="230"/>
+        </g>
+        <g class="bld">
+          <rect x="0" y="200" width="60" height="180"/>
+          <rect x="70" y="130" width="44" height="250"/>
+          <rect x="124" y="220" width="90" height="160"/>
+          <rect x="224" y="100" width="34" height="280"/>
+          <rect x="226" y="60" width="30" height="50"/>
+          <rect x="270" y="180" width="110" height="200"/>
+          <rect x="396" y="150" width="70" height="230"/>
+          <rect x="486" y="90" width="40" height="290"/>
+          <rect x="540" y="200" width="120" height="180"/>
+          <rect x="680" y="140" width="56" height="240"/>
+          <rect x="756" y="60" width="30" height="320"/>
+          <rect x="758" y="20" width="26" height="45"/>
+          <rect x="806" y="190" width="110" height="190"/>
+          <rect x="936" y="120" width="48" height="260"/>
+          <rect x="998" y="210" width="130" height="170"/>
+          <rect x="1148" y="150" width="60" height="230"/>
+          <rect x="1228" y="90" width="36" height="290"/>
+          <rect x="1280" y="200" width="160" height="180"/>
+        </g>
+        <g fill="#2bf6ff" opacity=".9">
+          <rect x="82" y="150" width="8" height="12"/><rect x="98" y="180" width="8" height="12"/>
+          <rect x="82" y="220" width="8" height="12"/><rect x="240" y="120" width="6" height="9"/>
+          <rect x="240" y="160" width="6" height="9"/><rect x="300" y="210" width="9" height="12"/>
+          <rect x="330" y="250" width="9" height="12"/><rect x="500" y="120" width="7" height="10"/>
+          <rect x="500" y="170" width="7" height="10"/><rect x="560" y="230" width="10" height="12"/>
+          <rect x="600" y="270" width="10" height="12"/><rect x="770" y="90" width="6" height="9"/>
+          <rect x="770" y="140" width="6" height="9"/><rect x="830" y="220" width="10" height="12"/>
+          <rect x="950" y="150" width="7" height="10"/><rect x="1020" y="240" width="11" height="13"/>
+          <rect x="1070" y="290" width="11" height="13"/><rect x="1240" y="120" width="7" height="10"/>
+          <rect x="1300" y="230" width="11" height="13"/><rect x="1360" y="270" width="11" height="13"/>
+        </g>
+        <g class="bld lit" fill="#ff2bd6" opacity=".85">
+          <rect x="300" y="300" width="9" height="12"/><rect x="600" y="320" width="10" height="12"/>
+          <rect x="830" y="300" width="10" height="12"/><rect x="1070" y="340" width="11" height="13"/>
+          <rect x="1360" y="320" width="11" height="13"/>
+        </g>
+        <g fill="#ff2bd6">
+          <circle cx="241" cy="56" r="3"/><circle cx="771" cy="16" r="3"/><circle cx="1244" cy="86" r="3"/>
+        </g>
+      </svg>
+    </div>
+    <div class="floor"></div>
+  </div>
+
+  <div class="scan" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="wrap">
+    <nav class="reveal">
+      <div class="logo"><span class="chip"></span><span>NEON<b>//</b>DRIVE</span></div>
+      <div class="navlinks">
+        <a href="#grid">Grid</a><a href="#specs">Specs</a><a href="#story">Story</a>
+      </div>
+      <button class="go">Jack In →</button>
+    </nav>
+
+    <header class="hero">
+      <span class="tag reveal">Night City · 2087</span>
+      <h1 class="reveal"><span class="cut">NEON</span>//<span class="cut">DRIVE</span></h1>
+      <p class="sub reveal">Plug into the electric dream of a city that never sleeps. Chrome
+        streets, magenta skies and a horizon humming with 240&nbsp;terabytes of raw signal.
+        This is where the grid meets the ghost in the machine.</p>
+      <div class="cta reveal">
+        <a class="btn solid" href="#grid">Enter the Grid</a>
+        <a class="btn ghost" href="#story">Watch Trailer</a>
+      </div>
+    </header>
+  </div>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="track">
+      <span>CHROME&nbsp;★&nbsp;<b>SYNTHWAVE</b>&nbsp;★&nbsp;NEURAL&nbsp;LINK&nbsp;★&nbsp;GRID&nbsp;RUNNER&nbsp;★&nbsp;HOLOGRAPHIC&nbsp;★&nbsp;<b>NIGHT CITY</b>&nbsp;★&nbsp;DATA&nbsp;STREAM&nbsp;★&nbsp;CYBER&nbsp;RUSH&nbsp;★&nbsp;</span>
+      <span>CHROME&nbsp;★&nbsp;<b>SYNTHWAVE</b>&nbsp;★&nbsp;NEURAL&nbsp;LINK&nbsp;★&nbsp;GRID&nbsp;RUNNER&nbsp;★&nbsp;HOLOGRAPHIC&nbsp;★&nbsp;<b>NIGHT CITY</b>&nbsp;★&nbsp;DATA&nbsp;STREAM&nbsp;★&nbsp;CYBER&nbsp;RUSH&nbsp;★&nbsp;</span>
+    </div>
+  </div>
+
+  <footer class="wrap foot reveal">© 2087 NEON//DRIVE — SYSTEM ONLINE · SIGNAL 240 TB/s</footer>
+
+  <script>
+  (function(){
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els=[].slice.call(document.querySelectorAll('.reveal'));
+    if(reduce||!('IntersectionObserver' in window)){
+      els.forEach(function(e){e.classList.add('in');});
+    }else{
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+        });
+      },{threshold:.12});
+      els.forEach(function(e){io.observe(e);});
+    }
+  })();
+  </script>
+</body>
+</html>

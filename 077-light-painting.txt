@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 077-light-painting.html + 077-light-painting.txt — Long-exposure light-painting strokes that draw themselves in the dark. Palette: deep black with glowing cyan/magenta/gold trails. Signature: canvas glowing stroke paths drawn over time with motion trails and bloom, mouse to add your own light strokes.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+LUMINA — Painting with Living Light
+
+DESIGN DESCRIPTION:
+Against a pure-black void, autonomous "painters" sweep glowing trails across the frame, each following an invisible flow field so their paths curl into organic, calligraphic loops. Every stroke is laid down as an additive, layered bloom — a hot near-white core wrapped in concentric cyan, magenta or gold halos — and the canvas is never fully cleared: a thin black veil is dropped each frame so the light lingers as a phosphor afterglow and slowly decays, exactly like a long photographic exposure. A soft radial vignette, a faint screen-blended grain, a serif wordmark, a live "strokes on screen" counter and a three-swatches colour legend frame the piece as a darkroom instrument for sculpting photons.
+
+MAJOR VISUAL TECHNIQUES:
+- Long-exposure trail effect via a per-frame semi-transparent black fill (rgba(0,0,0,~0.028)) instead of clearRect, so strokes persist and decay like afterglow phosphor.
+- Additive bloom helper that draws each light point as a radial gradient (bright core → mid halo → transparent) with a separate near-white hot core, composited with globalCompositeOperation:"lighter" so overlapping trails flare white-hot.
+- Six autonomous painters steered by a smooth sine-based pseudo-noise flow field, each assigned a cyan/magenta/gold family and a per-stroke phase so no two trails look alike.
+- Fan of offset dots behind each painter's head to give the strokes real width, wobble and taper rather than a thin line.
+- Pointer light that renders a colour-cycling, velocity-thickened tail (parabola-faded segments) plus speed-spawned sparkles, so fast movement throws off sparks.
+- DPR-aware canvas (capped at 2×) for crisp glow on retina/4K, delta-time loop, edge-bounce containment, a live stroke counter and prefers-reduced-motion that thins the painter count and slows the decay.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven, no buttons. Moving the cursor paints your own glowing light stroke — it thickens and brightens with speed and throws off sparks on fast sweeps; holding the button intensifies the glow. Autonomous painters continuously paint in the background so the canvas is never static, and every mark slowly fades back to black. A live counter in the legend tracks how many strokes are currently burning on screen. prefers-reduced-motion keeps the scene present but thins it to a few slow painters with a faster, calmer decay.

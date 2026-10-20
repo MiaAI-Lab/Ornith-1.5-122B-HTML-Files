@@ -1,0 +1,29 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 080-meteor-shower.html + 080-meteor-shower.txt — A meteor shower streaking across a starry night, with occasional bright bolides. Palette: night blue, white/orange meteors with long tails. Signature: canvas meteors with glowing tails spawning randomly, star twinkle, a rare big fireball with smoke trail.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+METEORA — A Shower of Falling Stars
+
+DESIGN DESCRIPTION:
+Over a night that deepens from midnight blue at the zenith to near-black at the base, a dense field of stars breathes and twinkles while meteors rake diagonally across the sky, each one a hot white-blue or gold core pulling a long additive-glow tail that flares brighter with speed. Most are small shower sparks that flicker out quickly, but every so often a rare bolide ignites — a big orange fireball with a layered radial bloom and a trailing wake of drifting, fading smoke and stray sparks that lingers in the air like a scar across the dark. A faint aurora band and horizon glow, a screen-blended film grain and a soft vignette give the scene depth, while a glass "Sky Controls" panel lets you dial in the shower density, drift speed and field of view, or reach for a single dramatic button that summons a fireball on demand. The result reads as a premium, cinematic observatory of a storm in the making.
+
+MAJOR VISUAL TECHNIQUES:
+- Full-screen DPR-aware <canvas> (capped at 2×) redrawn each frame: a vertical night gradient sky with a faint additive aurora band, then a twinkling starfield where each star's brightness is a per-frame sine (base + amp·sin(ωt+φ)) with a soft glow halo on the brighter stars and occasional warm/cool tints.
+- Meteors rendered with additive ("lighter") blending: a linear-gradient stroke (transparent tail → saturated body → near-white hot core) plus a short bright core line and a radial head bloom, so overlapping trails flare white-hot; tails lengthen and brighten for fireballs.
+- A dedicated smoke system for bolides: each frame the fireball emits soft radial-gradient particles that drift, decelerate and fade over ~1–2.5s, mixing warm orange and cool grey wakes for a realistic smoke scar, plus speed-spawned sparks.
+- Random spawning driven by a delta-time accumulator scaled by a density slider and field-of-view, with a separate rare natural-fireball timer; fast pointer clicks and the "Summon a fireball" button ignite an immediate bolide with a spark burst.
+- Pointer-scatter interaction that pushes nearby stars radially outward, a live "in sky" counter, a glassmorphic control panel with custom-styled sliders, and a prefers-reduced-motion path that renders a single static twinkling-free starfield with no meteors.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven. Moving the cursor scatters the surrounding stars, as if the sky parts around your hand; clicking (or pressing the glowing "Summon a fireball" button) ignites a big bolide with a smoke trail and spark burst. Three sliders reshape the scene live — Shower density (how many meteors fall), Drift speed (how fast they travel and how the field animates) and Field of view (narrow / wide / panoramic, which also changes meteor fill rate) — each with a live readout. A small legend tracks the meteor type and a live count of objects currently in the sky. prefers-reduced-motion shows a calm, static starfield with no falling meteors so the night remains present without motion.

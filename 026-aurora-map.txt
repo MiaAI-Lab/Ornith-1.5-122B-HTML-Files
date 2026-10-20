@@ -1,0 +1,55 @@
+TITLE
+Aurora — Intensity Field — a live "space weather" dashboard visualizing animated northern-lights curtains over a starfield.
+
+RECREATION PROMPT
+Build a single self-contained HTML page (no external assets) that fills the viewport with a dark night-sky scene and overlays a technical "space weather" monitoring HUD. Palette: deep navy/black night (#04060f → #060a19), neon aurora green (#4dffc4 / #17d68a), magenta/pink (#ff6fd8 / #c85bff), ice-blue text (#cfe6ff) and dim slate labels (#6f86ad).
+
+BACKGROUND LAYERS
+- Body background: stacked radial gradients (a low horizon teal glow, an upper-right magenta glow) over a vertical navy gradient. overflow hidden.
+- One full-screen <canvas id="aurora"> (fixed, inset 0) for the animation.
+- A `.haze` overlay: horizon green glow below + a top darkening vignette (pointer-events none).
+- A `.grid-lines` overlay: faint horizontal lines every 12.5% masked in from the bottom (a horizon ruler).
+
+CANVAS ANIMATION
+- Starfield: n ≈ (W*H)/9000 tiny white dots in the upper 72% of the screen, each with a random twinkle phase and speed; alpha pulses with sin().
+- Five stacked aurora "curtain" layers, back-to-front: higher/fainter layers are pinker/magenta and bluer, lower/brighter layers are greener. Each layer is a set of 48 vertical light columns.
+- Layer vertical height at each column comes from a multi-octave wave function (three summed sines with per-layer freq/speed/phase) driving an amplitude; columns fade in/out vertically via a linear gradient (color → transparent → color).
+- Layers are drawn with globalCompositeOperation = 'lighter' for additive glow; a soft green horizon glow band is painted on top near the bottom.
+- Continuously animated with requestAnimationFrame using elapsed seconds.
+
+HUD (mono type, uppercase, wide tracking, ice-blue on dark)
+- Top-left brand with a pulsing green status dot: "MERIDIAN · SPACE WEATHER" / bold "Aurora Intensity Field".
+- Top-right coordinates block: LAT 64°51′N · LON 19°02′W, ALT 312 km · MLT 22.4, and a live UTC clock (HH:MM:SS UTC).
+- Bottom-left a huge Kp index number (~46–104px, green gradient text with drop-shadow glow, tabular nums) plus a status label ("QUIET"/"ACTIVE"/"STRONG").
+- Bottom-right a glassy data `.panel`: rows for Geomag. Kp, Electron flux (×10⁸ cm⁻²s⁻¹), Peak λ (557.7 nm O I), Status ("CURTAIN · STABLE"), and a 24-bar mini-spectrum (first 16 green, last 8 pink).
+- Two fixed annotation tags: "Curtain base {alt} km" (left) and "Oxygen green line 557.7 nm" (right).
+- Respect prefers-reduced-motion (stop the CSS pulse).
+
+LIVE DATA (JS intervals)
+- Kp oscillates ~3.2–8.1 (base 5.4 + 1.3·sin), drives the big number, the panel value, and the ACTIVE/STRONG/QUIET label.
+- Electron flux oscillates ~2.4–4.0. Curtain altitude oscillates ~290–330 km. Spectrum bars animate every 120ms; data readouts update every ~900ms; clock updates each second.
+
+DESIGN DESCRIPTION:
+A full-bleed dark night-sky scene (navy/black #04060f → #060a19) filling the
+viewport, with stacked radial horizon/magenta glows behind one full-screen canvas
+that renders five additive-blended aurora "curtain" layers (pinker higher, greener
+lower) over a twinkling procedural starfield. A horizon glow haze and a faint
+grid-ruler overlay sit on top, while a technical "space weather" HUD in ice-blue
+mono type reports the Kp index, electron flux, peak wavelength and a mini-spectrum
+against a glassmorphic panel. Palette: aurora green (#4dffc4/#17d68a), magenta
+(#ff6fd8/#c85bff), ice-blue text (#cfe6ff).
+
+MAJOR VISUAL TECHNIQUES
+- Multi-octave sine wave field driving stacked, additive-blended aurora curtain columns with vertical gradient fade.
+- 'lighter' composite operation for realistic glowing, overlapping aurora layers; green horizon glow band.
+- Twinkling procedural starfield (per-star phase/speed alpha pulsing).
+- Gradient-clipped giant Kp number (background-clip:text) with drop-shadow glow and tabular numerals.
+- Glassmorphism data panel (translucent fill + blur + border + shadow).
+- Pulsing status dot and CSS grid-ruler horizon overlay with gradient mask.
+- Simulated live telemetry via sin-driven values on timers (Kp, flux, altitude, spectrum bars, UTC clock).
+
+INTENDED INTERACTION MODEL
+- Purely ambient/watching experience: the aurora, stars, bars and readouts animate continuously with no user input required.
+- No clickable controls; the HUD is informational (a fictional instrument readout).
+- Responsive: window resize re-seeds the starfield and aurora layer geometry.
+- Reduced-motion disables the CSS pulse animation on the status dot.

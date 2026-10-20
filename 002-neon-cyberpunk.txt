@@ -1,0 +1,25 @@
+PROMPT:
+Build a standalone, fully offline HTML page: a neon cyberpunk cityscape landing with scanlines, holographic glow and chrome type. Palette: near-black, magenta, cyan, electric purple. Signature: CSS/inline-SVG city silhouette, text-shadow neon-glow flicker, animated scanline overlay, and a perspective grid floor. One self-contained .html file, all CSS in a single <style>, all JS in a single <script>, zero external dependencies (system fonts only, no CDN, no external images), responsive 320px→4K, valid HTML5.
+
+TITLE:
+NEON//DRIVE — Night City (2087)
+
+DESIGN DESCRIPTION:
+A synthwave "night city" hero. A fixed full-viewport scene layers a deep violet-to-magenta radial sky, a retro banded grid-sun, a twinkling star field and an animated perspective grid floor that scrolls toward the viewer like a Tron highway. A two-layer inline-SVG skyline (distant purple towers + a near-black silhouette with lit cyan/magenta windows and blinking rooftop beacons) sits on the horizon, backlit by a neon cyan horizon line. Over the scene floats a centered hero: a small cyan "Night City · 2087" pill, a huge uppercase NEON//DRIVE wordmark with layered magenta/purple neon text-shadow and a chrome-gradient cut on the two words plus a stepped "glitch" flicker animation, a muted subtitle, and dual CTAs (magenta solid + cyan ghost). A scanline overlay (repeating gradient + a rolling highlight band) and a heavy vignette sit above the scene; a masked neon marquee ticker runs below the hero. Content fades/rises in via an IntersectionObserver reveal.
+
+MAJOR VISUAL TECHNIQUES:
+- Perspective grid floor: a div rotated with perspective() + rotateX(~68deg), filled with crossed repeating-linear-gradients (purple vertical lines + a cyan horizontal layer via ::before with mix-blend-mode:screen) and an infinite background-position animation to simulate forward motion.
+- Retro grid-sun: radial body (yellow→orange→magenta) with a ::after of horizontal dark bands using a linear-gradient mask so only the lower half shows.
+- Neon glow type: stacked text-shadow layers (white core + magenta + purple halos) plus a stepped @keyframes flicker (opacity steps) for the "burning neon" effect; chrome words use a metallic linear-gradient clipped to text (background-clip:text) with a magenta drop-shadow.
+- City silhouette: two inline SVG groups — a distant purple skyline and a near-black foreground skyline with individual lit windows (cyan/magenta rects) and pulsing rooftop beacons; some buildings use a stepped "lit" flicker animation.
+- Scanline + rolling-scan overlay: full-screen repeating-linear-gradient stripes (multiply blend) with a translucent cyan band that rolls top→bottom.
+- Retro sun halo breathing animation and a twinkling SVG star field.
+- Masked marquee ticker (edge-fade mask) with duplicated content for a seamless infinite scroll.
+- IntersectionObserver reveal for hero content; full prefers-reduced-motion fallback disables all motion.
+
+INTENDED INTERACTION MODEL:
+- Passive/ambient: grid floor scrolls continuously, sun halo breathes, windows/beacons flicker, scan band rolls, marquee scrolls — all CSS keyframes, no input required.
+- Hover: nav links shift from muted to lit cyan with a glow text-shadow; the "Enter the Grid" solid button and "Watch Trailer" ghost button lift (translateY) and intensify their glow.
+- Scroll: as hero content enters the viewport each block fades+slides up once (IntersectionObserver, threshold .12); if reduced-motion or no IO, all reveal at once.
+- Click: nav "Jack In" button and CTAs are anchor/button triggers (href="#grid"/"#story") — presentational only in this demo.
+- Accessibility: reduced-motion media query kills all animations and fixes the neon wordmark at full opacity.

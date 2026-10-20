@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blueprint — Drafting E-01</title>
+<style>
+  :root{
+    --blue:#1266b4;      /* classic blueprint cyan */
+    --blue-dk:#0c4f95;
+    --ink:#eaf4ff;       /* white drafting line */
+    --ink-dim:rgba(234,244,255,.45);
+    --grid:rgba(255,255,255,.10);
+    --grid-strong:rgba(255,255,255,.18);
+    --accent:#ffd27a;    /* annotation highlight */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;
+    background:var(--blue);
+    font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+    color:var(--ink);-webkit-font-smoothing:antialiased}
+  .stage{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* vignette + paper grain */
+  .veil{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(130% 110% at 50% 42%, rgba(0,0,0,0) 46%, rgba(4,26,52,.55) 100%)}
+
+  .frame{position:absolute;inset:clamp(14px,2.4vw,40px);pointer-events:none;
+    border:1.5px solid var(--ink-dim)}
+  .frame::before,.frame::after{content:"";position:absolute;background:var(--ink-dim)}
+  .frame::before{left:clamp(14px,2.4vw,40px);right:clamp(14px,2.4vw,40px);top:calc(clamp(14px,2.4vw,40px) + 10px);height:1px;box-shadow:0 0 0 4px rgba(18,102,180,.0)}
+  .corner{position:absolute;width:22px;height:22px;pointer-events:none}
+  .corner span{position:absolute;background:var(--ink)}
+  .corner.tl{top:clamp(14px,2.4vw,40px);left:clamp(14px,2.4vw,40px)}
+  .corner.tr{top:clamp(14px,2.4vw,40px);right:clamp(14px,2.4vw,40px)}
+  .corner.bl{bottom:clamp(14px,2.4vw,40px);left:clamp(14px,2.4vw,40px)}
+  .corner.br{bottom:clamp(14px,2.4vw,40px);right:clamp(14px,2.4vw,40px)}
+  .corner.tl span,.corner.br span{top:0;left:0}
+  .corner.tr span,.corner.bl span{top:0;right:0}
+  .corner.tl span:first-child,.corner.br span:first-child{width:22px;height:1.5px}
+  .corner.tl span:last-child,.corner.br span:last-child{width:1.5px;height:22px}
+  .corner.tr span:first-child,.corner.bl span:first-child{width:1.5px;height:22px}
+  .corner.tr span:last-child,.corner.bl span:last-child{width:22px;height:1.5px}
+
+  .sheet{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+  svg{width:min(92vw,1180px);height:auto;max-height:84vh;overflow:visible;display:block}
+
+  /* stroke-draw (builds the plan up) */
+  .draw{fill:none;stroke:var(--ink);stroke-linecap:round;stroke-linejoin:round;
+    stroke-dasharray:1;stroke-dashoffset:1;animation:build 2.4s cubic-bezier(.6,.02,.16,1) forwards}
+  .thin{stroke-width:.7;stroke:var(--ink-dim)}
+  .med{stroke-width:1.1}
+  .bold{stroke-width:1.6}
+  .hatch{stroke-width:.6;stroke:var(--ink-dim)}
+  .dim{stroke:var(--accent);stroke-width:.7}
+  .dim-tick{stroke:var(--accent);stroke-width:.8}
+  .anno{fill:var(--accent);font:600 12px/1 "Segoe UI",sans-serif;letter-spacing:.04em}
+  .anno-sm{fill:var(--ink-dim);font:500 10px/1 "Segoe UI",sans-serif;letter-spacing:.08em}
+  .lead{stroke:var(--accent);stroke-width:.5}
+
+  @keyframes build{to{stroke-dashoffset:0}}
+
+  .fade{opacity:0;animation:fade 1s ease forwards}
+  @keyframes fade{to{opacity:1}}
+
+  /* title block */
+  .titleblock{position:absolute;left:clamp(16px,2.4vw,40px);bottom:clamp(16px,2.4vw,40px);
+    max-width:min(360px,60vw);pointer-events:none}
+  .titleblock .row{display:flex;justify-content:space-between;align-items:baseline;
+    border-top:1px solid var(--ink-dim);padding-top:6px;margin-top:6px}
+  .titleblock .k{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim)}
+  .titleblock .v{font-size:11px;letter-spacing:.06em}
+  .titleblock h1{font-weight:300;font-size:clamp(16px,2.4vw,26px);letter-spacing:.14em;margin:0 0 2px}
+  .titleblock .sub{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-dim)}
+
+  .stamp{position:absolute;right:clamp(16px,2.4vw,40px);top:clamp(16px,2.4vw,40px);
+    text-align:right;pointer-events:none}
+  .stamp .no{font-size:clamp(22px,4vw,40px);font-weight:200;letter-spacing:.06em;line-height:1}
+  .stamp .lbl{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-dim)}
+
+  .compass{position:absolute;right:clamp(18px,3vw,52px);bottom:clamp(40px,7vw,96px);width:clamp(56px,8vw,92px);height:clamp(56px,8vw,92px);pointer-events:none;opacity:.9}
+
+  .scan{position:absolute;left:0;top:0;bottom:0;width:120px;pointer-events:none;
+    background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.06),rgba(255,255,255,0));
+    mix-blend-mode:screen;animation:scan 7s linear infinite}
+  @keyframes scan{0%{transform:translateX(-160px)}100%{transform:translateX(110vw)}}
+
+  @media (prefers-reduced-motion: reduce){
+    .draw{animation:none;stroke-dashoffset:0}
+    .fade{animation:none;opacity:1}
+    .scan{animation:none;opacity:0}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="grid"></canvas>
+  <div class="veil"></div>
+  <div class="scan"></div>
+  <div class="frame"></div>
+  <div class="corner tl"><span></span><span></span></div>
+  <div class="corner tr"><span></span><span></span></div>
+  <div class="corner bl"><span></span><span></span></div>
+  <div class="corner br"><span></span><span></span></div>
+
+  <div class="sheet">
+    <svg id="plan" viewBox="0 0 1000 620" role="img" aria-label="Architectural blueprint of a two-storey residence, elevation and floor plan">
+      <!-- ===== ELEVATION (left) ===== -->
+      <g id="elev">
+        <!-- ground line -->
+        <path class="draw bold" pathLength="1" d="M60 470 H500"/>
+        <!-- main walls outline -->
+        <path class="draw med" pathLength="1" d="M120 470 V250 H360 V470"/>
+        <!-- roof -->
+        <path class="draw med" pathLength="1" d="M108 250 L240 150 L372 250"/>
+        <path class="draw thin" pathLength="1" d="M120 250 L240 168 L360 250"/>
+        <!-- floor slab line -->
+        <path class="draw thin" pathLength="1" d="M120 360 H360"/>
+        <!-- windows upper -->
+        <path class="draw thin" pathLength="1" d="M150 300 h55 v45 h-55 Z M215 300 h50 v45 h-50 Z M285 300 h55 v45 h-55 Z"/>
+        <path class="draw thin" pathLength="1" d="M177 300 v45 M240 300 v45 M312 300 v45"/>
+        <!-- windows lower + door -->
+        <path class="draw thin" pathLength="1" d="M150 405 h55 v45 h-55 Z M285 405 h55 v45 h-55 Z"/>
+        <path class="draw med" pathLength="1" d="M232 470 V400 h40 v70"/>
+        <path class="draw thin" pathLength="1" d="M252 400 v70"/>
+        <!-- chimney -->
+        <path class="draw thin" pathLength="1" d="M320 205 V150 h26 v40"/>
+        <!-- hatch shading on roof -->
+        <path class="draw hatch" pathLength="1" d="M120 250 L150 226 M145 250 L178 224 M175 250 L208 224 M205 250 L240 222 M300 250 L270 226 M325 250 L296 226"/>
+      </g>
+
+      <!-- ===== FLOOR PLAN (right) ===== -->
+      <g id="plan-draw" transform="translate(560,90)">
+        <path class="draw bold" pathLength="1" d="M20 40 H380 V420 H20 Z"/>
+        <!-- outer wall double line -->
+        <path class="draw thin" pathLength="1" d="M30 50 H370 V410 H30 Z"/>
+        <!-- interior walls -->
+        <path class="draw med" pathLength="1" d="M200 40 V230 M200 250 V420 M20 230 H180 M220 230 H380 M200 230 V250"/>
+        <!-- room dividers -->
+        <path class="draw thin" pathLength="1" d="M110 50 V230 M290 250 V410 M200 330 H380"/>
+        <!-- door swings -->
+        <path class="draw thin" pathLength="1" d="M200 230 a26 26 0 0 1 26 -26 M380 300 a22 22 0 0 0 -22 22"/>
+        <!-- windows (double line breaks) -->
+        <path class="draw thin" pathLength="1" d="M60 40 v10 M140 40 v10 M260 40 v10 M340 40 v10 M20 140 h10 M20 320 h10 M380 140 h-10 M380 320 h-10"/>
+        <!-- furniture hints -->
+        <path class="draw hatch" pathLength="1" d="M45 150 h50 v30 h-50 Z M300 60 h60 v40 h-60 Z M50 350 h70 v50 h-70 Z M240 350 h40 v40 h-40 Z"/>
+      </g>
+
+      <!-- ===== DIMENSION LINES ===== -->
+      <g id="dims" opacity="0" class="fade" style="animation-delay:2.2s">
+        <!-- overall width dimension (top of elevation) -->
+        <line class="dim" x1="108" y1="120" x2="372" y2="120"/>
+        <line class="dim-tick" x1="108" y1="113" x2="108" y2="127"/>
+        <line class="dim-tick" x2="372" y1="113" x2="372" y2="127"/>
+        <text class="anno" x="240" y="112" text-anchor="middle">12.40 m</text>
+        <!-- height dimension (left of elevation) -->
+        <line class="dim" x1="78" y1="150" x2="78" y2="470"/>
+        <line class="dim-tick" x1="71" y1="150" x2="85" y2="150"/>
+        <line class="dim-tick" x1="71" y1="470" x2="85" y2="470"/>
+        <text class="anno" x="70" y="315" text-anchor="middle" transform="rotate(-90 70 315)">9.60 m</text>
+        <!-- floor-to-floor -->
+        <line class="dim" x1="40" y1="250" x2="40" y2="360"/>
+        <line class="dim-tick" x1="33" y1="250" x2="47" y2="250"/>
+        <line class="dim-tick" x1="33" y1="360" x2="47" y2="360"/>
+        <text class="anno-sm" x="48" y="312" transform="rotate(-90 48 312)">3.00 m</text>
+        <!-- plan overall -->
+        <line class="dim" x1="560" y1="70" x2="940" y2="70"/>
+        <line class="dim-tick" x1="560" y1="63" x2="560" y2="77"/>
+        <line class="dim-tick" x1="940" y1="63" x2="940" y2="77"/>
+        <text class="anno" x="750" y="62" text-anchor="middle">15.20 m</text>
+      </g>
+
+      <!-- leader + note -->
+      <g opacity="0" class="fade" style="animation-delay:2.6s">
+        <line class="lead" x1="240" y1="150" x2="240" y2="96"/>
+        <circle cx="240" cy="92" r="11" fill="none" stroke="var(--accent)" stroke-width=".7"/>
+        <text class="anno" x="240" y="96" text-anchor="middle" font-size="12">A</text>
+        <text class="anno-sm" x="256" y="90">GABLE</text>
+        <text class="anno-sm" x="256" y="102">FINISH</text>
+      </g>
+    </svg>
+  </div>
+
+  <!-- compass -->
+  <svg class="compass" viewBox="0 0 100 100" aria-hidden="true">
+    <circle cx="50" cy="50" r="46" fill="none" stroke="var(--ink-dim)" stroke-width=".8"/>
+    <circle cx="50" cy="50" r="38" fill="none" stroke="var(--ink-dim)" stroke-width=".4"/>
+    <path class="draw med" pathLength="1" d="M50 8 L60 52 L50 44 L40 52 Z" style="animation-delay:2.4s"/>
+    <text class="anno" x="50" y="26" text-anchor="middle" font-size="10">N</text>
+    <text class="anno-sm" x="50" y="86" text-anchor="middle">S</text>
+  </svg>
+
+  <div class="stamp">
+    <div class="no">E-01</div>
+    <div class="lbl">Sheet · Rev. B</div>
+  </div>
+
+  <div class="titleblock">
+    <div class="sub">Residential Study</div>
+    <h1>HOLLOW CREEK · No. 4</h1>
+    <div class="row"><span class="k">Scale</span><span class="v">1:100</span></div>
+    <div class="row"><span class="k">Drawing</span><span class="v">Elevation &amp; Plan</span></div>
+    <div class="row"><span class="k">Date</span><span class="v">20 · 10 · 2026</span></div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var cv = document.getElementById("grid");
+  var ctx = cv.getContext("2d");
+  var W=0,H=0,DPR=1,t=0,last=0;
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2);
+    W = Math.round(window.innerWidth*DPR);
+    H = Math.round(window.innerHeight*DPR);
+    cv.width=W; cv.height=H;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    var minor = 26*DPR;
+    var major = minor*5;
+
+    // subtle breathing offset so the grid feels alive
+    var ox = reduce?0:(Math.sin(t*0.15)*3+3)*DPR;
+    var oy = reduce?0:(Math.sin(t*0.13)*3+3)*DPR;
+
+    // minor lines
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = "rgba(255,255,255,.055)";
+    ctx.beginPath();
+    for(var x=ox%major; x<W; x+=minor){ ctx.moveTo(x,0); ctx.lineTo(x,H); }
+    for(var y=oy%minor; y<H; y+=minor){ ctx.moveTo(0,y); ctx.lineTo(W,y); }
+    ctx.stroke();
+
+    // major lines
+    ctx.strokeStyle = "rgba(255,255,255,.13)";
+    ctx.beginPath();
+    for(var mx=ox%major; mx<W; mx+=major){ ctx.moveTo(mx,0); ctx.lineTo(mx,H); }
+    for(var my=oy%major; my<H; my+=major){ ctx.moveTo(0,my); ctx.lineTo(W,my); }
+    ctx.stroke();
+
+    // a slow travelling bright node — the drafter's eye
+    if(!reduce){
+      var nx = (Math.sin(t*0.22)*0.5+0.5)*W;
+      var ny = (Math.cos(t*0.17)*0.5+0.5)*H;
+      var g = ctx.createRadialGradient(nx,ny,0,nx,ny,160*DPR);
+      g.addColorStop(0,"rgba(255,255,255,.10)");
+      g.addColorStop(1,"rgba(255,255,255,0)");
+      ctx.fillStyle=g;
+      ctx.fillRect(nx-160*DPR,ny-160*DPR,320*DPR,320*DPR);
+    }
+  }
+
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=(ts-last)/1000; last=ts;
+    if(!reduce) t+=dt*0.8;
+    draw();
+    if(!reduce) requestAnimationFrame(loop); else requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize",resize);
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

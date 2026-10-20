@@ -1,0 +1,20 @@
+PROMPT:
+065-polar-light.html — Polar light curtains (aurora) waving above a snow-covered silhouette horizon. Palette: green/violet aurora, black pine silhouette, starry sky. Signature: canvas aurora curtains as vertical-gradient wave columns drifting, twinkling stars, soft glow.
+
+TITLE:
+Polar Light — Aurora Curtains
+
+DESIGN DESCRIPTION:
+A silent arctic night: a deep indigo-to-violet sky dusted with hundreds of twinkling stars sits above a black horizon of pine ridges and drifting snow, while luminous curtains of green and violet light rise from the horizon and sway overhead as gently drifting, vertically-graded wave columns. The aurora is rendered on canvas as a dense field of soft, additive-blended light columns whose heights follow layered sine waves, so the ribbons breathe, fold and shimmer with a slow inner pulse; a faint magnetic horizon line and drifting snow motes complete the still, cold atmosphere.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas aurora drawn as ~180 vertical gradient "light columns" with additive (lighter) blending for real additive glow.
+- Layered sine-wave height field + slow phase drift so the curtains undulate like fabric rather than flicker.
+- Twinkling starfield (360 stars, per-star phase) plus occasional slow shooting stars.
+- Multi-stop green→violet vertical gradients with soft alpha edges for the curtain body.
+- Silhouette horizon: layered pine-ridge paths + a soft magnetic horizon glow line.
+- Drifting snow motes and a subtle parallax star glow behind the curtains.
+- System-font stack only; fully inline CSS/JS, zero external assets.
+
+INTENDED INTERACTION MODEL:
+Ambient and passive — the aurora performs on its own. On desktop, moving the pointer tilts the starfield and subtly steers the curtain drift for a gentle parallax; on touch, the scene plays uninterrupted. No controls or buttons; the piece is a living wallpaper meant to be watched.

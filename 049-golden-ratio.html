@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PHI · The Golden Ratio &amp; Fibonacci Spiral</title>
+<style>
+  :root{
+    --navy-0:#060b1c; --navy-1:#0a1330; --navy-2:#101c40;
+    --gold-0:#b9912f; --gold-1:#d9b64a; --gold-2:#f0d68a; --gold-hi:#fff4cf;
+    --cream:#f3ead2; --cream-dim:#c9be9e;
+    --line:rgba(216,182,74,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Georgia','Times New Roman',serif;
+    color:var(--cream);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #132049 0%, var(--navy-1) 42%, var(--navy-0) 100%);
+    min-height:100vh;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* ambient gold glow + vignette */
+  .aura{position:fixed;inset:0;pointer-events:none;z-index:0;
+    background:
+      radial-gradient(460px 460px at 78% 22%, rgba(216,182,74,.16), transparent 62%),
+      radial-gradient(620px 520px at 14% 88%, rgba(78,110,214,.14), transparent 66%);
+  }
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:0;
+    box-shadow:inset 0 0 240px 60px rgba(3,7,18,.85);}
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='120' height='120' filter='url(%23n)'/></svg>");}
+
+  .shell{position:relative;z-index:2;max-width:1240px;margin:0 auto;padding:clamp(20px,4vw,56px);}
+
+  /* ---------- topbar ---------- */
+  .topbar{display:flex;align-items:center;gap:18px;margin-bottom:clamp(20px,4vw,44px);}
+  .mark{position:relative;width:52px;height:52px;flex:0 0 auto;}
+  .mark svg{width:100%;height:100%;display:block}
+  .mark .ring{fill:none;stroke:var(--gold-1);stroke-width:1.4;opacity:.9}
+  .mark .phi{fill:var(--gold-hi);font:600 26px/1 Georgia,serif}
+  .title h1{font-size:clamp(1.7rem,4.4vw,2.9rem);font-weight:400;letter-spacing:.06em;
+    line-height:.98;color:var(--gold-hi);
+    text-shadow:0 2px 30px rgba(216,182,74,.35);}
+  .title h1 em{font-style:italic;color:var(--gold-2)}
+  .title p{margin-top:8px;font-size:clamp(.66rem,1.5vw,.82rem);letter-spacing:.34em;
+    text-transform:uppercase;color:var(--cream-dim);font-family:system-ui,sans-serif;}
+
+  /* ---------- content grid ---------- */
+  .content{display:grid;grid-template-columns:1.55fr 1fr;gap:clamp(20px,3.4vw,44px);align-items:center;}
+  @media(max-width:880px){ .content{grid-template-columns:1fr} }
+
+  /* ---------- diagram frame ---------- */
+  .diagram-wrap{position:relative}
+  .frame{position:relative;border-radius:16px;padding:clamp(12px,2vw,22px);
+    background:linear-gradient(160deg, rgba(20,32,72,.72), rgba(8,14,36,.86));
+    border:1px solid var(--line);
+    box-shadow:0 40px 90px -40px rgba(0,0,0,.8), inset 0 1px 0 rgba(255,244,207,.10);}
+  .frame::before{content:"";position:absolute;inset:0;border-radius:16px;padding:1px;
+    background:linear-gradient(135deg, rgba(240,214,138,.55), transparent 40%, transparent 60%, rgba(240,214,138,.30));
+    -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+    -webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none;}
+  svg#diag{display:block;width:100%;height:auto;border-radius:8px;}
+
+  .diagram-caption{margin-top:14px;display:flex;justify-content:space-between;gap:16px;
+    font-family:system-ui,sans-serif;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--cream-dim);}
+  .diagram-caption b{color:var(--gold-2);font-weight:600}
+
+  /* ---------- info panel ---------- */
+  .info{display:flex;flex-direction:column;gap:22px}
+  .phi-read{position:relative}
+  .phi-read .label{font-family:system-ui,sans-serif;font-size:.66rem;letter-spacing:.32em;
+    text-transform:uppercase;color:var(--cream-dim);}
+  .phi-read .value{margin-top:8px;font-size:clamp(2.1rem,6vw,3.4rem);line-height:1;
+    color:var(--gold-hi);font-variant-numeric:tabular-nums;letter-spacing:.01em;
+    text-shadow:0 0 26px rgba(216,182,74,.4);}
+  .phi-read .value .whole{color:var(--gold-2);font-size:.72em;vertical-align:super;margin-right:.06em}
+  .phi-read .value .cursor{display:inline-block;width:.5ch;background:var(--gold-1);
+    height:1em;transform:translateY(.12em);margin-left:2px;opacity:.85;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .phi-read .eq{margin-top:12px;font-style:italic;color:var(--cream-dim);font-size:1.02rem}
+  .phi-read .eq b{color:var(--gold-2);font-style:normal}
+
+  .info p.lead{color:#d8cfb6;line-height:1.75;font-size:1.02rem;}
+  .info p.lead b{color:var(--gold-hi)}
+
+  ul.facts{list-style:none;display:flex;flex-direction:column;gap:12px;
+    font-family:system-ui,sans-serif;}
+  ul.facts li{position:relative;padding-left:26px;font-size:.9rem;color:#cfc6ab;line-height:1.55}
+  ul.facts li::before{content:"";position:absolute;left:2px;top:.55em;width:9px;height:9px;
+    border:1px solid var(--gold-1);transform:rotate(45deg);
+    background:radial-gradient(circle at 40% 40%, var(--gold-hi), transparent 70%);}
+  ul.facts li b{color:var(--gold-2);font-weight:600}
+
+  .controls{margin-top:6px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  button#replay{font-family:system-ui,sans-serif;font-size:.74rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--gold-hi);background:linear-gradient(180deg, rgba(216,182,74,.18), rgba(216,182,74,.06));
+    border:1px solid var(--line);border-radius:999px;padding:11px 22px;cursor:pointer;
+    transition:transform .25s ease, box-shadow .25s ease, background .25s ease;}
+  button#replay:hover{transform:translateY(-2px);background:linear-gradient(180deg, rgba(216,182,74,.30), rgba(216,182,74,.10));
+    box-shadow:0 10px 26px -12px rgba(216,182,74,.6);}
+  button#replay:active{transform:translateY(0)}
+  .status{font-family:system-ui,sans-serif;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--cream-dim);}
+  .status b{color:var(--gold-2);font-variant-numeric:tabular-nums}
+
+  @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
+  @media(prefers-reduced-motion:reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+  <div class="aura"></div>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+
+  <div class="shell">
+    <header class="topbar">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 52 52"><circle class="ring" cx="26" cy="26" r="23"/><circle class="ring" cx="26" cy="26" r="15" opacity=".5"/><text class="phi" x="26" y="35" text-anchor="middle">φ</text></svg>
+      </div>
+      <div class="title">
+        <h1>The <em>Golden</em> Ratio</h1>
+        <p>φ · 1.6180339887 · Fibonacci Spiral</p>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="diagram-wrap">
+        <div class="frame">
+          <svg id="diag" viewBox="0 0 720 540" role="img"
+               aria-label="Golden ratio construction: nested golden rectangles subdividing into squares with a logarithmic spiral."></svg>
+        </div>
+        <div class="diagram-caption">
+          <span>construction · <b id="depthLabel">—</b> subdivisions</span>
+          <span>ratio <b>a : b = φ</b></span>
+        </div>
+      </div>
+
+      <aside class="info">
+        <div class="phi-read">
+          <div class="label">The Divine Proportion</div>
+          <div class="value"><span class="whole">φ =</span><span id="phiDigits">1</span><span class="cursor" aria-hidden="true"></span></div>
+          <div class="eq">where &nbsp;<b>a</b> : <b>b</b> &nbsp;=&nbsp; <b>a+b</b> : <b>a</b> &nbsp;=&nbsp; φ</div>
+        </div>
+
+        <p class="lead">A rectangle whose sides are in ratio φ can be split into a <b>square</b> and a
+          smaller rectangle that is <b>itself</b> golden — rotated, and scaled by 1/φ. Repeating the
+          subdivision forever produces a self-similar cascade, and quarter-circle arcs through each
+          square trace the logarithmic <b>Fibonacci spiral</b>.</p>
+
+        <ul class="facts">
+          <li>Each step scales the rectangle by <b>1/φ ≈ 0.6180</b> and turns it a right angle.</li>
+          <li>The spiral keeps a constant <b>~137.5°</b> angle — the golden angle.</li>
+          <li>The vertex converges to a single <b>fixed point</b>, the eye of the spiral.</li>
+        </ul>
+
+        <div class="controls">
+          <button id="replay">↻ Replay construction</button>
+          <span class="status">subdivisions <b id="sqCount">0</b> · phase <b id="phase">idle</b></span>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    var PHI = (1 + Math.sqrt(5)) / 2;
+    var SVGNS = "http://www.w3.org/2000/svg";
+    var VBW = 720, VBH = 540, PAD = 78;
+    var DIRS = ["left", "top", "right", "bottom"];
+
+    // ---- generate the subdivision (unit space: rect width=PHI, height=1) ----
+    function genSquares(){
+      var out = [];
+      var x = 0, y = 0, w = PHI, h = 1;
+      var i = 0;
+      while (i < 16){
+        var side = Math.min(w, h);
+        if (side < 0.015) break;
+        var d = DIRS[i % 4];
+        var sx, sy, ex, ey;
+        if (d === "left"){
+          sx = x; sy = y + h; ex = x + w; ey = y;
+          out.push({x:x, y:y, s:side});
+          x = x + side; w = w - side;
+        } else if (d === "top"){
+          sx = x; sy = y; ex = x + w; ey = y + h;
+          out.push({x:x, y:y, s:side});
+          y = y + side; h = h - side;
+        } else if (d === "right"){
+          sx = x + w; sy = y; ex = x; ey = y + h;
+          out.push({x:x + w - side, y:y, s:side});
+          w = w - side;
+        } else { // bottom
+          sx = x + w; sy = y + h; ex = x; ey = y;
+          out.push({x:x, y:y + h - side, s:side});
+          h = h - side;
+        }
+        i++;
+      }
+      return out;
+    }
+
+    var squares = genSquares();
+
+    // ---- transform: unit -> svg ----
+    var scale = (VBW - 2 * PAD) / PHI;
+    var ox = PAD, oy = (VBH - scale) / 2;
+    function tx(u){ return u * scale + ox; }
+    function ty(u){ return u * scale + oy; }
+
+    // ---- build SVG ----
+    var svg = document.getElementById("diag");
+    var frag = "";
+
+    // soft gold fill for each square (fades with depth)
+    for (var i = 0; i < squares.length; i++){
+      var q = squares[i];
+      var px = tx(q.x), py = ty(q.y), ps = q.s * scale;
+      var op = (0.10 - i * 0.006).toFixed(3);
+      if (parseFloat(op) < 0.012) op = 0.012;
+      frag += '<rect class="sq" data-i="' + i + '" x="' + px.toFixed(2) + '" y="' + py.toFixed(2) +
+              '" width="' + ps.toFixed(2) + '" height="' + ps.toFixed(2) +
+              '" rx="1.5" fill="url(#goldFill)" fill-opacity="' + op +
+              '" stroke="#d9b64a" stroke-width="' + (i === 0 ? 1.6 : 0.9) +
+              '" stroke-opacity="' + (0.75 - i * 0.05).toFixed(3) + '"/>';
+    }
+
+    // corner nodes
+    for (var j = 0; j < squares.length; j++){
+      var q2 = squares[j];
+      var cxp = tx(q2.x + q2.s), cyp = ty(q2.y); // TR corner (spiral pass-through)
+      frag += '<circle cx="' + cxp.toFixed(2) + '" cy="' + cyp.toFixed(2) +
+              '" r="' + (j === 0 ? 2.6 : 1.6) + '" fill="#fff4cf" opacity="' + (0.8 - j*0.06).toFixed(3) + '"/>';
+    }
+
+    // unit label "1" beneath the first square
+    var ulx = tx(0.5), uly = ty(1) + 26;
+    frag += '<text x="' + ulx.toFixed(1) + '" y="' + uly.toFixed(1) +
+            '" text-anchor="middle" font-family="Georgia,serif" font-style="italic" font-size="20" fill="#f0d68a" opacity=".85">1</text>';
+    // phi value near the vanishing point
+    var vpx = tx(1.165), vpy = ty(0.72);
+    frag += '<text class="vanish" x="' + vpx.toFixed(1) + '" y="' + vpy.toFixed(1) +
+            '" font-family="Georgia,serif" font-size="15" fill="#f0d68a" opacity=".9">φ</text>';
+
+    // gradient def
+    var defs =
+      '<defs>' +
+      '<linearGradient id="goldFill" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#f6e6a8"/>' +
+        '<stop offset="1" stop-color="#b9912f"/>' +
+      '</linearGradient>' +
+      '<linearGradient id="spiralGrad" x1="0" y1="0" x2="1" y2="1">' +
+        '<stop offset="0" stop-color="#fff4cf"/>' +
+        '<stop offset="0.5" stop-color="#f0d68a"/>' +
+        '<stop offset="1" stop-color="#d9b64a"/>' +
+      '</linearGradient>' +
+      '</defs>';
+
+    // spiral path (one continuous curve)
+    var first = squares[0];
+    var fpx = tx(first.x), fpy = ty(first.x + first.s); // BL start
+    var d = "M " + fpx.toFixed(2) + " " + fpy.toFixed(2);
+    for (var k = 0; k < squares.length; k++){
+      var qk = squares[k];
+      var r = qk.s * scale;
+      // recompute endpoints in svg space (same logic as gen, but from stored box)
+      var sX, sY, eX, eY;
+      var bx = qk.x, by = qk.y;
+      // corner helpers
+      var TLx = tx(bx), TLy = ty(by), TRx = tx(bx + r), TRy = ty(by);
+      var BLx = tx(bx), BLy = ty(by + r), BRx = tx(bx + r), BRy = ty(by + r);
+      var dir = DIRS[k % 4];
+      if (dir === "left"){ sX = BLx; sY = BLy; eX = TRx; eY = TRy; }
+      else if (dir === "top"){ sX = TLx; sY = TLy; eX = BRx; eY = BRy; }
+      else if (dir === "right"){ sX = TRx; sY = TRy; eX = BLx; eY = BLy; }
+      else { sX = BRx; sY = BRy; eX = TLx; eY = TLy; }
+      d += " A " + r.toFixed(2) + " " + r.toFixed(2) + " 0 0 1 " + eX.toFixed(2) + " " + eY.toFixed(2);
+    }
+
+    // ---- injected SVG animation styles ----
+    var css = document.createElement("style");
+    css.textContent =
+      "#diag .sq{transform-box:fill-box;transform-origin:center;opacity:0}" +
+      "#diag .sp{fill:none;stroke:url(#spiralGrad);stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(216,182,74,.55))}" +
+      "#diag .hi{fill:none;stroke:url(#spiralGrad);stroke-width:2.4;stroke-linecap:round;opacity:.92;animation:shimmer 6s linear infinite}" +
+      "@keyframes shimmer{to{stroke-dashoffset:-1000}}" +
+      "#diag .vanish{opacity:0;animation:vanFade 1.4s ease 1.3s both}" +
+      "@keyframes vanFade{to{opacity:.92}}";
+    document.head.appendChild(css);
+
+    // ---- assemble ----
+    var svgHTML = defs + frag +
+      '<path id="spiral" class="sp" d="' + d + '"></path>' +
+      '<path id="hi" class="hi" pathLength="1000" d="' + d + '"></path>';
+    svg.innerHTML = svgHTML;
+
+    var path = document.getElementById("spiral");
+    var L = path.getTotalLength();
+    path.style.strokeDasharray = L;
+    path.style.strokeDashoffset = L;
+
+    document.getElementById("depthLabel").textContent = squares.length;
+    document.getElementById("sqCount").textContent = squares.length;
+
+    // ---- number formatter: "1. 618 033 988 749 …" ----
+    function fmt(v){
+      var s = v.toFixed(11);
+      var frac = s.slice(2).replace(/\d{3}/g, " $&").replace(/^ /, "");
+      return "1." + frac + "\u2026";
+    }
+
+    function countPhi(){
+      var el = document.getElementById("phiDigits");
+      var start = performance.now(), dur = 2300;
+      function step(now){
+        var t = Math.min(1, (now - start) / dur);
+        var e = 1 - Math.pow(1 - t, 3);
+        var v = 1 + (PHI - 1) * e;
+        el.textContent = fmt(v);
+        if (t < 1) requestAnimationFrame(step);
+        else el.textContent = fmt(PHI);
+      }
+      requestAnimationFrame(step);
+    }
+
+    // ---- timeline ----
+    function play(){
+      // reveal squares, staggered
+      squares.forEach(function(q, i){
+        var el = svg.querySelector('.sq[data-i="' + i + '"]');
+        if (!el) return;
+        el.animate(
+          [{opacity: 0, transform: "scale(.5)"}, {opacity: 1, transform: "scale(1)"}],
+          {duration: 700, delay: i * 105, easing: "cubic-bezier(.2,.8,.25,1)", fill: "forwards"}
+        );
+      });
+      // draw the spiral on after the squares begin
+      path.getAnimations().forEach(function(a){ a.cancel(); });
+      path.style.strokeDashoffset = L;
+      void path.getBBox();
+      path.animate(
+        [{strokeDashoffset: L}, {strokeDashoffset: 0}],
+        {duration: 2500, delay: squares.length * 105, easing: "cubic-bezier(.22,1,.36,1)", fill: "forwards"}
+      );
+      countPhi();
+      document.getElementById("phase").textContent = "constructing";
+      setTimeout(function(){ document.getElementById("phase").textContent = "drawn"; },
+                 squares.length * 105 + 2600);
+    }
+
+    document.getElementById("replay").addEventListener("click", play);
+    play();
+  })();
+  </script>
+</body>
+</html>

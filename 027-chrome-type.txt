@@ -1,0 +1,53 @@
+TITLE
+Chrome — Liquid Reflection — a giant chrome word "CHROME" with an animated liquid-metal shimmer and a rippling mirrored reflection below it.
+
+RECREATION PROMPT
+Build a single self-contained HTML page (no external assets) that centers one huge, heavy-weight word ("CHROME") rendered to look like liquid chrome/mirror, with a faded, rippling reflection beneath it, over a dark blue ambient background.
+
+BACKGROUND
+- Body: dark blue radial + linear gradients (navy #0e1c34 → #0a1424 → #060d1a) with soft blue (#5aa7ff) and cyan (#8ff0ff) glows at opposite corners. Centered flex layout, overflow hidden.
+- A `.env` layer (fixed, inset -20%, opacity .55): two slowly drifting diagonal light bands (background-size 200%, animated by `envdrift` 18s linear infinite) that act as the "environment" the chrome reflects.
+- An inline SVG filter (`.fx`, zero-size, hidden) defining `#ripple`: feTurbulence (fractalNoise, baseFrequency ~"0.006 0.014", numOctaves 2, seed 9) → feDisplacementMap (scale 16, xChannel R, yChannel G).
+
+THE WORD
+- `.word`: font-weight 900, line-height .82, letter-spacing -.02em, size clamp(4.2rem, 24vw, 28rem).
+- Filled with a horizontal multi-stop chrome gradient (white → grey → blue → silver → near-white → dark grey → light → cyan → silver → white), background-size 220%, clipped to text (background-clip:text, color:transparent).
+- The gradient scrolls via `shimmer` animation (7s linear infinite, background-position 0% → 220%).
+- A `.sheen` overlay (mix-blend-mode:overlay) sweeps a bright specular band across the letters (`sheen` 5.5s ease-in-out).
+- drop-shadow for depth.
+
+THE REFLECTION
+- `.reflect`: a duplicate "CHROME" copy, flipped with transform:scaleY(-1) (transform-origin top), same size/weight, positioned top:100% with margin-top ~0.28em.
+- A muted/bluer chrome gradient, same 220% shimmer animation, masked with a downward fade (mask-image linear-gradient from semi-opaque to transparent ~90%).
+- Filtered with `url(#ripple)` + drop-shadow and opacity .9 to look like a liquid-distorted mirror reflection.
+
+TYPOGRAPHY / LABELS
+- A `.label` under the stage: "Liquid Chrome · Reflection Study 027" (uppercase, wide tracking, cyan accent on "Reflection Study").
+- Two mono corner captions: top-left "Mirror · Specular", bottom-right "feTurbulence + Displacement / Ripple Engine".
+- Respect prefers-reduced-motion (stop all animations).
+
+SCRIPT (live ripple)
+- requestAnimationFrame updates the SVG each frame: baseFrequency oscillates (bx = 0.006 + 0.004·sin(t*0.5), by = 0.014 + 0.006·sin(t*0.7+1.2)) and the displacement scale breathes (14 + 6·sin(t*0.9)), giving a living liquid ripple on the reflection.
+
+DESIGN DESCRIPTION:
+A centered, dark-blue ambient stage on which one enormous heavy-weight word
+("CHROME") reads as liquid chrome/mirror — a multi-stop metallic gradient clipped
+to the type with a scrolling shimmer and a sweeping specular sheen — above a faded,
+rippling, downward-masked reflection of the same word, distorted by an SVG
+feTurbulence + feDisplacementMap filter that is animated per frame. Two mono corner
+captions and a small label complete the composition. Palette: navy #0e1c34 →
+#0a1424 → #060d1a with blue (#5aa7ff) and cyan (#8ff0ff) glows.
+
+MAJOR VISUAL TECHNIQUES
+- Chrome/mirror text via a multi-stop metallic gradient clipped to heavy type (background-clip:text).
+- Animated shimmer (scrolling gradient) plus an overlay blend-mode specular sheen band sweeping the letters.
+- Mirror reflection: a flipped duplicate copy, mask-faded downward, colored in muted chrome tones.
+- Liquid distortion using an SVG feTurbulence + feDisplacementMap filter, with baseFrequency and displacement scale animated per frame for a breathing water ripple.
+- Drifting diagonal ambient light bands as the simulated reflective environment.
+- Dark blue glow gradient backdrop and mono technical corner captions.
+
+INTENDED INTERACTION MODEL
+- Purely ambient/visual: everything animates continuously (shimmer, sheen sweep, drifting environment, and the living ripple on the reflection) with no user interaction required.
+- No clickable controls; the piece is a decorative type/texture study.
+- Responsive: the word scales with viewport width (clamp) and stays centered.
+- Reduced-motion disables all animations, leaving a static chrome word and reflection.

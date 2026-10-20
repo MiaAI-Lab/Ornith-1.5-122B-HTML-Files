@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kinetic Sculpture — A Calder Mobile</title>
+<style>
+  :root{
+    --paper:#f3efe6;
+    --paper-2:#e9e3d5;
+    --ink:#161311;
+    --red:#e23a2e;
+    --blue:#1f4ea1;
+    --yellow:#f4c430;
+    --wire:#161311;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% -10%, #fbf8f1 0%, var(--paper) 45%, var(--paper-2) 100%);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+  }
+
+  /* ---- header / caption ---- */
+  header{
+    position:relative;
+    z-index:5;
+    padding:clamp(14px,3vw,30px) clamp(18px,4vw,48px) 6px;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+  }
+  .mark{display:flex;align-items:center;gap:12px;}
+  .dot{
+    width:clamp(14px,1.6vw,20px);height:clamp(14px,1.6vw,20px);border-radius:50%;
+    background:var(--red);box-shadow:0 0 0 3px var(--paper),0 0 0 5px var(--ink);
+    flex:none;
+  }
+  h1{
+    font-weight:650;
+    font-size:clamp(17px,2.4vw,30px);
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    margin:0;
+  }
+  .sub{
+    font-size:clamp(10px,1.1vw,13px);
+    letter-spacing:.32em;
+    text-transform:uppercase;
+    color:#6d665a;
+    margin:0;
+  }
+  .tag{
+    font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:#8a8273;
+    border:1px solid #cfc7b6;border-radius:999px;padding:6px 12px;
+  }
+
+  /* ---- gallery / stage ---- */
+  .stage{
+    position:relative;
+    flex:1;
+    min-height:0;
+  }
+  .floor{
+    position:absolute;left:0;right:0;bottom:0;height:26%;
+    background:linear-gradient(to bottom, rgba(22,19,17,0) 0%, rgba(22,19,17,.05) 55%, rgba(22,19,17,.12) 100%);
+    pointer-events:none;
+  }
+  .ceiling{
+    position:absolute;left:0;right:0;top:0;height:3px;
+    background:linear-gradient(to right, transparent, rgba(22,19,17,.25), transparent);
+  }
+
+  /* a single mobile occupies a vertical column */
+  .mobile{
+    position:absolute;
+    top:0;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    will-change:transform;
+  }
+  .m1{left:12%;width:26%;}
+  .m2{left:40%;width:34%;}
+  .m3{left:74%;width:24%;}
+
+  /* the hang assembly sways around its top anchor */
+  .sway{
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transform-origin:50% 0%;
+    animation:sway 9s ease-in-out infinite alternate;
+  }
+  .m1 .sway{animation-duration:11.5s;}
+  .m2 .sway{animation-duration:14s;animation-delay:-3s;}
+  .m3 .sway{animation-duration:9.5s;animation-delay:-1.5s;}
+
+  @keyframes sway{
+    0%{transform:rotate(-2.4deg);}
+    100%{transform:rotate(2.4deg);}
+  }
+
+  /* anchor disc glued to ceiling */
+  .anchor{
+    width:12px;height:12px;border-radius:50%;
+    background:var(--ink);
+    box-shadow:0 2px 3px rgba(0,0,0,.25);
+    flex:none;z-index:3;
+  }
+
+  /* wires */
+  .wire{
+    width:1.5px;
+    background:var(--wire);
+    margin:0 auto;
+    position:relative;
+    flex:none;
+  }
+  .wire::after{
+    content:"";position:absolute;left:50%;top:0;height:100%;width:1px;
+    background:linear-gradient(rgba(255,255,255,.35),transparent);
+  }
+
+  /* balance arms (the bent black wires) */
+  .arm{
+    position:relative;
+    height:6px;
+    background:var(--wire);
+    border-radius:2px;
+    transform-origin:50% 50%;
+    will-change:transform;
+  }
+  .arm::before,.arm::after{
+    content:"";position:absolute;top:50%;height:6px;width:6px;border-radius:50%;
+    background:var(--ink);transform:translateY(-50%);
+  }
+  .arm::before{left:-3px;}
+  .arm::after{right:-3px;}
+
+  .tiltA{animation:tiltA 7s ease-in-out infinite alternate;transform-origin:50% 50%;}
+  .tiltB{animation:tiltB 9.5s ease-in-out infinite alternate;transform-origin:50% 50%;}
+  .tiltC{animation:tiltC 6s ease-in-out infinite alternate;transform-origin:50% 50%;}
+  @keyframes tiltA{0%{transform:rotate(-6deg);}100%{transform:rotate(7deg);}}
+  @keyframes tiltB{0%{transform:rotate(5deg);}100%{transform:rotate(-8deg);}}
+  @keyframes tiltC{0%{transform:rotate(-9deg);}100%{transform:rotate(6deg);}}
+
+  /* shape hangers: a short wire + a shape that spins very gently */
+  .hang{
+    position:absolute;top:6px;
+    display:flex;flex-direction:column;align-items:center;
+    transform-origin:50% 0%;
+  }
+  .hang .wire{height:100%;}
+  .spin{transform-origin:50% 50%;animation:spin 14s linear infinite;}
+  .spin.rev{animation-direction:reverse;animation-duration:19s;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  /* the shapes themselves */
+  .shape{
+    position:relative;
+    filter:drop-shadow(6px 10px 8px rgba(22,19,17,.18));
+  }
+  .circle{border-radius:50%;}
+  .square{border-radius:6px;}
+  .tri{
+    width:0;height:0;background:none;filter:none;
+    border-left:var(--ts) solid transparent;
+    border-right:var(--ts) solid transparent;
+    border-bottom:calc(var(--ts) * 1.72) solid var(--c);
+    filter:drop-shadow(6px 10px 8px rgba(22,19,17,.18));
+  }
+  .oval{border-radius:50%/60%;}
+
+  /* drop the whole mobile up so the anchor sits at ceiling */
+  .stack{
+    display:flex;flex-direction:column;align-items:center;
+    height:100%;
+  }
+
+  /* ---- floor shadows that drift with the sway ---- */
+  .shadow{
+    position:absolute;bottom:4%;left:50%;
+    background:radial-gradient(closest-side, rgba(22,19,17,.16), rgba(22,19,17,0) 72%);
+    transform:translateX(-50%);
+    filter:blur(2px);
+    pointer-events:none;
+    animation:shadowSway 11s ease-in-out infinite alternate;
+  }
+  @keyframes shadowSway{0%{transform:translateX(-62%);}100%{transform:translateX(-38%);}}
+
+  /* subtle breeze hint particles */
+  .breeze{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+  .breeze span{
+    position:absolute;width:2px;height:2px;border-radius:50%;
+    background:rgba(22,19,17,.10);
+    animation:drift linear infinite;
+  }
+  @keyframes drift{
+    0%{transform:translateX(-5vw);opacity:0;}
+    10%{opacity:.6;}
+    90%{opacity:.6;}
+    100%{transform:translateX(105vw);opacity:0;}
+  }
+
+  footer{
+    position:relative;z-index:5;
+    padding:10px clamp(18px,4vw,48px) 16px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;
+    font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:#8a8273;
+  }
+  footer .hint{display:flex;align-items:center;gap:8px;}
+  .pulse{width:8px;height:8px;border-radius:50%;background:var(--blue);
+    box-shadow:0 0 0 0 rgba(31,78,161,.5);animation:pulse 2.6s infinite;}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(31,78,161,.45);}70%{box-shadow:0 0 0 10px rgba(31,78,161,0);}100%{box-shadow:0 0 0 0 rgba(31,78,161,0);}}
+
+  @media (max-width:640px){
+    .m1{left:6%;width:30%;}
+    .m2{left:36%;width:34%;}
+    .m3{left:68%;width:30%;}
+    .tag,.sub{display:none;}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .sway,.tiltA,.tiltB,.tiltC,.spin,.shadow,.breeze span,.pulse{animation:none!important;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="mark"><span class="dot"></span><h1>Mécanisme</h1></div>
+  <p class="sub">Balanced Forms in Gentle Motion</p>
+  <span class="tag">Kinetic Study №097</span>
+</header>
+
+<main class="stage" id="stage">
+  <div class="ceiling"></div>
+  <div class="floor"></div>
+
+  <!-- ============ MOBILE 1 : simple two-form balance ============ -->
+  <div class="mobile m1">
+    <div class="parallax" data-depth="0.9">
+      <div class="sway">
+        <div class="anchor"></div>
+        <div class="wire" style="height:17%"></div>
+        <div class="arm tiltA" style="width:clamp(120px,17vw,230px)">
+          <div class="hang" style="left:-2px">
+            <div class="wire" style="height:20px"></div>
+            <div class="rock"><div class="shape circle" style="width:clamp(46px,6vw,82px);height:clamp(46px,6vw,82px);background:var(--red)"></div></div>
+          </div>
+          <div class="hang" style="right:-2px">
+            <div class="wire" style="height:34px"></div>
+            <div class="rock rev"><div class="shape square" style="width:clamp(40px,5vw,70px);height:clamp(40px,5vw,70px);background:var(--blue)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="shadow" style="width:120px;height:26px"></div>
+  </div>
+
+  <!-- ============ MOBILE 2 : three-level cascade ============ -->
+  <div class="mobile m2">
+    <div class="parallax" data-depth="1.0">
+      <div class="sway">
+        <div class="anchor"></div>
+        <div class="wire" style="height:13%"></div>
+        <div class="arm tiltA" style="width:clamp(180px,26vw,340px)">
+          <div class="hang" style="left:-2px">
+            <div class="wire" style="height:30px"></div>
+            <div class="rock"><div class="shape tri" style="--ts:clamp(24px,3.4vw,44px);--c:var(--blue)"></div></div>
+          </div>
+          <div class="hang" style="right:-2px">
+            <div class="wire" style="height:18px"></div>
+            <!-- sub arm level 2 -->
+            <div class="arm tiltB" style="width:clamp(120px,16vw,210px)">
+              <div class="hang" style="left:-2px">
+                <div class="wire" style="height:30px"></div>
+                <div class="rock rev"><div class="shape circle" style="width:clamp(38px,4.6vw,64px);height:clamp(38px,4.6vw,64px);background:var(--yellow)"></div></div>
+              </div>
+              <div class="hang" style="right:-2px">
+                <div class="wire" style="height:44px"></div>
+                <div class="rock"><div class="shape oval" style="width:clamp(52px,6.4vw,88px);height:clamp(34px,4.2vw,56px);background:var(--red)"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="shadow" style="width:180px;height:34px"></div>
+  </div>
+
+  <!-- ============ MOBILE 3 : asymmetric single-leaf ============ -->
+  <div class="mobile m3">
+    <div class="parallax" data-depth="0.75">
+      <div class="sway">
+        <div class="anchor"></div>
+        <div class="wire" style="height:20%"></div>
+        <div class="arm tiltC" style="width:clamp(110px,15vw,200px)">
+          <div class="hang" style="left:-2px">
+            <div class="wire" style="height:26px"></div>
+            <div class="rock"><div class="shape oval" style="width:clamp(40px,5vw,66px);height:clamp(56px,7vw,90px);background:var(--blue)"></div></div>
+          </div>
+          <div class="hang" style="right:-2px">
+            <div class="wire" style="height:40px"></div>
+            <div class="rock rev"><div class="shape square" style="width:clamp(34px,4.4vw,58px);height:clamp(34px,4.4vw,58px);background:var(--yellow)"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="shadow" style="width:100px;height:22px"></div>
+  </div>
+
+  <div class="breeze" id="breeze"></div>
+</main>
+
+<footer>
+  <span class="hint"><span class="pulse"></span>Move the cursor — a gentle breeze</span>
+  <span>Primary Forms · Black Wires · Off-White Ground</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  // ---- drifting breeze motes ----
+  var bz = document.getElementById("breeze");
+  for(var i=0;i<14;i++){
+    var s=document.createElement("span");
+    var top=5+Math.random()*80;
+    var dur=14+Math.random()*16;
+    var delay=-Math.random()*dur;
+    var y=10+Math.random()*30;
+    s.style.top=top+"%";
+    s.style.animationDuration=dur+"s";
+    s.style.animationDelay=delay+"s";
+    s.style.transform="translateY("+y+"px)";
+    bz.appendChild(s);
+  }
+
+  // ---- cursor breeze: parallax tilt on each mobile ----
+  var parallax=[].slice.call(document.querySelectorAll(".parallax"));
+  var tx=0, ty=0, cx=0, cy=0;
+  function onMove(e){
+    var w=window.innerWidth||1;
+    tx=((e.clientX||0)/w-0.5);
+    ty=((e.clientY||0)/(window.innerHeight||1)-0.5);
+  }
+  window.addEventListener("pointermove",onMove,{passive:true});
+  window.addEventListener("deviceorientation",function(e){
+    if(e.gamma!=null){tx=e.gamma/40;if(e.beta!=null)ty=(e.beta-45)/40;}
+  },{passive:true});
+  function tick(){
+    cx+=(tx-cx)*0.045;
+    cy+=(ty-cy)*0.045;
+    for(var i=0;i<parallax.length;i++){
+      var d=parseFloat(parallax[i].getAttribute("data-depth"))||1;
+      var rot=(cx*6*d).toFixed(3)+"deg";
+      var dx=(cx*10*d).toFixed(2)+"px";
+      var dy=(cy*6*d).toFixed(2)+"px";
+      parallax[i].style.transform="translate("+dx+","+dy+") rotate("+rot+")";
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

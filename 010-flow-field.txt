@@ -1,0 +1,102 @@
+TITLE
+Flow Field — Ink on Cream
+
+RECREATION PROMPT
+Build a single self-contained HTML page (no external libraries) that renders an
+animated generative "flow field" on an HTML5 canvas, styled like ink lines drawn
+on cream paper.
+
+Layout / chrome:
+- Full-viewport fixed canvas (inset:0), with the body background a subtle radial
+  gradient of warm cream/paper tones (center #efe8da near the upper-middle,
+  darkening to #d8cfbc at the edges) to give a soft vignette. Body has
+  overflow:hidden and a crosshair cursor.
+- Add a faint paper-grain overlay using a fixed full-screen ::before element that
+  uses an inline SVG feTurbulence fractalNoise texture at ~4.5% opacity with
+  mix-blend-mode:multiply.
+- Top-left: a large serif (Georgia) title "Flow Field" (clamp 28–72px, ink
+  color), with a small uppercase letter-spaced subtitle "Seeded noise ·
+  thousands of particles · ink on cream".
+- Bottom-left: a small editorial UI block (also mix-blend-mode:multiply) with an
+  italic serif mark "perlin, drawn by hand", a meta line showing the current
+  four-digit zero-padded SEED and the live PARTICLE COUNT, two small uppercase
+  outlined buttons ("New Field" and "Pause"/"Play"), and a hint line: "Move the
+  cursor to part the ink. / Click anywhere to seed a new field." Hide the hint
+  under 520px width. Buttons invert (ink background, paper text) on hover.
+
+Core algorithm:
+- Implement a seedable PRNG (mulberry32) and a seeded 2D Perlin noise generator
+  (permutation table shuffled via Fisher-Yates via the PRNG, quintic fade curve,
+  standard gradient noise returning ~[-1,1]).
+- Spawn thousands of particles (count scaled to viewport area, clamped roughly
+  900–6500, ~area/150), each placed at a random position with a random remaining
+  lifetime (120–420 frames).
+- Each frame, instead of clearing, draw a translucent paper-colored rectangle
+  (globalAlpha ~0.05) over the whole canvas so previous strokes fade slowly and
+  long ink trails accumulate.
+- Advance each particle along the field: the flow angle is the (multi-octave,
+  2-octave fractal) Perlin noise value at the particle's position plus slowly
+  evolving time offsets, multiplied into a curling radians value (~*2.6*PI).
+  Move the particle a small step (~1.15px) along that angle, drawing a thin
+  round-capped line from its previous to its new position. Stroke color is dark
+  ink with slight per-particle alpha/width variation tied to vertical position
+  (deeper = slightly darker/thicker). Particles that die or leave the canvas are
+  respawned at a random point.
+- DPR-aware: size the canvas by devicePixelRatio (capped at 2) and setTransform
+  so drawing stays in CSS pixels; repaint the paper background gradient on resize.
+
+Cursor interaction ("part the ink"):
+- Track mouse/touch position and velocity. Within a radius (~150px) of the
+  cursor, add a tangential swirl (perpendicular to the particle-to-cursor
+  vector, scaled by cursor motion) plus a radial repel push, fading linearly to
+  zero at the radius edge, so the ink visibly parts and swirls around the
+  pointer.
+
+Controls:
+- "New Field" button and clicking the canvas both pick a new random seed,
+  rebuild the Perlin noise, reset time, repaint the background, and reseed all
+  particles; the seed label updates to the new zero-padded value.
+- "Pause"/"Play" toggles the animation (trails freeze but the loop keeps
+  ticking). Resize is debounced and reflows/reseeds.
+
+Palette: cream paper (#efe8da / #e4dccB / vignette #d8cfbc) with dark warm ink
+(#1b1913, soft #3a352b). Typography: Georgia serif for display, Segoe UI /
+system sans for UI labels. Overall mood: minimal, editorial, tactile,
+hand-drawn.
+
+DESIGN DESCRIPTION
+A calm, editorial generative-art piece that simulates thousands of ink particles
+flowing along a slowly evolving seeded Perlin flow field across a warm cream
+paper surface. Because each frame is painted over with a translucent paper layer
+instead of being cleared, the particles leave long, overlapping trails that build
+into dense, organic, calligraphic textures which gradually fade — evoking ink
+diffusing on paper. A faint SVG noise grain, a soft radial vignette, and
+multiply-blended serif typography reinforce the analog, hand-drawn feel. Moving
+the cursor "parts the ink" with a swirl-and-repel force, and clicking or pressing
+"New Field" regrows a completely different composition from a new random seed,
+while a live readout shows the seed and particle count.
+
+MAJOR VISUAL TECHNIQUES
+- Seeded mulberry32 PRNG + custom 2D Perlin noise (permutation table, quintic
+  fade, gradient noise) for reproducible flow fields.
+- Fractal (2-octave) noise sampling, animated with slowly advancing time offsets,
+  mapped to a curling flow angle that drives particle motion.
+- Trail accumulation via per-frame translucent paper overlay (low globalAlpha
+  fill) instead of clearing, producing fading ink trails.
+- Thin round-capped line strokes per particle (previous→new position) with
+  vertical-position-based alpha/width variation for depth.
+- Cursor "parting the ink": radius-based tangential swirl + radial repel driven
+  by pointer position/velocity.
+- DPR-aware canvas sizing (capped at 2x) and resize-debounced reflow.
+- CSS/SVG paper grain (feTurbulence fractalNoise) and radial-gradient vignette,
+  both blended with mix-blend-mode:multiply.
+- Editorial overlay UI: Georgia italic serif marks, tabular-nums seed readout,
+  uppercase letter-spaced labels, inverted hover buttons.
+
+INTENDED INTERACTION MODEL
+Passive-to-active generative display. By default the field animates continuously
+and the user watches the ink flow and accumulate. Hovering/moving the cursor
+parts and swirls the ink around the pointer (touch supported). Clicking anywhere
+on the canvas, or pressing "New Field", instantly regenerates a fresh seeded
+composition; "Pause"/"Play" freezes or resumes the motion. The seed and particle
+count are always visible, and resizing the window reflows the field.

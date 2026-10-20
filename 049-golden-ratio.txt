@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page — Golden ratio / Fibonacci spiral construction visualization. Palette: navy, gold, cream. Signature: animated golden rectangles subdividing, spiral draw-on, phi annotations. One self-contained .html file, all CSS in a single <style> block, all JS in a single <script> block, no external dependencies (no CDN, fonts, images or libraries), responsive 320px–4K, valid HTML5. WOW quality bar: genuinely stunning, premium, Awwwards/SiteInspire-caliber, distinctive art direction, curated palette, refined typography, real motion, one signature effect.
+
+TITLE:
+"Φ — The Golden Construction"
+
+DESIGN DESCRIPTION:
+A dark navy drafting table where the golden ratio draws itself into being. A single golden rectangle rises from the origin, then subdivides endlessly: each square peels away in turn, its far corner pinned with a brass node, while a continuous logarithmic spiral sweeps inward through the quarter-arcs, as if a compass had been set loose. Cream hairline guides, phi annotations and live Fibonacci counters float around the figure in a quiet grotesque/serif mix. Everything breathes on a slow timeline — the subdivision marches to a metronome tuned to φ, the spiral thickens as it draws, and a soft gold bloom follows the active construction point. The result is less an infographic than an animated geometric proof rendered in gilt and midnight.
+
+MAJOR VISUAL TECHNIQUES:
+- Pure inline SVG golden rectangle built from φ = 1.618…, subdivided recursively into golden squares with hairline strokes.
+- Animated spiral drawn as one continuous SVG path (arc segments through each square's corner), revealed with stroke-dashoffset draw-on.
+- Sequential reveal: squares and quarter-arcs animate in φ-timed beats using staggered requestAnimationFrame / CSS transitions.
+- Brass "node" anchors and cream construction guides; live Fibonacci + phi readout in the corner.
+- Gold radial bloom that tracks the current construction point (SVG filter blur + screen blend).
+- Refined two-typeface system (system serif for the display, system grotesque for the technical labels) on a navy ground with a subtle paper-grain gradient.
+- Fully responsive viewBox scaling so the diagram stays crisp from 320px to 4K.
+
+INTENDED INTERACTION MODEL:
+Passive-forward but alive. On load the construction animates itself in a loop; the viewer can step forward/back one subdivision with the ◀ ▶ controls, pause/resume, and scrub the "growth" stage with the slider to freeze the figure at any depth of subdivision. A small "replay" button re-triggers the full draw-on. Hovering a square highlights its edge and shows its φ proportion; the whole thing respects prefers-reduced-motion by resting on a static final construction.

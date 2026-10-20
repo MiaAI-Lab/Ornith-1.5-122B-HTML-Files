@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prisma · Living Kaleidoscope</title>
+<style>
+  :root{
+    --bg:#05030a;
+    --ink:#f4ecff; --muted:#b9a9d6;
+    --glass:rgba(20,12,36,.55);
+    --line:rgba(190,160,255,.22);
+    --ruby:#e01b4a; --emerald:#1fbf7a; --sapphire:#2b5fe6;
+    --topaz:#ffb63a; --amethyst:#a24be0; --rose:#ff5ea8;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink); -webkit-font-smoothing:antialiased;
+    touch-action:none;
+  }
+  #kaleido{position:fixed;inset:0;display:block;cursor:crosshair}
+
+  /* vignette + center glow for depth */
+  .depth{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(120% 120% at 50% 50%, transparent 42%, rgba(5,3,10,.55) 78%, rgba(5,3,10,.9) 100%);}
+  .core{position:fixed;left:50%;top:50%;width:160px;height:160px;margin:-80px 0 0 -80px;border-radius:50%;
+    pointer-events:none;z-index:2;
+    background:radial-gradient(circle, rgba(220,190,255,.16), transparent 62%);
+    mix-blend-mode:screen}
+
+  .help{position:fixed;left:50%;top:clamp(16px,4vh,34px);transform:translateX(-50%);z-index:4;
+    text-align:center;pointer-events:none;transition:opacity 1s ease}
+  .help h1{font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:.34em;text-transform:uppercase;
+    font-size:clamp(.72rem,2.2vw,1rem);margin:0 0 6px;color:#e9dcff;opacity:.9}
+  .help p{margin:0;color:var(--muted);font-size:clamp(.66rem,1.7vw,.82rem);letter-spacing:.14em}
+
+  .panel{position:fixed;left:50%;bottom:clamp(14px,3.4vh,28px);transform:translateX(-50%);z-index:4;
+    display:flex;flex-direction:column;gap:10px;align-items:center;
+    background:linear-gradient(180deg, rgba(30,18,58,.55), rgba(14,8,28,.6));
+    border:1px solid var(--line);border-radius:20px;padding:14px 18px;
+    box-shadow:0 18px 50px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.07);
+    backdrop-filter:blur(14px);max-width:calc(100vw - 24px)}
+  .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+  .grp{display:flex;align-items:center;gap:7px}
+  .grp .cap{font-size:.6rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:0 4px}
+  button.pill{
+    background:rgba(255,255,255,.05);border:1px solid rgba(190,160,255,.2);color:var(--ink);
+    border-radius:999px;padding:7px 13px;font:inherit;font-size:.72rem;letter-spacing:.06em;cursor:pointer;
+    transition:transform .12s, background .2s, border-color .2s, color .2s;
+    display:flex;align-items:center;gap:6px}
+  button.pill:hover{background:rgba(160,120,255,.18);border-color:rgba(190,160,255,.55);color:#fff;transform:translateY(-1px)}
+  button.pill.active{background:linear-gradient(180deg, rgba(180,120,255,.35), rgba(140,80,240,.28));
+    border-color:rgba(200,170,255,.75);color:#fff;box-shadow:0 0 14px rgba(160,110,255,.4)}
+  button.pill .sw{width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
+  .divider{width:1px;height:22px;background:rgba(190,160,255,.2);margin:0 2px}
+
+  @media (max-width:560px){
+    .panel{padding:11px 12px;gap:8px;border-radius:16px}
+    button.pill{padding:6px 10px;font-size:.66rem}
+    .grp .cap{display:none}
+    .divider{display:none}
+  }
+  @media (prefers-reduced-motion: reduce){ .help{opacity:.85} }
+</style>
+</head>
+<body>
+<canvas id="kaleido"></canvas>
+<div class="core"></div>
+<div class="depth"></div>
+
+<div class="help" id="help">
+  <h1>Prisma</h1>
+  <p id="helpSub">move · drag · tap to paint light</p>
+</div>
+
+<div class="panel" id="panel">
+  <div class="row">
+    <span class="grp"><span class="cap">Mirror</span>
+      <button class="pill" data-seg="4">4</button>
+      <button class="pill active" data-seg="6">6</button>
+      <button class="pill" data-seg="8">8</button>
+      <button class="pill" data-seg="12">12</button>
+      <button class="pill" data-seg="16">16</button>
+    </span>
+  </div>
+  <div class="row">
+    <span class="grp"><span class="cap">Colour</span>
+      <button class="pill active" data-mode="jewel"><span class="sw"></span>Jewel</button>
+      <button class="pill" data-mode="spectrum"><span class="sw"></span>Spectrum</button>
+      <button class="pill" data-mode="random"><span class="sw"></span>Random</button>
+      <button class="pill" data-mode="mono"><span class="sw"></span>Monochrome</button>
+    </span>
+  </div>
+  <div class="row">
+    <button class="pill" id="glowBtn"><span class="sw"></span>Glow</button>
+    <span class="divider"></span>
+    <button class="pill" id="clearBtn">Clear</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv = document.getElementById("kaleido");
+  var ctx = cv.getContext("2d", { alpha:false });
+  var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var cx = 0, cy = 0;
+
+  var segments = 6, sector = (Math.PI * 2) / segments;
+  var colorMode = "jewel";
+  var glow = true;
+  var fade = 0.085;
+
+  var JEWEL = ["#e01b4a","#f2453a","#ff8a3d","#ffb63a","#ffe14d",
+               "#1fbf7a","#2bd4c8","#2b5fe6","#3a7bd5","#6a5cff",
+               "#a24be0","#c24df0","#ff5ea8","#ff7e6b"];
+  var MONO_HUE = 274;
+
+  var pending = [];          // dots queued before the next frame
+  var tick = 0;              // advances for spectrum cycling
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.floor(W * dpr); cv.height = Math.floor(H * dpr);
+    cv.style.width = W + "px"; cv.style.height = H + "px";
+    ctx.setTransform(1,0,0,1,0,0);
+    cx = W * dpr / 2; cy = H * dpr / 2;
+    // clear to background on resize so nothing lingers stretched
+    ctx.fillStyle = "#05030a";
+    ctx.fillRect(0,0,cv.width,cv.height);
+  }
+  window.addEventListener("resize", resize);
+  window.addEventListener("orientationchange", resize);
+
+  function pickColor(){
+    tick++;
+    if(colorMode === "spectrum"){
+      var h = (tick * 6 + (Math.random()*24 - 12)) % 360;
+      return "hsl(" + h + ",92%,62%)";
+    }
+    if(colorMode === "random"){
+      return JEWEL[(Math.random() * JEWEL.length) | 0];
+    }
+    if(colorMode === "mono"){
+      var l = 48 + (Math.random()*30 - 15);
+      var s = 78 + Math.random()*16;
+      return "hsl(" + MONO_HUE + "," + s + "%," + l + "%)";
+    }
+    // jewel: slow cycle with slight jitter so strokes band through the palette
+    var i = ((tick / 3) | 0) % JEWEL.length;
+    return JEWEL[(i + JEWEL.length) % JEWEL.length];
+  }
+
+  var glowAmt = 26;
+
+  function drawOne(x, y, color, size, a, mirror){
+    // draw one dot into a rotated (and optionally mirrored) segment
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.save();
+    ctx.translate(cx, cy);
+    if(mirror) ctx.scale(1, -1);
+    ctx.rotate(a);
+    ctx.translate(x - cx, y - cy);
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, 6.2832);
+    ctx.fillStyle = color;
+    ctx.shadowBlur = glow ? glowAmt : 0;
+    ctx.shadowColor = color;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function paintDot(x, y, color, size){
+    for(var k = 0; k < segments; k++){
+      var a = k * sector;
+      drawOne(x, y, color, size, a, false);
+      drawOne(x, y, color, size, a, true);
+    }
+  }
+
+  function paintBurst(x, y, color){
+    // radial sparkle: a ring of dots expanding outward
+    var n = 26, r = 6 + Math.random() * 10;
+    for(var i = 0; i < n; i++){
+      var ang = (i / n) * 6.2832;
+      var px = x + Math.cos(ang) * r;
+      var py = y + Math.sin(ang) * r;
+      pending.push({ x: px, y: py, c: color, s: 2 + Math.random() * 3 });
+    }
+    pending.push({ x:x, y:y, c:color, s:5 });
+  }
+
+  function frame(){
+    // fade the whole canvas toward the night background -> trailing glow
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "rgba(5,3,10," + fade + ")";
+    ctx.fillRect(0, 0, W * dpr, H * dpr);
+    // drain queued dots
+    for(var i = 0; i < pending.length; i++){
+      var d = pending[i];
+      paintDot(d.x, d.y, d.c, d.s);
+    }
+    pending.length = 0;
+    requestAnimationFrame(frame);
+  }
+
+  function inPanel(el){
+    return !!(el && el.closest && el.closest("#panel"));
+  }
+  function pt(e){
+    return { x: e.clientX * dpr, y: e.clientY * dpr };
+  }
+
+  var lastX = null, lastY = null, hinted = false;
+
+  function onMove(e){
+    if(inPanel(e.target)) return;
+    var p = pt(e);
+    if(!hinted){ hinted = true; var h = document.getElementById("help"); if(h) h.style.opacity = "0"; }
+    if(lastX === null){ lastX = p.x; lastY = p.y; }
+    var dx = p.x - lastX, dy = p.y - lastY, dist = Math.sqrt(dx*dx + dy*dy);
+    var steps = Math.min(Math.max(Math.ceil(dist / 4), 1), 48);
+    for(var s = 1; s <= steps; s++){
+      var t = s / steps;
+      var x = lastX + dx * t, y = lastY + dy * t;
+      var c = pickColor();
+      var size = 2.2 + Math.random() * 3.2;
+      pending.push({ x:x, y:y, c:c, s:size });
+    }
+    lastX = p.x; lastY = p.y;
+  }
+
+  function onDown(e){
+    if(inPanel(e.target)) return;
+    var p = pt(e);
+    paintBurst(p.x, p.y, pickColor());
+    lastX = p.x; lastY = p.y;
+  }
+
+  window.addEventListener("pointermove", onMove, { passive:true });
+  window.addEventListener("pointerdown", onDown, { passive:true });
+
+  // controls
+  function wireSeg(){
+    var btns = document.querySelectorAll("[data-seg]");
+    for(var i = 0; i < btns.length; i++){
+      btns[i].addEventListener("click", (function(b){
+        return function(){
+          for(var j = 0; j < btns.length; j++) btns[j].classList.remove("active");
+          b.classList.add("active");
+          segments = parseInt(b.getAttribute("data-seg"), 10) || 6;
+          sector = (Math.PI * 2) / segments;
+        };
+      })(btns[i]));
+    }
+  }
+  function wireMode(){
+    var btns = document.querySelectorAll("[data-mode]");
+    for(var i = 0; i < btns.length; i++){
+      btns[i].addEventListener("click", (function(b){
+        return function(){
+          for(var j = 0; j < btns.length; j++) btns[j].classList.remove("active");
+          b.classList.add("active");
+          colorMode = b.getAttribute("data-mode") || "jewel";
+        };
+      })(btns[i]));
+    }
+  }
+  var glowBtn = document.getElementById("glowBtn");
+  if(glowBtn){
+    glowBtn.addEventListener("click", function(){
+      glow = !glow;
+      glowBtn.classList.toggle("active", glow);
+    });
+    glow = true; glowBtn.classList.add("active");
+  }
+  var clearBtn = document.getElementById("clearBtn");
+  if(clearBtn){
+    clearBtn.addEventListener("click", function(){
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.fillStyle = "#05030a";
+      ctx.fillRect(0,0,W*dpr,H*dpr);
+    });
+  }
+
+  resize();
+  wireSeg();
+  wireMode();
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

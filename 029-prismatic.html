@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REFRACTION · A Prism of White Light</title>
+<style>
+  :root{
+    --bg:#07070c;
+    --bg2:#0d0f1c;
+    --ink:#f2f4ff;
+    --muted:#8b90b8;
+    --R:#ff3b30; --O:#ff9f1c; --Y:#ffd23f; --G:#2ec07a; --B:#2b7bff; --I:#6a5cff; --V:#b14dff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 20% 0%, #141731 0%, transparent 55%),
+      radial-gradient(120% 120% at 80% 100%, #10132a 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    touch-action:none;
+  }
+  .stage{position:fixed;inset:0;display:block}
+  svg{display:block;width:100%;height:100%}
+
+  /* ambient vignette for depth */
+  .vign{position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(120% 120% at 50% 46%, transparent 40%, rgba(4,4,12,.55) 76%, rgba(4,4,12,.92) 100%);}
+
+  .wordmark{position:fixed;left:clamp(20px,4vw,54px);top:clamp(20px,4vh,46px);z-index:5;pointer-events:none}
+  .wordmark .k{font-size:clamp(.62rem,1.5vw,.8rem);letter-spacing:.42em;text-transform:uppercase;color:var(--muted)}
+  .wordmark h1{margin:.35em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.7rem,5.4vw,3.3rem);letter-spacing:.02em;line-height:.98}
+  .wordmark h1 em{font-style:italic;font-weight:300;
+    background:linear-gradient(92deg,var(--R),var(--O),var(--Y),var(--G),var(--B),var(--I),var(--V));
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+
+  .foot{position:fixed;left:clamp(20px,4vw,54px);bottom:clamp(18px,4vh,40px);z-index:5;max-width:min(560px,80vw)}
+  .foot p{margin:0;color:var(--muted);font-size:clamp(.72rem,1.55vw,.9rem);line-height:1.55;letter-spacing:.02em}
+  .foot .hint{margin-top:.7em;font-size:.72em;letter-spacing:.14em;text-transform:uppercase;color:#aab0dd}
+
+  .readout{position:fixed;right:clamp(18px,3.4vw,44px);top:clamp(18px,3.4vh,40px);z-index:5;text-align:right;pointer-events:none}
+  .readout .row{display:flex;gap:9px;justify-content:flex-end;align-items:center;font-variant-numeric:tabular-nums}
+  .readout .lab{font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:var(--muted)}
+  .readout .val{font-size:.82rem;color:var(--ink);letter-spacing:.04em;min-width:52px}
+  .swatches{display:flex;gap:4px;justify-content:flex-end;margin-top:9px}
+  .swatches i{width:16px;height:5px;border-radius:2px;display:block;box-shadow:0 0 8px currentColor}
+
+  @media (prefers-reduced-motion: reduce){
+    .foot .hint::after{content:" · reduced motion"}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <svg id="scene" viewBox="0 0 1000 700" preserveAspectRatio="xMidYMid slice" aria-label="White light passing through a glass prism and dispersing into a ROYGBIV spectrum">
+    <defs>
+      <!-- glass body -->
+      <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0"   stop-color="#eaf3ff" stop-opacity=".55"/>
+        <stop offset=".35" stop-color="#b9d6ff" stop-opacity=".18"/>
+        <stop offset=".62" stop-color="#8fb6ff" stop-opacity=".14"/>
+        <stop offset="1"   stop-color="#ffffff" stop-opacity=".34"/>
+      </linearGradient>
+      <linearGradient id="glassEdge" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#9fbfff" stop-opacity=".35"/>
+      </linearGradient>
+      <!-- white incident beam -->
+      <linearGradient id="whiteBeam" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".2"/>
+        <stop offset=".7" stop-color="#ffffff" stop-opacity=".95"/>
+        <stop offset="1" stop-color="#ffffff" stop-opacity="1"/>
+      </linearGradient>
+      <!-- interior refracted white path -->
+      <linearGradient id="innerBeam" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#ffffff" stop-opacity=".9"/>
+        <stop offset="1" stop-color="#dfe9ff" stop-opacity=".35"/>
+      </linearGradient>
+
+      <filter id="soft" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur stdDeviation="6"/>
+      </filter>
+      <filter id="bloom" x="-120%" y="-120%" width="340%" height="340%">
+        <feGaussianBlur stdDeviation="16"/>
+      </filter>
+      <filter id="bloomLg" x="-150%" y="-150%" width="400%" height="400%">
+        <feGaussianBlur stdDeviation="34"/>
+      </filter>
+      <filter id="glassBlur" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="2.2"/>
+      </filter>
+    </defs>
+
+    <!-- faint floating dust handled on canvas overlay? kept in svg for simplicity -->
+    <g id="dust"></g>
+
+    <!-- spectrum fan (behind prism rays drawn from exit) -->
+    <g id="fan"></g>
+
+    <!-- spectrum bloom (additive smear) -->
+    <g id="fanBloom" style="mix-blend-mode:screen"></g>
+
+    <!-- incident white beam + reflection -->
+    <g id="beam"></g>
+
+    <!-- prism glass -->
+    <g id="prism"></g>
+
+    <!-- exit & entry caustic glows -->
+    <g id="caustics" style="mix-blend-mode:screen"></g>
+  </svg>
+</div>
+
+<div class="vign"></div>
+
+<div class="wordmark">
+  <div class="k">Optica · No. 029</div>
+  <h1>The <em>Prism</em><br>disperses the white.</h1>
+</div>
+
+<div class="readout">
+  <div class="row"><span class="lab">Angle</span><span class="val" id="angVal">0°</span></div>
+  <div class="row"><span class="lab">Dispersion</span><span class="val" id="disVal">100%</span></div>
+  <div class="swatches" id="swatches"></div>
+</div>
+
+<div class="foot">
+  <p>A single ray of colourless white light enters the crown-glass prism, bends at each
+     interface, and leaves as a fanning spectrum — red bending least, violet most.</p>
+  <div class="hint">Move vertically to tilt the beam · drag horizontally to rotate the prism</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var svg=document.getElementById("scene");
+  var fan=document.getElementById("fan");
+  var fanBloom=document.getElementById("fanBloom");
+  var beamG=document.getElementById("beam");
+  var prismG=document.getElementById("prism");
+  var caustics=document.getElementById("caustics");
+  var dustG=document.getElementById("dust");
+  var angVal=document.getElementById("angVal");
+  var disVal=document.getElementById("disVal");
+  var swWrap=document.getElementById("swatches");
+
+  var W=1000, H=700;
+  var C={x:500,y:377};
+
+  var COLORS=["#ff3b30","#ff9f1c","#ffd23f","#2ec07a","#2b7bff","#6a5cff","#b14dff"];
+
+  for(var s=0;s<COLORS.length;s++){
+    var si=document.createElement("i");
+    si.style.background=COLORS[s]; si.style.color=COLORS[s];
+    swWrap.appendChild(si);
+  }
+
+  function el(tag,a){ var e=document.createElementNS(NS,tag); for(var k in a) e.setAttribute(k,a[k]); return e; }
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function rot(p,c,a){ var co=Math.cos(a),si=Math.sin(a),dx=p.x-c.x,dy=p.y-c.y; return {x:c.x+dx*co-dy*si,y:c.y+dx*si+dy*co}; }
+  function lerp(p,q,t){ return {x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t}; }
+  function segInt(p1,p2,p3,p4){
+    var a=p2.x-p1.x,b=p2.y-p1.y,c=p4.x-p3.x,d=p4.y-p3.y;
+    var den=a*d-b*c; if(Math.abs(den)<1e-9) return null;
+    var t=((p3.x-p1.x)*d-(p3.y-p1.y)*c)/den;
+    var u=((p3.x-p1.x)*b-(p3.y-p1.y)*a)/den;
+    if(t<0||t>1||u<0||u>1) return null;
+    return {x:p1.x+t*a,y:p1.y+t*b};
+  }
+
+  var baseV=[{x:500,y:166},{x:370,y:494},{x:630,y:494}];
+
+  // build persistent elements
+  var beamLine=el("line",{stroke:"url(#whiteBeam)","stroke-width":"10","stroke-linecap":"round",filter:"url(#bloom)"});
+  var beamCore=el("line",{stroke:"#ffffff","stroke-width":"2.6","stroke-linecap":"round"});
+  var reflLine=el("line",{stroke:"url(#whiteBeam)","stroke-width":"4","stroke-linecap":"round","stroke-opacity":".55",filter:"url(#soft)"});
+  var innerLine=el("line",{stroke:"url(#innerBeam)","stroke-width":"7","stroke-linecap":"round",filter:"url(#soft)"});
+  beamG.appendChild(beamLine); beamG.appendChild(beamCore); beamG.appendChild(reflLine); beamG.appendChild(innerLine);
+
+  var prismFill=el("polygon",{fill:"url(#glass)","stroke":"url(#glassEdge)","stroke-width":"1.6","stroke-linejoin":"round"});
+  var prismSpec=el("line",{stroke:"#ffffff","stroke-width":"2.4","stroke-linecap":"round","stroke-opacity":".85"});
+  var prismEdge=el("polygon",{fill:"none","stroke":"url(#glassEdge)","stroke-width":"2","stroke-linejoin":"round","stroke-opacity":".85"});
+  prismG.appendChild(prismFill); prismG.appendChild(prismSpec); prismG.appendChild(prismEdge);
+
+  var rayEls=[], rayBloomEls=[];
+  for(var i=0;i<7;i++){
+    var r=el("line",{stroke:COLORS[i],"stroke-width":"5","stroke-linecap":"round","stroke-opacity":".96",filter:"url(#soft)"});
+    var rb=el("line",{stroke:COLORS[i],"stroke-width":"16","stroke-linecap":"round","stroke-opacity":".45"});
+    fan.appendChild(r); fanBloom.appendChild(rb);
+    rayEls.push(r); rayBloomEls.push(rb);
+  }
+
+  var entryGlow=el("circle",{r:"28",fill:"#ffffff","fill-opacity":".55",filter:"url(#bloomLg)"});
+  var exitGlow=el("circle",{r:"34",fill:"#d6e4ff","fill-opacity":".5",filter:"url(#bloomLg)"});
+  caustics.appendChild(entryGlow); caustics.appendChild(exitGlow);
+
+  var dust=[];
+  for(var dd=0;dd<70;dd++){
+    var dot=el("circle",{cx:(Math.random()*W).toFixed(1),cy:(Math.random()*H).toFixed(1),r:(Math.random()*1.3+0.3).toFixed(2),fill:"#cdd8ff","fill-opacity":(Math.random()*0.26+0.04).toFixed(2)});
+    dustG.appendChild(dot);
+    dust.push({el:dot,ph:Math.random()*6.28,sp:Math.random()*0.9+0.15});
+  }
+
+  var state={t:0,d:1,r:0}, target={t:0,d:1,r:0};
+  var pointer={down:false,startX:0,startY:0,baseT:0,baseR:0,baseD:1};
+  var idleTimer=2, time=0, lastFrame=0, reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function onDown(e){ var p=pt(e); pointer.down=true; pointer.startX=p.x; pointer.startY=p.y; pointer.baseT=state.t; pointer.baseR=state.r; pointer.baseD=state.d; idleTimer=0; }
+  function onMove(e){
+    var p=pt(e);
+    if(pointer.down){
+      var dx=p.x-pointer.startX, dy=p.y-pointer.startY;
+      target.r=clamp(pointer.baseR+dx*0.045,-16,16);
+      target.d=clamp(pointer.baseD+dx*0.0055,0.4,1.7);
+      target.t=clamp(pointer.baseT+dy*0.0035,-1,1);
+    }else{
+      var fracY=clamp(p.y/window.innerHeight,0,1);
+      target.t=1-2*fracY;
+    }
+    idleTimer=0;
+  }
+  function onUp(){ pointer.down=false; }
+  function pt(e){ return {x:e.clientX|| (e.touches&&e.touches[0]&&e.touches[0].clientX)||0, y:e.clientY||(e.touches&&e.touches[0]&&e.touches[0].clientY)||0}; }
+
+  window.addEventListener("pointermove",onMove,{passive:true});
+  window.addEventListener("pointerdown",onDown);
+  window.addEventListener("pointerup",onUp);
+  window.addEventListener("pointercancel",onUp);
+
+  function frame(ts){
+    if(!lastFrame) lastFrame=ts;
+    var dt=Math.min((ts-lastFrame)/1000,0.05); lastFrame=ts;
+    time+=dt;
+    if(reduce){ target.t=0.08; target.r=0; }
+    else if(idleTimer>1.6){
+      target.t=Math.sin(time*0.5)*0.55;
+      target.r=Math.sin(time*0.22)*9;
+      target.d=1+Math.sin(time*0.7)*0.14;
+    }
+    state.t+=(target.t-state.t)*0.07;
+    state.d+=(target.d-state.d)*0.07;
+    state.r+=(target.r-state.r)*0.07;
+
+    var theta=state.r*Math.PI/180;
+    var verts=baseV.map(function(p){return rot(p,C,theta);});
+    var A=verts[0],BL=verts[1],BR=verts[2];
+
+    var yMin=Math.min(A.y,BL.y), yMax=Math.max(A.y,BL.y);
+    var beamY=clamp(C.y+state.t*120, yMin+12, yMax-12);
+
+    var fromL={x:-40,y:beamY}, fromR={x:W+40,y:beamY};
+    var E=segInt(fromL,fromR,A,BL);
+    if(!E) E=lerp(A,BL,0.5);
+
+    // incident beam
+    beamLine.setAttribute("x1",fromL.x); beamLine.setAttribute("y1",beamY);
+    beamLine.setAttribute("x2",E.x); beamLine.setAttribute("y2",E.y);
+    beamCore.setAttribute("x1",fromL.x); beamCore.setAttribute("y1",beamY);
+    beamCore.setAttribute("x2",E.x); beamCore.setAttribute("y2",E.y);
+
+    // interior refracted path
+    var phi=0.10+state.t*0.12;
+    var idir={x:Math.cos(phi),y:Math.sin(phi)};
+    var X=segInt(E,{x:E.x+idir.x*1200,y:E.y+idir.y*1200},A,BR);
+    if(!X) X=lerp(A,BR,0.5);
+    innerLine.setAttribute("x1",E.x); innerLine.setAttribute("y1",E.y);
+    innerLine.setAttribute("x2",X.x); innerLine.setAttribute("y2",X.y);
+
+    // reflected beam off the entry face (up-left)
+    var rdir={x:-Math.cos(0.34-state.t*0.1),y:-Math.sin(0.34-state.t*0.1)};
+    reflLine.setAttribute("x1",E.x); reflLine.setAttribute("y1",E.y);
+    reflLine.setAttribute("x2",E.x+rdir.x*430); reflLine.setAttribute("y2",E.y+rdir.y*430);
+
+    // exit fan
+    var exitBase=0.30+state.t*0.30;
+    var spread=state.d*0.054;
+    for(var i=0;i<7;i++){
+      var ang=exitBase+(i-3)*spread;
+      var ex=X.x+Math.cos(ang)*1700, ey=X.y+Math.sin(ang)*1700;
+      rayEls[i].setAttribute("x1",X.x); rayEls[i].setAttribute("y1",X.y);
+      rayEls[i].setAttribute("x2",ex); rayEls[i].setAttribute("y2",ey);
+      rayBloomEls[i].setAttribute("x1",X.x); rayBloomEls[i].setAttribute("y1",X.y);
+      rayBloomEls[i].setAttribute("x2",ex); rayBloomEls[i].setAttribute("y2",ey);
+    }
+
+    // prism geometry
+    var pts=A.x+","+A.y+" "+BL.x+","+BL.y+" "+BR.x+","+BR.y;
+    prismFill.setAttribute("points",pts);
+    prismEdge.setAttribute("points",pts);
+    var specEnd=lerp(A,BL,0.32);
+    prismSpec.setAttribute("x1",A.x); prismSpec.setAttribute("y1",A.y);
+    prismSpec.setAttribute("x2",specEnd.x); prismSpec.setAttribute("y2",specEnd.y);
+
+    // caustics
+    entryGlow.setAttribute("cx",E.x); entryGlow.setAttribute("cy",E.y);
+    exitGlow.setAttribute("cx",X.x); exitGlow.setAttribute("cy",X.y);
+    var pulse=reduce?1:0.82+0.18*Math.sin(time*3.2);
+    entryGlow.setAttribute("fill-opacity",(0.5*pulse).toFixed(3));
+    exitGlow.setAttribute("fill-opacity",(0.45*pulse).toFixed(3));
+
+    // dust twinkle
+    for(var k=0;k<dust.length;k++){
+      var dd2=dust[k];
+      dd2.el.setAttribute("fill-opacity",(0.05+0.22*(0.5+0.5*Math.sin(time*dd2.sp+dd2.ph))).toFixed(3));
+    }
+
+    angVal.textContent=Math.round(state.t*34)+"°";
+    disVal.textContent=Math.round(state.d*88)+"%";
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

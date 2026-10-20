@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aethermere — Floating Islands & Upward Waterfalls</title>
+<style>
+  :root{
+    --sky-top:#7fb4e8;
+    --sky-mid:#bcd6f2;
+    --sky-low:#e7e2f4;
+    --haze:#c9b8e6;
+    --stone:#b98a5e;
+    --stone-dk:#8a5f3c;
+    --stone-lt:#d9b587;
+    --moss:#6f9c5b;
+    --moss-dk:#4f7340;
+    --moss-lt:#9cc479;
+    --ink:#3a4a52;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; height:100%; overflow:hidden;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif; }
+
+  .scene{ position:fixed; inset:0; overflow:hidden;
+    background:
+      radial-gradient(120% 80% at 78% 12%, rgba(255,246,214,0.9) 0%, rgba(255,236,190,0.35) 22%, rgba(255,236,190,0) 45%),
+      linear-gradient(to bottom,
+        #6ea6dc 0%, #8fbed8 22%, #b6d5ee 44%,
+        #d6ddf0 64%, #e6e0f2 80%, #efe7f6 100%); }
+
+  /* ---------- sun ---------- */
+  .sun{ position:absolute; left:78%; top:14%; width:180px; height:180px;
+    transform:translate(-50%,-50%); border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle at 50% 50%,
+      rgba(255,252,236,1) 0%, rgba(255,240,196,0.95) 26%,
+      rgba(253,214,150,0.5) 50%, rgba(253,200,140,0) 72%);
+    filter:drop-shadow(0 0 40px rgba(255,214,140,0.6))
+           drop-shadow(0 0 120px rgba(255,190,120,0.35));
+    will-change:transform; }
+  .sun-core{ position:absolute; left:78%; top:14%; width:72px; height:72px;
+    transform:translate(-50%,-50%); border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle at 45% 42%, #fffef6, #fff2cf 60%, #ffe6a6 100%);
+    box-shadow:0 0 60px 20px rgba(255,236,180,0.55); }
+
+  /* ---------- haze bands ---------- */
+  .haze{ position:absolute; left:-20%; right:-20%; height:240px;
+    background:radial-gradient(ellipse 55% 100% at 50% 50%,
+      rgba(201,184,230,0.5) 0%, rgba(201,184,230,0.14) 55%, rgba(201,184,230,0) 78%);
+    filter:blur(18px); pointer-events:none; will-change:transform; }
+
+  /* ---------- clouds (parallax) ---------- */
+  .cloud{ position:absolute; pointer-events:none; will-change:transform;
+    filter:drop-shadow(0 14px 22px rgba(90,110,150,0.18)); }
+  .cloud svg{ display:block; overflow:visible; }
+
+  /* ---------- birds ---------- */
+  .birds{ position:absolute; inset:0; pointer-events:none; will-change:transform; }
+
+  /* ---------- islands ---------- */
+  .island{ position:absolute; will-change:transform;
+    filter:drop-shadow(0 46px 40px rgba(70,80,120,0.34)); }
+  .island .body{ position:absolute; left:0; right:0; top:0;
+    background:
+      linear-gradient(to right, var(--stone-dk) 0%, var(--stone) 34%, var(--stone-lt) 62%, var(--stone) 100%);
+    box-shadow:inset -14px -10px 30px rgba(80,50,28,0.45),
+               inset 16px 6px 26px rgba(255,220,170,0.35); }
+  .island .grass{ position:absolute; left:-4%; right:-4%; top:0; height:34%;
+    background:linear-gradient(to bottom, var(--moss-lt) 0%, var(--moss) 55%, var(--moss-dk) 100%);
+    border-radius:50% 50% 12% 12% / 70% 70% 20% 20%;
+    box-shadow:inset 0 6px 10px rgba(255,255,255,0.28),
+               inset 0 -8px 14px rgba(40,70,30,0.35); }
+  .island .grassedge{ position:absolute; left:-4%; right:-4%; top:26%; height:12%;
+    background:linear-gradient(to bottom, var(--moss) 0%, var(--stone) 100%);
+    border-radius:50%; opacity:0.85; }
+
+  /* trees */
+  .tree{ position:absolute; bottom:100%; transform-origin:bottom center; }
+  .trunk{ position:absolute; left:50%; bottom:0; width:6%; height:70%;
+    transform:translateX(-50%); background:linear-gradient(to right,#6b4a2c,#8a5f3c);
+    border-radius:3px; }
+  .foliage{ position:absolute; left:50%; bottom:52%; width:44%; aspect-ratio:1/1;
+    transform:translateX(-50%); border-radius:50% 50% 46% 54%;
+    background:radial-gradient(circle at 38% 34%, var(--moss-lt), var(--moss) 60%, var(--moss-dk));
+    box-shadow:inset -6px -6px 12px rgba(30,55,25,0.4), 2px 4px 8px rgba(40,60,30,0.25); }
+
+  /* little cottage */
+  .cottage{ position:absolute; bottom:100%; }
+  .cottage .wall{ width:52px; height:38px;
+    background:linear-gradient(to right,#efe4cf,#d8c39c);
+    box-shadow:inset -6px 0 10px rgba(120,90,50,0.3), 3px 4px 8px rgba(60,50,40,0.25); }
+  .cottage .roof{ width:64px; height:0; border-left:8px solid transparent;
+    border-right:8px solid transparent; border-bottom:26px solid #9c5b46;
+    margin-left:-6px; filter:drop-shadow(0 -1px 0 rgba(0,0,0,0.1)); }
+  .cottage .door{ position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+    width:14px; height:22px; background:#6b4a2c; border-radius:7px 7px 0 0; }
+  .cottage .win{ position:absolute; top:8px; width:9px; height:9px;
+    background:#ffe9a8; box-shadow:0 0 6px rgba(255,214,120,0.7); border-radius:2px; }
+
+  /* ---------- upward waterfall (signature) ---------- */
+  .falls{ position:absolute; pointer-events:none; }
+  .falls .stream{ position:absolute; border-radius:50% 50% 42% 42%;
+    background:linear-gradient(to top,
+      rgba(160,206,240,0.05) 0%, rgba(180,220,245,0.55) 40%,
+      rgba(225,242,255,0.85) 72%, rgba(255,255,255,0.95) 100%);
+    box-shadow:0 0 22px 6px rgba(170,214,246,0.45),
+               inset 0 0 14px rgba(255,255,255,0.6);
+    mix-blend-mode:screen; will-change:transform; }
+  .falls .stream::after{ content:""; position:absolute; inset:0; border-radius:inherit;
+    background:repeating-linear-gradient(to top,
+      rgba(255,255,255,0.0) 0px, rgba(255,255,255,0.55) 10px,
+      rgba(255,255,255,0.0) 22px);
+    animation:rise 1.5s linear infinite; }
+  @keyframes rise{ from{ background-position:0 0; } to{ background-position:0 -66px; } }
+
+  /* the pool / source at the base from which water leaps up */
+  .falls .source{ position:absolute; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,255,255,0.9), rgba(190,224,250,0.5) 55%, rgba(190,224,250,0) 72%);
+    filter:blur(2px); pointer-events:none; }
+
+  .spark{ position:absolute; border-radius:50%; pointer-events:none;
+    background:radial-gradient(circle, rgba(255,255,255,0.95), rgba(200,228,252,0.4) 60%, rgba(200,228,252,0) 72%);
+    will-change:transform,opacity; }
+
+  /* ---------- vignette + grain ---------- */
+  .vignette{ position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(ellipse at 50% 42%, rgba(0,0,0,0) 54%, rgba(40,45,80,0.42) 100%); }
+  .grain{ position:absolute; inset:0; pointer-events:none; opacity:0.05; mix-blend-mode:overlay;
+    background-image:radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px);
+    background-size:3px 3px; }
+
+  /* ---------- caption ---------- */
+  .caption{ position:absolute; left:0; right:0; bottom:44px; text-align:center;
+    color:#3a4a63; font-family:Georgia,'Times New Roman',serif;
+    letter-spacing:0.32em; text-transform:uppercase;
+    font-size:clamp(12px,1.7vw,21px);
+    text-shadow:0 1px 0 rgba(255,255,255,0.6); opacity:0.92; }
+  .caption small{ display:block; letter-spacing:0.46em; font-size:0.46em;
+    opacity:0.55; margin-top:9px; font-family:system-ui,sans-serif;
+    text-transform:uppercase; }
+
+  .hint{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    color:rgba(58,74,99,0.55); letter-spacing:0.3em; text-transform:uppercase;
+    font-size:11px; pointer-events:none; transition:opacity 1.4s ease; }
+</style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="sun" id="sun"></div>
+    <div class="sun-core" id="sunCore"></div>
+
+    <div class="haze" id="haze2" style="bottom:30%;"></div>
+    <div class="haze" id="haze1" style="bottom:14%;"></div>
+
+    <div class="clouds" id="clouds"></div>
+    <div class="birds" id="birds"></div>
+    <div class="islands" id="islands"></div>
+
+    <div class="vignette"></div>
+    <div class="grain"></div>
+
+    <div class="caption">Aethermere<small>floating isles · waterfalls that rise · move your mouse</small></div>
+    <div class="hint" id="hint">move your mouse · drift</div>
+  </div>
+<script>
+(function(){
+  "use strict";
+  var scene = document.getElementById("scene");
+  var W = window.innerWidth, H = window.innerHeight;
+  var pointer = 0, target = 0, time = 0;
+  var clouds = [], islands = [], birds = [], sparks = [];
+
+  /* ---------------- CLOUDS ---------------- */
+  function cloudSVG(seed){
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns, "svg");
+    var w = 260, h = 110;
+    svg.setAttribute("viewBox","0 0 "+w+" "+h);
+    svg.setAttribute("width", w); svg.setAttribute("height", h);
+    // soft white puffs
+    var puffs = [
+      {x:60,y:60,r:38},{x:110,y:46,r:46},{x:160,y:52,r:42},
+      {x:200,y:64,r:34},{x:130,y:70,r:40},{x:86,y:74,r:30}
+    ];
+    puffs.forEach(function(p){
+      var c = document.createElementNS(ns,"ellipse");
+      c.setAttribute("cx",p.x); c.setAttribute("cy",p.y);
+      c.setAttribute("rx",p.r); c.setAttribute("ry",p.r*0.72);
+      c.setAttribute("fill","rgba(255,255,255,"+(0.78+Math.random()*0.18).toFixed(2)+")");
+      svg.appendChild(c);
+    });
+    return svg;
+  }
+  function buildClouds(){
+    var host = document.getElementById("clouds");
+    host.innerHTML = "";
+    clouds = [];
+    var defs = [
+      { x:0.12, y:0.14, s:1.15, depth:0.28, speed:0.010 },
+      { x:0.62, y:0.09, s:0.85, depth:0.20, speed:0.007 },
+      { x:0.34, y:0.26, s:1.40, depth:0.42, speed:0.014 },
+      { x:0.86, y:0.22, s:0.7,  depth:0.16, speed:0.006 },
+      { x:0.50, y:0.40, s:1.0,  depth:0.34, speed:0.011 }
+    ];
+    defs.forEach(function(d,i){
+      var el = document.createElement("div");
+      el.className = "cloud";
+      var svg = cloudSVG(i);
+      el.appendChild(svg);
+      el.style.opacity = (0.6 + d.depth*0.4).toFixed(2);
+      host.appendChild(el);
+      clouds.push({ el:el, baseX:d.x, y:d.y, s:d.s, depth:d.depth, speed:d.speed,
+                    offset:(Math.random()-0.5)*400 });
+    });
+  }
+
+  /* ---------------- ISLANDS ---------------- */
+  function makeTree(){
+    var t = document.createElement("div");
+    t.className = "tree";
+    var tr = document.createElement("div"); tr.className="trunk";
+    var f = document.createElement("div"); f.className="foliage";
+    t.appendChild(tr); t.appendChild(f);
+    return t;
+  }
+  function makeCottage(){
+    var c = document.createElement("div"); c.className="cottage";
+    var w = document.createElement("div"); w.className="wall";
+    var r = document.createElement("div"); r.className="roof";
+    var d = document.createElement("div"); d.className="door";
+    var w1 = document.createElement("div"); w1.className="win"; w1.style.left="8px";
+    var w2 = document.createElement("div"); w2.className="win"; w2.style.right="8px";
+    w.appendChild(d); w.appendChild(w1); w.appendChild(w2);
+    c.appendChild(r); c.appendChild(w);
+    return c;
+  }
+  function buildIslands(){
+    var host = document.getElementById("islands");
+    host.innerHTML = "";
+    islands = [];
+    // width, height(body), grass%, depth, x%, y%, bob
+    var defs = [
+      { w:300, body:170, x:0.20, y:0.52, depth:0.9,  bob:1.0, trees:5, fall:true  },
+      { w:200, body:120, x:0.72, y:0.40, depth:0.62, bob:1.3, trees:3, fall:true  },
+      { w:150, body:92,  x:0.44, y:0.70, depth:1.15, bob:0.8, trees:2, fall:false },
+      { w:110, body:70,  x:0.90, y:0.66, depth:0.45, bob:1.5, trees:2, fall:false },
+      { w:86,  body:56,  x:0.10, y:0.30, depth:0.32, bob:1.6, trees:1, fall:false }
+    ];
+    defs.forEach(function(d,i){
+      var el = document.createElement("div");
+      el.className = "island";
+      var half = d.w/2;
+
+      var grass = document.createElement("div"); grass.className="grass";
+      var edge = document.createElement("div"); edge.className="grassedge";
+      var body = document.createElement("div"); body.className="body";
+      body.style.height = d.body + "px";
+
+      // irregular rocky bottom via clip-path
+      body.style.clipPath = "polygon(4% 30%, 12% 78%, 30% 96%, 52% 100%, 74% 94%, 92% 72%, 97% 40%, 60% 30%, 40% 30%)";
+      body.style.webkitClipPath = body.style.clipPath;
+
+      el.appendChild(grass); el.appendChild(edge); el.appendChild(body);
+
+      // grass cap sized to island top
+      grass.style.height = (d.body*0.34) + "px";
+      edge.style.top = (d.body*0.26) + "px";
+
+      // trees + optional cottage on the grass line
+      var groundY = d.body*0.30; // top band where things sit
+      for(var t=0;t<d.trees;t++){
+        var tx = 0.18 + (t/(Math.max(1,d.trees-1)))*0.68;
+        if(d.trees===1) tx = 0.5;
+        var tree = makeTree();
+        tree.style.left = (tx*d.w) + "px";
+        tree.style.width = (d.w*0.16) + "px";
+        tree.style.bottom = (d.body - groundY) + "px";
+        el.appendChild(tree);
+      }
+      if(i===0){
+        var cot = makeCottage();
+        cot.style.left = (d.w*0.34) + "px";
+        cot.style.bottom = (d.body - groundY) + "px";
+        el.appendChild(cot);
+      }
+
+      // upward waterfall pouring from the island's edge
+      var falls = null, source = null;
+      if(d.fall){
+        falls = document.createElement("div"); falls.className="falls";
+        falls.style.left="0"; falls.style.top="0";
+        falls.style.width="100%"; falls.style.height="100%";
+        var streamH = d.body*1.15;
+        var stream = document.createElement("div"); stream.className="stream";
+        var sw = d.w*0.16;
+        stream.style.width = sw + "px";
+        stream.style.height = streamH + "px";
+        stream.style.left = (d.w*0.60) + "px";
+        stream.style.top = (d.body - streamH + 6) + "px";
+        stream.style.animationDelay = (i*0.2)+"s";
+        falls.appendChild(stream);
+
+        source = document.createElement("div"); source.className="source";
+        source.style.width = (sw*2.2) + "px";
+        source.style.height = (sw*1.1) + "px";
+        source.style.left = (d.w*0.60 - sw*0.6) + "px";
+        source.style.top = (d.body - 6) + "px";
+        falls.appendChild(source);
+
+        el.appendChild(falls);
+      }
+
+      var px = d.x * W, py = d.y * H;
+      el.style.width = d.w + "px";
+      el.style.left = px + "px";
+      el.style.top = py + "px";
+      host.appendChild(el);
+
+      islands.push({ el:el, defs:d, w:d.w, body:d.body, falls:falls,
+                     phase:Math.random()*6.28, baseY:py });
+
+      // sparks for upward particles
+      if(d.fall){
+        for(var s=0;s<10;s++){
+          var sp = document.createElement("div"); sp.className="spark";
+          var sz = 3 + Math.random()*5;
+          sp.style.width = sz+"px"; sp.style.height = sz+"px";
+          falls.appendChild(sp);
+          sparks.push({ el:sp, falls:falls,
+            x: d.w*0.60 + sw*0.5 + (Math.random()-0.5)*sw*0.8,
+            baseBody: d.body, streamH:streamH,
+            t: Math.random(), speed: 0.004 + Math.random()*0.006,
+            drift:(Math.random()-0.5)*40, sz:sz });
+        }
+      }
+    });
+  }
+
+  /* ---------------- BIRDS ---------------- */
+  function buildBirds(){
+    var host = document.getElementById("birds");
+    host.innerHTML = "";
+    birds = [];
+    var ns = "http://www.w3.org/2000/svg";
+    var svg = document.createElementNS(ns,"svg");
+    svg.setAttribute("viewBox","0 0 "+W+" "+H);
+    svg.setAttribute("width",W); svg.setAttribute("height",H);
+    svg.style.cssText = "position:absolute;inset:0;fill:none;stroke:rgba(58,70,90,0.6);stroke-width:2.2;stroke-linecap:round;";
+    var flocks = [ {x:0.30,y:0.20},{x:0.55,y:0.15},{x:0.40,y:0.28},{x:0.66,y:0.32} ];
+    flocks.forEach(function(f){
+      var g = document.createElementNS(ns,"g");
+      var w = 15 + Math.random()*10;
+      var p = document.createElementNS(ns,"path");
+      p.setAttribute("d","M0 0 Q"+(-w*0.4)+" "+(-w*0.45)+" "+(-w)+" 0 Q"+(w*0.4)+" "+(-w*0.45)+" "+w+" 0");
+      g.appendChild(p); svg.appendChild(g);
+      birds.push({ g:g, baseX:f.x*W, baseY:f.y*H, speed:0.014+Math.random()*0.016,
+                   phase:Math.random()*6.28, amp:6+Math.random()*8 });
+    });
+    host.appendChild(svg);
+  }
+
+  /* ---------------- INIT ---------------- */
+  buildClouds();
+  buildIslands();
+  buildBirds();
+
+  var hint = document.getElementById("hint");
+  window.addEventListener("pointermove", function(e){
+    target = (e.clientX / W - 0.5) * 2;
+    if(hint) hint.style.opacity = "0";
+  }, { passive:true });
+  window.addEventListener("pointerdown", function(){
+    target = (Math.random()-0.5)*2;
+    if(hint) hint.style.opacity = "0";
+  }, { passive:true });
+
+  var maxPar = 60;
+
+  function frame(){
+    time += 1;
+    pointer += (target - pointer) * 0.045;
+
+    // sun gentle breathe + parallax
+    var sb = Math.sin(time*0.006)*6;
+    document.getElementById("sun").style.transform =
+      "translate(calc(-50% + "+(-pointer*16).toFixed(1)+"px),calc(-50% + "+sb.toFixed(1)+"px))";
+    document.getElementById("sunCore").style.transform =
+      "translate(calc(-50% + "+(-pointer*16).toFixed(1)+"px),calc(-50% + "+sb.toFixed(1)+"px))";
+
+    // haze drift
+    var hz = document.querySelectorAll(".haze");
+    for(var i=0;i<hz.length;i++){
+      var depth = 0.12 + i*0.06;
+      var fd = (time*(0.008+i*0.004)) % (W*0.4);
+      hz[i].style.transform = "translate3d("+((-fd - pointer*depth*maxPar*0.6)%(W*0.4)).toFixed(1)+"px,0,0)";
+    }
+
+    // clouds parallax + slow drift
+    for(var c=0;c<clouds.length;c++){
+      var L = clouds[c];
+      var cx = (L.baseX*W + L.offset + time*L.speed*60) % (W+400) - 200;
+      var cmx = -pointer * L.depth * maxPar * 0.9;
+      var cy = Math.sin(time*0.004 + c)*8;
+      L.el.style.transform =
+        "translate3d("+((cx + cmx - W*0.2).toFixed(1)+"px,"+(cy.toFixed(1))+"px,0)") +
+        " scale("+L.s.toFixed(2)+","+L.s.toFixed(2)+")";
+    }
+
+    // islands bob + parallax
+    for(var k=0;k<islands.length;k++){
+      var I = islands[k];
+      var bob = Math.sin(time*0.01*I.defs.bob + I.phase)* (7 + I.defs.depth*6);
+      var imx = -pointer * I.defs.depth * maxPar;
+      I.el.style.transform =
+        "translate3d("+imx.toFixed(1)+"px,"+(bob).toFixed(1)+"px,0)";
+    }
+
+    // upward waterfall sparks
+    for(var s=0;s<sparks.length;s++){
+      var P = sparks[s];
+      P.t += P.speed;
+      if(P.t > 1) P.t -= 1;
+      var prog = P.t;
+      var rise = -prog * (P.streamH*1.05);
+      var px = P.x + Math.sin(prog*6.28*2 + s)* (P.drift*0.4) + prog*P.drift;
+      var op = Math.sin(prog*Math.PI); // fade in/out
+      op *= (P.falls ? 1 : 0.6);
+      P.el.style.transform =
+        "translate3d("+px.toFixed(1)+"px,"+rise.toFixed(1)+"px,0)";
+      P.el.style.opacity = (op*0.9).toFixed(2);
+      P.el.style.transform += " scale("+ (0.5+op).toFixed(2) +")";
+    }
+
+    // birds glide across + flap-bob
+    for(var b=0;b<birds.length;b++){
+      var B = birds[b];
+      var bx = (B.baseX + time*B.speed*60) % (W+160) - 80;
+      var by = B.baseY + Math.sin(time*0.01 + B.phase)*B.amp;
+      B.g.setAttribute("transform","translate("+bx.toFixed(1)+","+by.toFixed(1)+") scale("+(0.9+Math.sin(time*0.3+B.phase)*0.15).toFixed(2)+",1)");
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    buildClouds(); buildIslands(); buildBirds();
+  }
+  window.addEventListener("resize", resize);
+})();
+</script>
+</body>
+</html>

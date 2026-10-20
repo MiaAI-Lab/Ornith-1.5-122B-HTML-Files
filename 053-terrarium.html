@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terrarium · A Little World at Dusk</title>
+<style>
+  :root{
+    --night:#060d16; --night-mid:#0b1826; --night-hi:#16283d;
+    --green-deep:#17301f; --green:#2c5a34; --green-bright:#5fa85a; --leaf:#7cb86a;
+    --moss:#7d9a3e; --amber:#ffcf6b; --amber-hot:#ffe0a0; --amber-deep:#e79534;
+    --glass-tint:rgba(176,216,210,0.10);
+    --ink:#e9f4ea;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:ui-sans-serif,-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:
+      radial-gradient(125% 100% at 50% 18%, var(--night-hi) 0%, var(--night-mid) 42%, var(--night) 100%);
+    color:var(--ink); overflow:hidden; -webkit-font-smoothing:antialiased;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* dreamy dusk bokeh behind everything */
+  .bokeh{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.55;
+    background:
+      radial-gradient(2.2% 2.2% at 22% 26%, rgba(255,225,170,.5), transparent 70%),
+      radial-gradient(1.6% 1.6% at 78% 20%, rgba(255,210,150,.42), transparent 70%),
+      radial-gradient(1.4% 1.4% at 60% 12%, rgba(200,230,255,.35), transparent 70%),
+      radial-gradient(2.6% 2.6% at 34% 14%, rgba(255,200,140,.32), transparent 70%),
+      radial-gradient(1.2% 1.2% at 88% 40%, rgba(190,220,255,.3), transparent 70%);
+    filter:blur(2px);}
+
+  /* warm lamp pool glowing from within the terrarium onto the room */
+  .glow{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(34% 30% at 50% 60%, rgba(255,184,96,.22), rgba(255,150,70,.07) 42%, transparent 72%);
+    mix-blend-mode:screen;}
+
+  /* wooden shelf the jar rests on */
+  .shelf{position:fixed;left:0;right:0;bottom:0;height:17%;z-index:3;
+    background:linear-gradient(180deg,#2a1c13 0%, #1a110b 60%, #100a06 100%);
+    box-shadow:0 -14px 50px rgba(0,0,0,.6);}
+  .shelf::before{position:absolute;top:0;left:0;right:0;height:5px;
+    background:linear-gradient(90deg,transparent 4%, rgba(255,190,120,.16) 50%, transparent 96%);}
+  .shelf::after{position:absolute;top:9px;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent, rgba(0,0,0,.4), transparent);}
+
+  /* ---------- the terrarium ---------- */
+  .terrarium{position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);
+    width:clamp(232px,52vw,452px);aspect-ratio:1/1.14;z-index:4;}
+
+  /* soft contact shadow on the shelf */
+  .terrarium::before{content:"";position:absolute;left:50%;bottom:-6%;transform:translateX(-50%);
+    width:82%;height:26px;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%, rgba(0,0,0,.55), transparent 70%);
+    filter:blur(6px);z-index:-1;}
+
+  /* glass body — the refraction vessel */
+  .glass{position:absolute;inset:0;overflow:hidden;z-index:2;
+    border-radius:47% 47% 45% 45% / 40% 40% 34% 34%;
+    background:
+      radial-gradient(120% 90% at 30% 12%, rgba(232,246,242,.20), rgba(180,218,212,.06) 40%, rgba(90,140,138,.12) 100%);
+    box-shadow:
+      inset 0 8px 26px rgba(255,255,255,.30),
+      inset 12px 4px 34px rgba(255,255,255,.14),
+      inset -18px -10px 46px rgba(6,30,30,.5),
+      inset 0 -34px 60px rgba(6,24,26,.55),
+      0 26px 60px rgba(0,0,0,.45);
+  }
+  /* faint colored refraction fringe along the rim */
+  .glass::before{content:"";position:absolute;inset:0;
+    border-radius:inherit;pointer-events:none;
+    box-shadow:
+      inset 2px 0 14px rgba(120,230,255,.28),
+      inset -2px 0 16px rgba(255,140,190,.16),
+      inset 0 2px 12px rgba(255,240,210,.35);
+    mix-blend-mode:screen;}
+
+  /* interior sky / warm dusk air inside the jar */
+  .interior{position:absolute;inset:0;
+    background:linear-gradient(180deg, rgba(255,214,150,.14) 0%, rgba(120,170,120,.10) 46%, rgba(20,44,30,.55) 100%);
+    mix-blend-mode:screen;}
+
+  /* left specular streak — the glassy highlight */
+  .spec{position:absolute;left:11%;top:8%;width:9%;height:64%;border-radius:50%;
+    background:linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.05));
+    filter:blur(2px);mix-blend-mode:screen;transform:rotate(6deg);z-index:6;pointer-events:none;}
+  .spec.r{left:auto;right:9%;top:24%;width:5%;height:34%;opacity:.5;}
+
+  /* plants container clipped by the glass */
+  .plants{position:absolute;left:0;right:0;bottom:0;height:74%;z-index:4;}
+  .plants svg{position:absolute;overflow:visible;}
+
+  .moss{position:absolute;left:0;right:0;bottom:0;height:26%;z-index:3;
+    background:
+      radial-gradient(60% 120% at 20% 100%, var(--moss) 0%, transparent 60%),
+      radial-gradient(70% 120% at 78% 100%, #5f7a2e 0%, transparent 62%),
+      linear-gradient(180deg, rgba(40,70,36,.0) 0%, var(--green-deep) 78%, #0f2216 100%);
+    border-radius:0 0 45% 45% / 0 0 30% 30%;}
+  .moss::after{content:"";position:absolute;left:0;right:0;top:-7px;height:14px;
+    background:radial-gradient(55% 100% at 12% 100%, var(--moss), transparent 70%),
+      radial-gradient(55% 100% at 42% 100%, #6b8a34, transparent 70%),
+      radial-gradient(55% 100% at 70% 100%, var(--moss), transparent 70%),
+      radial-gradient(55% 100% at 92% 100%, #5f7a2e, transparent 70%);}
+
+  /* little pebbles / soil grains */
+  .pebbles{position:absolute;left:0;right:0;bottom:4%;height:12%;z-index:5;pointer-events:none;
+    background-image:radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(120,140,110,.5) 0 2px, transparent 3px);
+  }
+
+  /* firefly canvas sits above plants, below specular, clipped to glass */
+  #flies{position:absolute;inset:0;width:100%;height:100%;z-index:5;}
+
+  /* glass lid / cork cap */
+  .lid{position:absolute;left:50%;top:-7.5%;transform:translateX(-50%);
+    width:38%;height:9%;border-radius:16px 16px 8px 8px;z-index:7;
+    background:linear-gradient(180deg,#c98b4a 0%, #a5662f 55%, #7c4a20 100%);
+    box-shadow:inset 0 6px 12px rgba(255,220,170,.4), inset 0 -6px 12px rgba(60,26,8,.6), 0 6px 14px rgba(0,0,0,.4);}
+  .lid::after{content:"";position:absolute;left:50%;top:-34%;transform:translateX(-50%);
+    width:44%;height:44%;border-radius:50% 50% 45% 45%;
+    background:radial-gradient(circle at 40% 30%, #e6b477, #a5662f 70%);
+    box-shadow:0 3px 8px rgba(0,0,0,.45);}
+  .ring{position:absolute;left:50%;top:-2.4%;transform:translateX(-50%);
+    width:44%;height:4.6%;border-radius:6px;z-index:6;
+    background:linear-gradient(180deg, rgba(210,235,230,.5), rgba(150,195,190,.18));
+    box-shadow:inset 0 3px 8px rgba(255,255,255,.4), 0 2px 6px rgba(0,0,0,.35);}
+  .base{position:absolute;left:50%;bottom:-2.4%;transform:translateX(-50%);
+    width:60%;height:5%;border-radius:0 0 46% 46% / 0 0 60% 60%;z-index:6;
+    background:linear-gradient(180deg, rgba(150,195,190,.28), rgba(90,130,128,.12));
+    box-shadow:inset 0 6px 14px rgba(255,255,255,.2);}
+
+  /* ---------- caption ---------- */
+  .caption{position:absolute;left:50%;bottom:-23%;transform:translateX(-50%);
+    text-align:center;z-index:8;white-space:nowrap;}
+  .caption .k{font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(1.05rem,2.6vw,1.6rem);letter-spacing:.01em;color:#f3ead6;
+    text-shadow:0 2px 20px rgba(255,170,80,.35);}
+  .caption .s{margin-top:6px;font-size:clamp(.52rem,1.5vw,.7rem);letter-spacing:.42em;
+    text-transform:uppercase;color:rgba(214,228,214,.55);}
+
+  @media (max-width:520px){
+    .terrarium{top:52%;}
+    .caption .s{letter-spacing:.3em;}
+  }
+  @media (max-height:420px){ .caption{display:none} }
+  @media (prefers-reduced-motion:reduce){
+    .bokeh{animation:none}
+  }
+</style>
+</head>
+<body>
+  <div class="bokeh"></div>
+  <div class="glow"></div>
+  <div class="shelf"></div>
+
+  <div class="terrarium" id="jar">
+    <div class="glass">
+      <div class="interior"></div>
+      <div class="plants">
+        <!-- fern, left -->
+        <svg style="left:6%;bottom:18%;width:46%;height:64%" viewBox="0 0 120 160" aria-hidden="true">
+          <g stroke-linecap="round" fill="none">
+            <path d="M60 152 C58 110 54 74 40 30" stroke="#2f6a34" stroke-width="4"/>
+            <path d="M56 128 C44 122 34 118 24 120" stroke="#3d7f3c" stroke-width="3"/>
+            <path d="M54 108 C42 101 32 98 20 101" stroke="#4a9048" stroke-width="3"/>
+            <path d="M51 88 C40 81 30 78 19 81" stroke="#57a052" stroke-width="3"/>
+            <path d="M48 68 C38 62 29 60 20 63" stroke="#63ac5c" stroke-width="2.5"/>
+            <path d="M45 50 C37 45 30 43 23 46" stroke="#6fb868" stroke-width="2.5"/>
+            <path d="M60 150 C64 108 70 74 86 34" stroke="#2f6a34" stroke-width="4"/>
+            <path d="M66 126 C78 120 88 117 99 120" stroke="#3d7f3c" stroke-width="3"/>
+            <path d="M69 106 C81 100 91 97 102 100" stroke="#4a9048" stroke-width="3"/>
+            <path d="M73 86 C84 80 94 78 104 81" stroke="#57a052" stroke-width="3"/>
+            <path d="M77 66 C87 61 96 59 104 62" stroke="#63ac5c" stroke-width="2.5"/>
+          </g>
+        </svg>
+        <!-- rosette succulent, center-right -->
+        <svg style="left:46%;bottom:14%;width:40%;height:44%" viewBox="0 0 100 100" aria-hidden="true">
+          <g>
+            <ellipse cx="50" cy="70" rx="34" ry="12" fill="#1c3a22" opacity=".5"/>
+            <g fill="#5fae5a">
+              <path d="M50 72 C34 66 30 48 40 36 C46 50 52 62 50 72Z"/>
+              <path d="M50 72 C66 66 70 48 60 36 C54 50 48 62 50 72Z"/>
+              <path d="M50 74 C30 72 20 56 26 42 C40 52 48 64 50 74Z" fill="#4f9e52"/>
+              <path d="M50 74 C70 72 80 56 74 42 C60 52 52 64 50 74Z" fill="#4f9e52"/>
+            </g>
+            <g fill="#7cb86a">
+              <path d="M50 74 C40 70 38 54 46 44 C50 56 52 66 50 74Z"/>
+              <path d="M50 74 C60 70 62 54 54 44 C50 56 48 66 50 74Z"/>
+              <path d="M50 70 C46 62 48 48 52 44 C54 54 53 64 50 70Z" fill="#93c983"/>
+            </g>
+            <circle cx="50" cy="52" r="5" fill="#a6d58f"/>
+          </g>
+        </svg>
+        <!-- grass blades cluster -->
+        <svg style="left:2%;bottom:8%;width:20%;height:34%" viewBox="0 0 60 90" aria-hidden="true">
+          <g stroke-linecap="round" fill="none">
+            <path d="M30 88 C28 60 22 40 14 18" stroke="#6fb868" stroke-width="3"/>
+            <path d="M34 88 C36 58 42 40 52 20" stroke="#57a052" stroke-width="3"/>
+            <path d="M32 88 C32 60 32 42 30 14" stroke="#7cc070" stroke-width="2.5"/>
+          </g>
+        </svg>
+        <!-- tiny stone -->
+        <svg style="left:34%;bottom:5%;width:12%;height:12%" viewBox="0 0 40 30" aria-hidden="true">
+          <ellipse cx="20" cy="22" rx="16" ry="8" fill="#2a3a26" opacity=".5"/>
+          <path d="M6 20 C10 8 30 8 34 20 C30 26 10 26 6 20Z" fill="#8a9a86"/>
+          <path d="M10 16 C14 10 24 10 28 16" stroke="rgba(255,255,255,.35)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="moss"></div>
+      <canvas id="flies"></canvas>
+      <div class="spec"></div>
+      <div class="spec r"></div>
+    </div>
+    <div class="ring"></div>
+    <div class="lid"></div>
+    <div class="base"></div>
+    <div class="caption">
+      <div class="k">A Little World at Dusk</div>
+      <div class="s">No. 053 · terrarium</div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    var glass = document.getElementById('flies');
+    var jar   = document.getElementById('jar');
+    var ctx = glass.getContext('2d');
+    var W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var pointer = {x:-1, y:-1, active:false};
+    var flies = [];
+
+    function resize(){
+      var r = glass.getBoundingClientRect();
+      W = r.width; H = r.height;
+      glass.width = Math.max(1, Math.round(W * DPR));
+      glass.height = Math.max(1, Math.round(H * DPR));
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    }
+
+    function rand(a, b){ return a + Math.random() * (b - a); }
+
+    function make(n){
+      flies = [];
+      for(var i = 0; i < n; i++){
+        var x = rand(0.15, 0.85), y = rand(0.30, 0.92);
+        flies.push({
+          x: x, y: y,
+          tx: rand(0.2, 0.8), ty: rand(0.35, 0.9),
+          phase: rand(0, Math.PI * 2),
+          spd: rand(0.35, 0.9),
+          size: rand(1.2, 2.6),
+          glow: rand(9, 20),
+          tw: rand(0.6, 1.6),
+          hue: rand(38, 52)
+        });
+      }
+    }
+
+    function step(t){
+      for(var i = 0; i < flies.length; i++){
+        var f = flies[i];
+        var dx = f.tx - f.x, dy = f.ty - f.y;
+        var d = Math.sqrt(dx*dx + dy*dy) || 1;
+        // organic wandering: steer toward target + lateral sine wobble
+        var wob = Math.sin(t * 0.0008 + f.phase);
+        f.x += (dx / d) * f.spd * 0.010 + wob * 0.0016;
+        f.y += (dy / d) * f.spd * 0.010 + Math.cos(t * 0.0007 + f.phase) * 0.0014;
+
+        // pointer attraction when hovering the jar
+        if(pointer.active){
+          var px = f.x - pointer.x, py = f.y - pointer.y;
+          var pd = Math.sqrt(px*px + py*py) || 1;
+          if(pd < 0.34){
+            f.x -= (px / pd) * 0.006 * (0.34 - pd);
+            f.y -= (py / pd) * 0.006 * (0.34 - pd);
+          }
+        }
+
+        // keep inside the glass (rounded box -> simple margin)
+        if(f.x < 0.06){ f.x = 0.06; f.tx = rand(0.3, 0.8); }
+        if(f.x > 0.94){ f.x = 0.94; f.tx = rand(0.2, 0.7); }
+        if(f.y < 0.22){ f.y = 0.22; f.ty = rand(0.4, 0.9); }
+        if(f.y > 0.97){ f.y = 0.97; f.ty = rand(0.35, 0.85); }
+
+        // pick a new wander target when reached
+        if(d < 0.02 && Math.random() < 0.02){
+          f.tx = rand(0.18, 0.82);
+          f.ty = rand(0.34, 0.93);
+        }
+      }
+    }
+
+    function draw(t){
+      ctx.clearRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'lighter';
+      for(var i = 0; i < flies.length; i++){
+        var f = flies[i];
+        var tw = 0.55 + 0.45 * Math.sin(t * 0.0018 * f.tw + f.phase);
+        var cx = f.x * W, cy = f.y * H;
+        var g = f.glow * (0.7 + 0.5 * tw);
+        var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, g);
+        var a = 0.85 * tw;
+        grad.addColorStop(0, 'hsla('+f.hue+', 100%, 82%, '+a+')');
+        grad.addColorStop(0.28, 'hsla('+f.hue+', 100%, 66%, '+(a*0.55)+')');
+        grad.addColorStop(1, 'hsla('+f.hue+', 100%, 50%, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, g, 0, Math.PI * 2);
+        ctx.fill();
+        // bright core
+        ctx.fillStyle = 'hsla('+(f.hue+6)+', 100%, 92%, '+a+')';
+        ctx.beginPath();
+        ctx.arc(cx, cy, f.size * (0.6 + 0.5 * tw), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    var raf = 0;
+    function loop(t){
+      if(!reduce) step(t);
+      draw(t);
+      raf = requestAnimationFrame(loop);
+    }
+
+    function boot(){
+      resize();
+      make(W < 380 ? 16 : 26);
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', function(){ resize(); });
+    jar.addEventListener('pointermove', function(e){
+      var r = glass.getBoundingClientRect();
+      pointer.x = (e.clientX - r.left) / W;
+      pointer.y = (e.clientY - r.top) / H;
+      pointer.active = true;
+    });
+    jar.addEventListener('pointerleave', function(){ pointer.active = false; });
+
+    if(document.readyState === 'loading')
+      document.addEventListener('DOMContentLoaded', boot);
+    else boot();
+  })();
+  </script>
+</body>
+</html>

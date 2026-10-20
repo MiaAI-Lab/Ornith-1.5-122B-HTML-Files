@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE POND — Rain on Still Water</title>
+<style>
+  :root{
+    --ink:#151b22;
+    --ink-soft:#7d8a98;
+    --slate:#2a3540;
+    --cream:#e9edf1;
+    --paper:#0d1218;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--serif);
+    color:var(--cream);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #1a232c 0%, #0f151c 55%, #080c11 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background:radial-gradient(60% 45% at 80% 6%, rgba(120,160,190,.10),transparent 60%),
+      radial-gradient(55% 50% at 8% 96%, rgba(90,120,150,.10),transparent 60%);
+  }
+
+  .sheet{
+    position:relative;
+    max-width:1180px;
+    margin:0 auto;
+    padding:clamp(22px,5vw,64px) clamp(18px,5vw,56px) clamp(40px,7vw,90px);
+    display:grid;
+    gap:clamp(20px,3.5vw,40px);
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .kicker{font-family:var(--sans);font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:#7fa8c6;font-weight:600;margin:0 0 12px}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(38px,7vw,84px);line-height:.95;letter-spacing:-.01em;margin:0}
+  h1 em{font-style:italic;color:#8fb6d2}
+  .tag{font-family:var(--sans);font-size:14px;line-height:1.55;color:var(--ink-soft);max-width:34ch;margin:14px 0 0}
+
+  .stats{display:flex;gap:clamp(16px,3vw,34px);align-items:flex-end;font-family:var(--mono)}
+  .stat{display:block;text-align:right}
+  .stat .n{font-size:clamp(28px,4vw,46px);line-height:1;color:var(--cream);font-weight:500;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
+  .stat .n.r{color:#8fb6d2}
+
+  /* ---------- The pond ---------- */
+  .stage{
+    position:relative;
+    border-radius:14px;
+    overflow:hidden;
+    border:1px solid rgba(143,182,210,.16);
+    box-shadow:0 50px 100px -60px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02) inset;
+    background:linear-gradient(180deg,#16202a 0%, #0c141b 100%);
+  }
+  canvas{display:block;width:100%;height:auto;touch-action:none;cursor:crosshair}
+
+  .hud{
+    position:absolute;left:18px;top:16px;right:18px;
+    display:flex;justify-content:space-between;align-items:center;pointer-events:none;
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#9fb4c6;
+  }
+  .hud .chip{
+    background:rgba(8,12,17,.45);border:1px solid rgba(143,182,210,.18);
+    padding:7px 12px;border-radius:999px;backdrop-filter:blur(6px);
+  }
+  .hint{
+    position:absolute;left:50%;bottom:20px;transform:translateX(-50%);
+    font-family:var(--sans);font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:#b9cad8;background:rgba(8,12,17,.5);border:1px solid rgba(143,182,210,.18);
+    padding:9px 18px;border-radius:999px;backdrop-filter:blur(6px);
+    transition:opacity .6s ease;pointer-events:none;
+  }
+
+  /* ---------- Controls ---------- */
+  .foot{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;font-family:var(--sans)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap}
+  .controls button{
+    font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    border:1px solid rgba(143,182,210,.3);background:transparent;color:var(--cream);
+    padding:10px 18px;border-radius:999px;cursor:pointer;transition:.25s var(--ease);
+  }
+  .controls button:hover{background:#8fb6d2;color:#080c11;border-color:#8fb6d2;transform:translateY(-1px)}
+  .controls button.on{background:rgba(143,182,210,.16);border-color:rgba(143,182,210,.5)}
+  .caption{font-family:var(--sans);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .caption b{color:var(--cream);font-weight:600}
+
+  @media (prefers-reduced-motion:reduce){
+    .hint{display:none}
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="masthead">
+      <div>
+        <p class="kicker">The Weather Room · No. 059</p>
+        <h1>Rain on <em>still</em> water.</h1>
+        <p class="tag">A pond under a low grey sky. Diagonal rain stitches the dark, each drop that lands
+          sends a ring of ripples outward, and a pale reflection shivers on the surface. Click to make it rain harder.</p>
+      </div>
+      <div class="stats">
+        <span class="stat"><span class="n" id="drops">0</span><span class="l">Rain</span></span>
+        <span class="stat"><span class="n r" id="ripples">0</span><span class="l">Ripples</span></span>
+        <span class="stat"><span class="n" id="fps">—</span><span class="l">fps</span></span>
+      </div>
+    </header>
+
+    <section class="stage">
+      <div class="hud">
+        <span class="chip" id="mood">overcast</span>
+        <span class="chip">click the water to drop a stone</span>
+      </div>
+      <canvas id="pond" width="1120" height="640" aria-label="A rainy pond with ripples"></canvas>
+      <div class="hint" id="hint">click anywhere to send a ripple</div>
+    </section>
+
+    <footer class="foot">
+      <div class="controls">
+        <button id="intensity">Intensity: Calm</button>
+        <button id="sound" class="on">Sound: On</button>
+        <button id="wind">Wind: Off</button>
+      </div>
+      <div class="caption">Generative · <b id="res">—</b> canvas</div>
+    </footer>
+  </main>
+  <script>
+  (function(){
+    "use strict";
+    var canvas = document.getElementById('pond');
+    var ctx = canvas.getContext('2d');
+    var stage = canvas.parentElement;
+    var dropsEl = document.getElementById('drops');
+    var ripplesEl = document.getElementById('ripples');
+    var fpsEl = document.getElementById('fps');
+    var resEl = document.getElementById('res');
+    var moodEl = document.getElementById('mood');
+    var hint = document.getElementById('hint');
+    var intensityBtn = document.getElementById('intensity');
+    var soundBtn = document.getElementById('sound');
+    var windBtn = document.getElementById('wind');
+
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var W = 1120, H = 640, DPR = 1;
+    var drops = [], ripples = [], splashes = [];
+    var totalRipples = 0;
+    var wind = 0.55;            // horizontal drift of rain
+    var windOn = false;
+    var soundOn = true, soundReady = false, AC = null, rainGain = null;
+    var intensities = [
+      {name:'Calm',   target:90,  speed:8,  gap:14},
+      {name:'Steady', target:220, speed:12, gap:9},
+      {name:'Downpour',target:460,speed:17, gap:6}
+    ];
+    var inten = 1;
+
+    function resize(){
+      var sw = stage.clientWidth;
+      W = Math.max(320, sw);
+      H = Math.round(W * 640 / 1120);
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(W * DPR);
+      canvas.height = Math.round(H * DPR);
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      seedDrops();
+      resEl.textContent = Math.round(W) + '×' + Math.round(H);
+    }
+
+    function seedDrops(){
+      drops = [];
+      var cfg = intensities[inten];
+      for(var i=0;i<cfg.target;i++){
+        drops.push(makeDrop());
+      }
+    }
+    function makeDrop(){
+      var cfg = intensities[inten];
+      return {
+        x: Math.random()*W,
+        y: Math.random()*H,
+        len: 8 + Math.random()*16,
+        speed: cfg.speed * (0.7 + Math.random()*0.7),
+        alpha: 0.12 + Math.random()*0.22,
+        gap: cfg.gap
+      };
+    }
+
+    function spawnRipple(x, y, power){
+      ripples.push({
+        x:x, y:y, r:0, maxR: 40 + Math.random()*70 + (power||0),
+        life:1, rings: 2 + (Math.random()*2|0), speed: 0.9 + Math.random()*0.7
+      });
+      totalRipples++;
+      // little splash crown
+      if(!reduce){
+        for(var i=0;i<5;i++){
+          splashes.push({
+            x:x, y:y,
+            vx:(Math.random()-0.5)*1.6, vy:-1-Math.random()*1.8,
+            life:1
+          });
+        }
+      }
+    }
+
+    function drawSky(t){
+      // moody vertical gradient
+      var g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'#1a2530');
+      g.addColorStop(0.55,'#101820');
+      g.addColorStop(1,'#0a1015');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      // faint reflection shimmer — a soft light column that shivers
+      var shimmer = 0.5 + 0.5*Math.sin(t*0.0009);
+      var gx = W*0.72 + Math.sin(t*0.0006)*W*0.03;
+      var rg = ctx.createRadialGradient(gx, H*0.12, 10, gx, H*0.55, H*0.9);
+      rg.addColorStop(0, 'rgba(150,190,215,'+(0.10+0.05*shimmer)+')');
+      rg.addColorStop(0.5, 'rgba(120,160,190,0.05)');
+      rg.addColorStop(1, 'rgba(120,160,190,0)');
+      ctx.fillStyle = rg;
+      ctx.fillRect(0,0,W,H);
+
+      // horizontal shimmer bands on the water (animated)
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for(var i=0;i<6;i++){
+        var by = H*(0.35 + i*0.11) + Math.sin(t*0.001 + i)*3;
+        var bw = W*(0.5 + 0.15*Math.sin(t*0.0007 + i*1.3));
+        var bx = W*0.5 + Math.sin(t*0.0005 + i)*W*0.1;
+        var lg = ctx.createLinearGradient(bx-bw/2, 0, bx+bw/2, 0);
+        var a = 0.03 + 0.025*Math.sin(t*0.0012 + i*2);
+        lg.addColorStop(0,'rgba(160,195,220,0)');
+        lg.addColorStop(0.5,'rgba(170,205,230,'+a+')');
+        lg.addColorStop(1,'rgba(160,195,220,0)');
+        ctx.fillStyle = lg;
+        ctx.fillRect(bx-bw/2, by-1, bw, 2);
+      }
+      ctx.restore();
+
+      // distant horizon line
+      ctx.strokeStyle = 'rgba(150,185,210,0.10)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, H*0.32);
+      ctx.lineTo(W, H*0.32);
+      ctx.stroke();
+    }
+
+    function drawRain(){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(190,210,225,0.5)';
+      ctx.lineWidth = 1;
+      ctx.lineCap = 'round';
+      for(var i=0;i<drops.length;i++){
+        var d = drops[i];
+        ctx.globalAlpha = d.alpha;
+        ctx.beginPath();
+        ctx.moveTo(d.x, d.y);
+        ctx.lineTo(d.x - wind*d.len*0.5, d.y - d.len);
+        ctx.stroke();
+        d.y += d.speed;
+        d.x += wind*d.speed*0.4;
+        if(d.y > H){
+          d.y = -10;
+          d.x = Math.random()*W;
+        }
+        if(d.x > W+20) d.x = -20;
+        if(d.x < -20) d.x = W+20;
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
+    function drawRipples(){
+      ctx.save();
+      for(var i=ripples.length-1;i>=0;i--){
+        var rp = ripples[i];
+        rp.r += rp.speed;
+        rp.life = 1 - rp.r / rp.maxR;
+        if(rp.life <= 0){ ripples.splice(i,1); continue; }
+        for(var k=0;k<rp.rings;k++){
+          var rr = rp.r - k*6;
+          if(rr <= 0) continue;
+          var a = rp.life * (0.5 - k*0.12);
+          if(a<=0) continue;
+          ctx.strokeStyle = 'rgba(190,215,235,'+a.toFixed(3)+')';
+          ctx.lineWidth = 1.2 - k*0.2;
+          ctx.beginPath();
+          ctx.ellipse(rp.x, rp.y, rr, rr*0.42, 0, 0, Math.PI*2);
+          ctx.stroke();
+        }
+      }
+      // splashes
+      for(var j=splashes.length-1;j>=0;j--){
+        var s = splashes[j];
+        s.x += s.vx; s.y += s.vy; s.vy += 0.12; s.life -= 0.03;
+        if(s.life<=0){ splashes.splice(j,1); continue; }
+        ctx.fillStyle = 'rgba(200,220,235,'+ (s.life*0.6).toFixed(3) +')';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, 1.4, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function loop(t){
+      drawSky(t);
+      drawRain();
+      drawRipples();
+      dropsEl.textContent = drops.length;
+      ripplesEl.textContent = totalRipples;
+
+      // fps
+      frameCount++;
+      if(t - lastFps > 500){
+        fpsEl.textContent = Math.round(frameCount*1000/(t-lastFps));
+        frameCount = 0; lastFps = t;
+      }
+      // ambient rain: occasionally auto-spawn ripples
+      if(!autoAcc) autoAcc = 0;
+      autoAcc += 1;
+      var rate = intensities[inten].target > 300 ? 4 : 9;
+      if(autoAcc > rate){ autoAcc = 0; spawnRipple(Math.random()*W, H*0.4 + Math.random()*H*0.55, 20); }
+
+      requestAnimationFrame(loop);
+    }
+    var frameCount = 0, lastFps = 0, autoAcc = 0;
+
+    // ---- audio: soft ambient rain + pop blips ----
+    function ensureAudio(){
+      if(AC) return;
+      try{
+        AC = new (window.AudioContext || window.webkitAudioContext)();
+        var bufSize = 2*AC.sampleRate;
+        var buf = AC.createBuffer(1, bufSize, AC.sampleRate);
+        var data = buf.getChannelData(0);
+        for(var i=0;i<bufSize;i++) data[i] = Math.random()*2-1;
+        var noise = AC.createBufferSource();
+        noise.buffer = buf; noise.loop = true;
+        var lp = AC.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=900;
+        var bp = AC.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=1400; bp.Q.value=0.5;
+        rainGain = AC.createGain(); rainGain.gain.value = 0;
+        noise.connect(lp).connect(bp).connect(rainGain).connect(AC.destination);
+        noise.start();
+        soundReady = true;
+      }catch(e){}
+    }
+    function setRainVol(){
+      if(!soundReady || !rainGain) return;
+      var target = soundOn ? (0.03 + intensities[inten].target/20000) : 0;
+      rainGain.gain.setTargetAtTime(target, AC.currentTime, 0.4);
+    }
+    function popBlip(){
+      if(!soundOn || !soundReady) return;
+      try{
+        var now = AC.currentTime;
+        var o = AC.createOscillator(), g = AC.createGain();
+        o.type='sine';
+        var f = 260 + Math.random()*120;
+        o.frequency.setValueAtTime(f, now);
+        o.frequency.exponentialRampToValueAtTime(f*0.6, now+0.12);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.05, now+0.01);
+        g.gain.exponentialRampToValueAtTime(0.0001, now+0.18);
+        o.connect(g).connect(AC.destination);
+        o.start(now); o.stop(now+0.2);
+      }catch(e){}
+    }
+
+    // ---- interaction ----
+    function canvasPos(e){
+      var r = canvas.getBoundingClientRect();
+      var cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      var cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+      return {x: cx * (W/r.width), y: cy * (H/r.height)};
+    }
+    function onDrop(e){
+      if(!reduce){ ensureAudio(); if(AC && AC.state==='suspended') AC.resume(); }
+      var p = canvasPos(e);
+      spawnRipple(p.x, p.y, 45);
+      popBlip();
+      hint.style.opacity = '0';
+      if(soundOn) setRainVol();
+    }
+    canvas.addEventListener('mousedown', onDrop);
+    canvas.addEventListener('touchstart', onDrop, {passive:true});
+
+    intensityBtn.addEventListener('click', function(){
+      inten = (inten+1) % intensities.length;
+      var cfg = intensities[inten];
+      intensityBtn.textContent = 'Intensity: ' + cfg.name;
+      // rebuild drops to match
+      var cfg2 = intensities[inten];
+      while(drops.length < cfg2.target) drops.push(makeDrop());
+      if(drops.length > cfg2.target) drops.length = cfg2.target;
+      moodEl.textContent = cfg.name.toLowerCase();
+      setRainVol();
+    });
+    soundBtn.addEventListener('click', function(){
+      soundOn = !soundOn;
+      soundBtn.textContent = 'Sound: ' + (soundOn?'On':'Off');
+      soundBtn.classList.toggle('on', soundOn);
+      if(soundOn) ensureAudio();
+      setRainVol();
+    });
+    windBtn.addEventListener('click', function(){
+      windOn = !windOn;
+      windBtn.textContent = windOn ? 'Wind: On' : 'Wind: Off';
+      windBtn.classList.toggle('on', windOn);
+      wind = windOn ? 1.6 : 0.55;
+    });
+
+    var rt;
+    window.addEventListener('resize', function(){ clearTimeout(rt); rt = setTimeout(resize, 180); });
+
+    resize();
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 042-northern-lights-audio.html + 042-northern-lights-audio.txt — Aurora / northern lights driven by a live WebAudio synthesiser; curtains, starfield, silhouette, analyser. Palette: deep night sky to green/cyan/violet aurora. Signature: audio-reactive aurora curtains where moving the pointer reshapes both the sky and its sound.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+AURORA — Synthesised Northern Lights
+
+DESIGN DESCRIPTION:
+A full-bleed night scene descends from a deep indigo sky into a luminous horizon, its starfield twinkling on a <canvas> while three layered aurora curtains — a primary green, a secondary cyan and a violet — ripple as vertical gradient bands whose height, drift and striations are driven by a live WebAudio signal. A gentle "wind" of filtered noise and a slow breathing LFO give the sound (and therefore the sky) an organic, living pulse, and a soft horizon haze glows in time with the energy. Inline SVG carves a two-layer mountain silhouette along the bottom; the chrome is a curated editorial panel — a mono kicker, a Georgia serif headline "Northern Lights", a mono signal readout (live Hz + playing/idle state) and a small right-hand analyser of 24 bars that dances to the frequency data. A circular "Begin" button with concentric ping rings gates the whole experience behind a proper audio-unlock gesture, then fades away to reveal the sky.
+
+MAJOR VISUAL TECHNIQUES:
+- A single requestAnimationFrame loop renders a devicePixelRatio-scaled (capped 2×) canvas: a twinkling starfield, three stacked aurora curtains, vertical ray striations on the green curtain, and a horizon haze — all composited with globalCompositeOperation 'lighter' for authentic additive glow.
+- Each curtain is a column of thin gradient-filled strips whose top/bottom edges are built from a sum of three sine waves (slow drift + mid shimmer + broad sway), so the fabric folds and waves like real aurora rather than a single sine.
+- The sky is genuinely audio-reactive: an analyser (fftSize 512) feeds a mid-band level and an RMS value that modulate curtain amplitude, an "audio ripple" riding across the curtains, ray brightness and the horizon haze — the visuals ARE the waveform.
+- The synthesiser is built entirely in-code (no samples): a triangle + sine oscillator pair (a just-tuned fifth), a lowpass filter swept by a 0.16 Hz breathing LFO, a soft tremolo on master gain, and a procedurally generated, bandpass-filtered noise buffer looped as a "wind" layer — all cross-linked so the mouse controls pitch and brightness.
+- A 24-bar inline analyser (CSS heights driven from the same frequency data) sits beside a mono readout, tying the audio and visual systems together as one instrument.
+- Typographic system pairs a Georgia serif display headline with mono metadata (kicker, Hz readout, signal label) and a green→blue gradient on the analyser bars; responsive rules hide the analyser below 600px and prefers-reduced-motion collapses the button's ping animation.
+
+INTENDED INTERACTION MODEL:
+The piece is gated behind a single explicit gesture: clicking (or pressing Space/Enter on) the "Begin" button, which unlocks and resumes the AudioContext — the only way audio can start in a browser — then fades the overlay away. From then on the scene is continuously alive: the starfield twinkles, the curtains breathe and the sound swells on its own. Moving the pointer reshapes everything in real time — horizontal position sets the base pitch (deep on the left, bright on the right) and vertical position controls filter warmth/brightness (higher = colder, brighter aurora and a livelier sky). The readout and analyser reflect the live signal, so the page reads as an instrument you both see and hear. Everything degrades gracefully to a still, contemplative idle animation before Begin, and prefers-reduced-motion removes the button ping and hover motion.

@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 041-ocean-data.html + 041-ocean-data.txt — Ocean depth stratification data art; layers, creatures, temperature gradient. Palette: surface teal to abyss black. Signature: stratified animated layers, drifting creatures (CSS), depth markers, gradient.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+PELAGIA — Stratification of the Sea
+
+DESIGN DESCRIPTION:
+A full-bleed vertical water column descends from sunlit teal to abyssal black, rendered as a single multi-stop gradient that encodes the ocean's real thermal structure. Four wavy SVG "water-mass" bands drift horizontally at their own speeds to make the stratification physically legible as stacked, moving layers, while god rays, a shimmering surface caustic and a fine SVG-noise grain add atmosphere. Inline-SVG creatures inhabit their correct zones — pulsing translucent jellyfish with swaying tentacles in the mesopelagic, a bobbing school of lanternfish with blinking bioluminescent lures in the bathypelagic, a golden reef fish near the surface, and a near-invisible leviathan silhouette in the abyss — all drifting on their own CSS currents. A right-hand depth scale ticks through Epipelagic → Hadal with depth and temperature, a live surface-temperature readout flickers, and a warm-to-cold gradient legend ties the whole piece together as a curated scientific data-art panel.
+
+MAJOR VISUAL TECHNIQUES:
+- A single 10-stop vertical gradient (bright teal → abyss black) doubles as both the scene and the temperature data, so the art IS the chart.
+- Four parallax stratified bands built from wavy inline-SVG paths filled with depth-appropriate translucent teals/blues, each on its own infinite translateX drift animation (46s–110s) so the layering reads as moving water masses.
+- Creatures drawn entirely as inline SVG with per-part CSS animation: a jellyfish bell that pulses (scaleY/scaleX), tentacles that sway (skewX), a fish school that "bobs" and flaps fins, and bioluminescent lures that glow on staggered timers.
+- Layered atmosphere: animated god rays (repeating-linear-gradient with a vertical mask), a screen-blended surface caustic, and a subtle feTurbulence grain overlay for a filmic, printed-data feel.
+- A lightweight <canvas> "marine snow" field (devicePixelRatio-scaled, capped 2×) of slowly settling, swaying particles driven by a scroll-controlled upward current.
+- Typographic system pairing a Georgia serif display headline with mono metadata (depths, temperatures, readouts) and a warm→cold gradient legend bar; responsive rules hide the scale below 600px and prefers-reduced-motion freezes all animation.
+
+INTENDED INTERACTION MODEL:
+Ambient and pointer/scroll driven, no buttons. The scene is always alive — creatures drift on independent loops and marine snow settles continuously. Scrolling (or trackpad swipe) injects a brief upward current that stirs the snow and water, then relaxes back to rest, as if a submersible's thruster disturbed the column. The surface temperature readout drifts gently on its own so the panel feels instrumented and breathing. Everything is CSS-animation-led for zero-jank idle motion, and prefers-reduced-motion collapses the whole piece to a still, contemplative frame.

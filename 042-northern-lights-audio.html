@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AURORA · Synthesised Lights</title>
+<style>
+  :root{
+    --ink:#eaf6ff; --ink-dim:#9fb4d6; --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Georgia,"Times New Roman",serif; --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#04060f;
+    font-family:var(--sans);-webkit-font-smoothing:antialiased;color:var(--ink);touch-action:none}
+
+  .sky{position:fixed;inset:0;
+    background:
+      radial-gradient(140% 120% at 50% -10%, rgba(40,70,130,.35), transparent 55%),
+      radial-gradient(120% 90% at 80% 10%, rgba(120,60,140,.16), transparent 50%),
+      linear-gradient(180deg,#05060f 0%, #080b1c 40%, #0b1230 72%, #101a3a 100%);}
+
+  #aurora{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1}
+
+  /* landscape silhouette */
+  .land{position:fixed;left:0;right:0;bottom:0;z-index:3;pointer-events:none;
+    filter:drop-shadow(0 -6px 20px rgba(30,70,120,.25))}
+  .land svg{display:block;width:100%;height:auto}
+
+  /* chrome */
+  .chrome{position:fixed;inset:0;z-index:4;pointer-events:none}
+  .kicker{position:absolute;left:clamp(16px,4vw,44px);top:clamp(15px,3.4vh,36px)}
+  .kicker .tag{font-family:var(--mono);font-size:clamp(.54rem,1.25vw,.72rem);letter-spacing:.42em;text-transform:uppercase;color:#7f9fd0}
+  .kicker h1{margin:.35em 0 0;font-family:var(--serif);font-weight:400;
+    font-size:clamp(1.6rem,5.4vw,3.3rem);line-height:.98;letter-spacing:.01em;
+    text-shadow:0 2px 30px rgba(0,0,0,.6)}
+  .kicker h1 em{font-style:italic;color:#8ff0c0;font-weight:300}
+  .foot{position:absolute;left:clamp(16px,4vw,44px);bottom:clamp(14px,3.2vh,34px);max-width:min(340px,66vw)}
+  .foot p{margin:0;color:var(--ink-dim);font-size:clamp(.66rem,1.5vw,.82rem);line-height:1.5;
+    text-shadow:0 1px 14px rgba(0,0,0,.7)}
+  .signal{position:absolute;right:clamp(14px,3.4vw,40px);bottom:clamp(14px,3.2vh,34px);text-align:right}
+  .signal .lab{font-family:var(--mono);font-size:.56rem;letter-spacing:.26em;text-transform:uppercase;color:#7f9fd0}
+  .signal .bar{display:flex;gap:3px;align-items:flex-end;height:22px;justify-content:flex-end;margin-top:.5em}
+  .signal .b{width:4px;background:linear-gradient(180deg,#8ff0c0,#3aa0ff);border-radius:1px;opacity:.25;transition:height .06s linear,opacity .06s linear}
+  .readout{position:absolute;left:clamp(16px,4vw,44px);top:clamp(58px,9vh,92px);font-family:var(--mono);
+    font-size:.6rem;letter-spacing:.22em;text-transform:uppercase;color:#6f8fc2}
+  .readout b{color:#9ff0d0;font-weight:400}
+  @media (max-width:600px){.signal{display:none}}
+
+  /* start overlay */
+  .start{position:fixed;inset:0;z-index:10;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(120% 120% at 50% 40%, rgba(10,16,40,.35), rgba(3,5,12,.86));
+    transition:opacity .9s ease, visibility .9s ease;cursor:pointer}
+  .start.gone{opacity:0;visibility:hidden}
+  .btn{position:relative;width:min(74vw,300px);height:min(74vw,300px);display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:.6em;border-radius:50%;color:var(--ink);
+    background:radial-gradient(circle at 50% 35%, rgba(60,120,180,.16), rgba(20,40,80,.05) 60%, transparent 72%);
+    border:1px solid rgba(150,190,240,.25);box-shadow:0 0 60px rgba(40,90,160,.25), inset 0 0 40px rgba(40,90,160,.12);
+    transition:transform .3s ease, box-shadow .3s ease}
+  .btn:hover{transform:scale(1.03);box-shadow:0 0 90px rgba(60,120,200,.4), inset 0 0 50px rgba(60,120,200,.2)}
+  .btn .ring{position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(140,240,190,.0);
+    animation:ping 3.4s ease-out infinite}
+  .btn .ring.r2{animation-delay:1.13s}
+  @keyframes ping{0%{transform:scale(1);opacity:.55}80%,100%{transform:scale(1.5);opacity:0}}
+  .btn .play{font-size:clamp(1.5rem,6vw,2.4rem);line-height:1;filter:drop-shadow(0 0 14px rgba(140,240,190,.6))}
+  .btn .lbl{font-family:var(--mono);font-size:clamp(.6rem,1.7vw,.78rem);letter-spacing:.36em;text-transform:uppercase;color:#bfe9ff}
+  .btn .sub{font-size:clamp(.62rem,1.5vw,.72rem);color:var(--ink-dim);letter-spacing:.08em;max-width:220px;text-align:center}
+  @media (prefers-reduced-motion:reduce){.btn .ring{animation:none}.btn:hover{transform:none}}
+</style>
+</head>
+<body>
+
+<div class="sky"></div>
+<canvas id="aurora"></canvas>
+
+<div class="land" aria-hidden="true">
+  <svg viewBox="0 0 1440 220" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="landGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#0a1530"/>
+        <stop offset="1" stop-color="#04070f"/>
+      </linearGradient>
+    </defs>
+    <path fill="url(#landGrad)" d="M0,150 L60,140 L120,152 L180,120 L240,140 L300,100 L360,132 L420,110 L480,145 L540,128 L600,96 L660,130 L720,108 L780,140 L840,118 L900,148 L960,124 L1020,100 L1080,132 L1140,112 L1200,142 L1260,120 L1320,146 L1380,128 L1440,150 L1440,220 L0,220 Z"/>
+    <path fill="#020408" d="M0,175 L80,168 L160,178 L240,160 L320,172 L400,152 L480,170 L560,158 L640,176 L720,156 L800,172 L880,160 L960,178 L1040,162 L1120,174 L1200,158 L1280,176 L1360,164 L1440,180 L1440,220 L0,220 Z"/>
+  </svg>
+</div>
+
+<div class="chrome">
+  <div class="kicker">
+    <div class="tag">042 · Synthesised Nature</div>
+    <h1>Northern <em>Lights</em></h1>
+  </div>
+  <div class="readout" id="readout">SIGNAL · <b id="freqRead">— Hz</b> · <b id="modeRead">idle</b></div>
+  <div class="foot">
+    <p>Aurora curtains driven by a live WebAudio oscillator. Move the pointer to reshape the sky and its voice.</p>
+  </div>
+  <div class="signal">
+    <div class="lab">Analyser</div>
+    <div class="bar" id="eq">
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+      <span class="b"></span><span class="b"></span><span class="b"></span><span class="b"></span>
+    </div>
+  </div>
+</div>
+
+<div class="start" id="start">
+  <button class="btn" id="playBtn" type="button">
+    <span class="ring"></span><span class="ring r2"></span>
+    <span class="play">▶</span>
+    <span class="lbl">Begin</span>
+    <span class="sub">Unlocks the synthesiser &amp; lets the lights sing</span>
+  </button>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var canvas = document.getElementById('aurora');
+  var ctx = canvas.getContext('2d', { alpha:false });
+  var eqEl = document.getElementById('eq');
+  var startEl = document.getElementById('start');
+  var playBtn = document.getElementById('playBtn');
+  var freqRead = document.getElementById('freqRead');
+  var modeRead = document.getElementById('modeRead');
+
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 0, H = 0, horizon = 0;
+  var stars = [];
+  var t0 = performance.now();
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = canvas.clientWidth; H = canvas.clientHeight;
+    canvas.width = Math.max(1, Math.floor(W * DPR));
+    canvas.height = Math.max(1, Math.floor(H * DPR));
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    horizon = H * 0.86;
+    buildStars();
+  }
+
+  function buildStars(){
+    var n = Math.round((W * H) / 9000);
+    n = Math.max(40, Math.min(n, 260));
+    stars = [];
+    for (var i = 0; i < n; i++){
+      stars.push({
+        x: Math.random() * W,
+        y: Math.random() * horizon * 0.9,
+        r: Math.random() * 1.2 + 0.3,
+        a: Math.random() * 0.6 + 0.15,
+        tw: Math.random() * Math.PI * 2,
+        sp: Math.random() * 0.02 + 0.004
+      });
+    }
+  }
+
+  // ---- pointer state (drives both audio & visuals) ----
+  var pointer = { x: 0.5, y: 0.45, active:false };
+  function onMove(cx, cy){
+    pointer.active = true;
+    pointer.x = Math.min(1, Math.max(0, cx / W));
+    pointer.y = Math.min(1, Math.max(0, cy / H));
+  }
+  window.addEventListener('mousemove', function(e){ onMove(e.clientX, e.clientY); });
+  window.addEventListener('touchmove', function(e){
+    if (e.touches && e.touches[0]) onMove(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive:true });
+
+  // ---- audio graph ----
+  var ac = null, master = null, filter = null, oscA = null, oscB = null, lfo = null, lfoGain = null, noise = null, noiseGain = null;
+  var analyser = null, freqData = null, timeData = null;
+  var started = false;
+
+  function buildAudio(){
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = ac.createAnalyser();
+    analyser.fftSize = 512;
+    analyser.smoothingTimeConstant = 0.8;
+    freqData = new Uint8Array(analyser.frequencyBinCount);
+    timeData = new Uint8Array(analyser.fftSize);
+
+    master = ac.createGain();
+    master.gain.value = 0.0;
+
+    filter = ac.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 900;
+    filter.Q.value = 3.5;
+
+    oscA = ac.createOscillator(); oscA.type = 'triangle'; oscA.frequency.value = 160;
+    oscB = ac.createOscillator(); oscB.type = 'sine';     oscB.frequency.value = 240;
+    oscB.detune.value = 8;
+
+    var oscGain = ac.createGain(); oscGain.gain.value = 0.5;
+    var oscGainB = ac.createGain(); oscGainB.gain.value = 0.32;
+
+    // slow breathing LFO on the filter cutoff
+    lfo = ac.createOscillator(); lfo.type = 'sine'; lfo.frequency.value = 0.16;
+    lfoGain = ac.createGain(); lfoGain.gain.value = 500;
+    lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+
+    // gentle tremolo on master
+    var trem = ac.createOscillator(); trem.type = 'sine'; trem.frequency.value = 0.42;
+    var tremGain = ac.createGain(); tremGain.gain.value = 0.12;
+    trem.connect(tremGain); tremGain.connect(master.gain);
+
+    // filtered noise "wind" layer, generated in-code (no external file)
+    var buf = ac.createBuffer(1, ac.sampleRate * 2, ac.sampleRate);
+    var d = buf.getChannelData(0);
+    for (var i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * 0.6;
+    noise = ac.createBufferSource(); noise.buffer = buf; noise.loop = true;
+    var noiseFilter = ac.createBiquadFilter(); noiseFilter.type = 'bandpass'; noiseFilter.frequency.value = 420; noiseFilter.Q.value = 0.8;
+    noiseGain = ac.createGain(); noiseGain.gain.value = 0.0;
+    noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(master);
+
+    // routing
+    oscA.connect(oscGain);  oscGain.connect(filter);
+    oscB.connect(oscGainB); oscGainB.connect(filter);
+    filter.connect(master);
+    master.connect(analyser);
+    analyser.connect(ac.destination);
+
+    oscA.start(); oscB.start(); lfo.start(); trem.start(); noise.start();
+
+    // soft attack
+    var now = ac.currentTime;
+    master.gain.setValueAtTime(0.0001, now);
+    master.gain.exponentialRampToValueAtTime(0.34, now + 2.2);
+  }
+
+  function applyControls(){
+    if (!ac) return;
+    var t = ac.currentTime;
+    // X → base pitch (deep on the left, bright on the right)
+    var base = 90 + pointer.x * 1080;
+    var fifth = base * 1.498;
+    oscA.frequency.setTargetAtTime(base, t, 0.25);
+    oscB.frequency.setTargetAtTime(fifth, t, 0.25);
+    // Y → filter warmth / brightness (higher = colder & brighter aurora)
+    var cutoff = 320 + (1 - pointer.y) * 260 + pointer.x * 200;
+    filter.frequency.setTargetAtTime(cutoff + 400, t, 0.3);
+    filter.Q.setTargetAtTime(2.2 + pointer.x * 4.5, t, 0.3);
+    noiseGain.gain.setTargetAtTime(0.02 + (1 - pointer.y) * 0.05, t, 0.4);
+    if (freqRead) freqRead.textContent = Math.round(base) + ' Hz';
+  }
+
+  // ---- start gesture ----
+  function begin(){
+    if (started) return;
+    started = true;
+    if (!ac) buildAudio();
+    ac.resume().then(function(){
+      startEl.classList.add('gone');
+      if (modeRead) modeRead.textContent = 'playing';
+    });
+    applyControls();
+  }
+  startEl.addEventListener('click', begin);
+  playBtn.addEventListener('click', begin);
+  window.addEventListener('keydown', function(e){ if (e.key === ' ' || e.key === 'Enter') begin(); });
+
+  // ---- render loop ----
+  function draw(now){
+    var time = (now - t0) / 1000;
+
+    // audio levels
+    var band = 0.5, rms = 0.5;
+    if (started && analyser){
+      analyser.getByteFrequencyData(freqData);
+      analyser.getByteTimeDomainData(timeData);
+      var mid = freqData.length >> 1;
+      var wsum = 0;
+      for (var k = 0; k < freqData.length; k++){
+        var s = (timeData[k] - 128) / 128;
+        wsum += s * s;
+        if (k >= mid - 6 && k <= mid + 6) band += freqData[k] / 255;
+      }
+      band /= 13;
+      rms = Math.sqrt(wsum / freqData.length);
+    } else {
+      // idle breathing before audio starts
+      band = 0.42 + Math.sin(time * 0.6) * 0.12;
+      rms = 0.5 + Math.sin(time * 0.9) * 0.08;
+    }
+    var energy = started ? (0.35 + band * 0.65) : (0.55 + band * 0.45);
+
+    // starfield
+    ctx.clearRect(0, 0, W, H);
+    for (var i = 0; i < stars.length; i++){
+      var st = stars[i];
+      st.tw += st.sp;
+      var tw = 0.5 + 0.5 * Math.sin(st.tw);
+      ctx.globalAlpha = st.a * (0.5 + tw * 0.5);
+      ctx.fillStyle = '#cfe4ff';
+      ctx.beginPath();
+      ctx.arc(st.x, st.y, st.r, 0, 6.2832);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // aurora curtains
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+
+    var step = 5;
+    var cols = Math.ceil(W / step);
+
+    var layers = [
+      { top:0.10, r:120, g:255, b:170, amp:0.30, spd:0.30, ph:0.0,  gain:0.55 },
+      { top:0.18, r:70,  g:210, b:255, amp:0.34, spd:0.22, ph:1.7,  gain:0.45 },
+      { top:0.06, r:190, g:120, b:255, amp:0.26, spd:0.42, ph:3.3,  gain:0.30 }
+    ];
+
+    for (var L = 0; L < layers.length; L++){
+      var ly = layers[L];
+      var baseTop = horizon * (1 - ly.top) - H * 0.04;
+      var bottomBase = horizon * (0.62 + ly.amp) + energy * H * 0.14;
+      var colGain = ly.gain * (0.7 + energy * 0.5);
+
+      for (var c = 0; c <= cols; c++){
+        var x = c * step;
+        var nx = x / W;
+        var w1 = Math.sin(nx * 6.0 + time * ly.spd + ly.ph);
+        var w2 = Math.sin(nx * 13.0 - time * ly.spd * 1.7 + ly.ph * 2.0) * 0.5;
+        var w3 = Math.sin(nx * 2.3 + time * 0.10) * 0.7;
+        var shape = (w1 + w2 + w3) / 2.2;
+        var audioRipple = started
+          ? (Math.sin(nx * 22.0 - time * 4.0) * band * 0.5 + Math.sin(nx * 40.0 + time * 6.0) * rms * 0.3)
+          : Math.sin(nx * 18.0 + time * 1.5) * 0.15;
+        var bottom = bottomBase + shape * H * 0.14 + audioRipple * H * 0.10;
+        var topY = baseTop + w3 * H * 0.03;
+
+        var grad = ctx.createLinearGradient(0, topY, 0, bottom);
+        grad.addColorStop(0.0, 'rgba(' + ly.r + ',' + ly.g + ',' + ly.b + ',0)');
+        grad.addColorStop(0.14, 'rgba(' + ly.r + ',' + ly.g + ',' + ly.b + ',' + (0.05 * colGain) + ')');
+        grad.addColorStop(0.42, 'rgba(' + ly.r + ',' + ly.g + ',' + ly.b + ',' + (0.26 * colGain) + ')');
+        grad.addColorStop(0.72, 'rgba(' + Math.round(ly.r*0.6) + ',' + Math.round(ly.g*0.7) + ',' + Math.round(ly.b*0.9) + ',' + (0.10 * colGain) + ')');
+        grad.addColorStop(1.0, 'rgba(' + ly.r + ',' + ly.g + ',' + ly.b + ',0)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(x, topY, step + 1, bottom - topY);
+      }
+
+      // vertical ray striations on the primary (green) curtain
+      if (L === 0){
+        var rayStep = 14;
+        var rays = Math.ceil(W / rayStep);
+        for (var r = 0; r < rays; r++){
+          var rx = r * rayStep + (Math.sin(time * 0.5 + r) * 3);
+          var ra = (0.5 + 0.5 * Math.sin(time * 2.2 + r * 0.9));
+          ra *= (0.10 + band * 0.22) * colGain;
+          if (ra < 0.02) continue;
+          var ry1 = baseTop + Math.sin(rx / W * 6.0 + time * ly.spd) * H * 0.05;
+          var ry2 = bottomBase + H * 0.10;
+          var rg = ctx.createLinearGradient(0, ry1, 0, ry2);
+          rg.addColorStop(0, 'rgba(200,255,220,' + ra + ')');
+          rg.addColorStop(0.6, 'rgba(140,255,190,' + (ra * 0.4) + ')');
+          rg.addColorStop(1, 'rgba(140,255,190,0)');
+          ctx.fillStyle = rg;
+          ctx.fillRect(rx, ry1, 2, ry2 - ry1);
+        }
+      }
+    }
+    ctx.restore();
+
+    // soft glow haze near horizon, reacting to energy
+    var haze = ctx.createRadialGradient(W * (0.35 + pointer.x * 0.3), horizon, 0, W * 0.5, horizon, W * 0.75);
+    var ha = started ? (0.10 + band * 0.16) : 0.10;
+    haze.addColorStop(0, 'rgba(120,230,180,' + ha + ')');
+    haze.addColorStop(0.5, 'rgba(70,140,220,' + (ha * 0.4) + ')');
+    haze.addColorStop(1, 'rgba(10,20,50,0)');
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = haze;
+    ctx.fillRect(0, 0, W, H);
+    ctx.globalCompositeOperation = 'source-over';
+
+    // EQ bars
+    if (started && freqData){
+      var bars = eqEl.children;
+      var step2 = Math.floor(freqData.length / bars.length);
+      for (var b = 0; b < bars.length; b++){
+        var v = freqData[b * step2] / 255;
+        var h = 3 + v * 19;
+        var bar = bars[b];
+        bar.style.height = h.toFixed(1) + 'px';
+        bar.style.opacity = (0.25 + v * 0.7).toFixed(2);
+      }
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  // ---- control sync (throttled) after start ----
+  var ctrlTimer = null;
+  function scheduleControls(){
+    if (!started) return;
+    if (ctrlTimer) return;
+    ctrlTimer = setTimeout(function(){ ctrlTimer = null; applyControls(); }, 40);
+  }
+  window.addEventListener('mousemove', scheduleControls);
+  window.addEventListener('touchmove', scheduleControls, { passive:true });
+
+  // init
+  window.addEventListener('resize', resize);
+  resize();
+  modeRead.textContent = 'idle';
+  requestAnimationFrame(draw);
+
+})();
+</script>
+</body>
+</html>

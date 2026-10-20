@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ORINTH OS — CRT Boot</title>
+<style>
+  :root{
+    --ph:#3dff9b;
+    --ph-dim:#1f9e5e;
+    --ph-faint:#0c4a2c;
+    --bg:#050806;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Courier New',Consolas,'Lucida Console',monospace;
+    background:
+      radial-gradient(120% 120% at 50% 40%, #0d120e 0%, #050705 45%, #010201 100%);
+    color:var(--ph);
+    min-height:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:clamp(14px,4vw,44px);
+    overflow:hidden;
+  }
+
+  /* CRT bezel */
+  .crt{
+    position:relative;
+    width:min(820px,98vw);
+    aspect-ratio:4/3;
+    border-radius:clamp(22px,4vw,42px);
+    background:
+      linear-gradient(160deg,#1b1c1e,#0c0c0d 55%,#050505);
+    padding:clamp(14px,3.4vw,34px);
+    box-shadow:
+      inset 0 2px 4px rgba(255,255,255,.08),
+      inset 0 -8px 24px rgba(0,0,0,.9),
+      0 30px 70px -20px rgba(0,0,0,.9),
+      0 0 0 2px #000;
+  }
+  .bezel-dot{position:absolute;right:clamp(14px,3vw,30px);bottom:clamp(8px,1.6vw,16px);display:flex;gap:8px;align-items:center;z-index:6}
+  .bezel-dot i{width:9px;height:9px;border-radius:50%;background:#12331f;box-shadow:inset 0 0 3px #000}
+  .bezel-dot i.on{background:#3dff9b;box-shadow:0 0 8px #3dff9b,inset 0 0 2px #0a3a20}
+  .bezel-dot span{font-size:.5rem;letter-spacing:.35em;color:#3a3c3e;text-transform:uppercase}
+
+  /* screen */
+  .screen{
+    position:relative;width:100%;height:100%;
+    border-radius:clamp(14px,2.4vw,26px);
+    background:
+      radial-gradient(120% 120% at 50% 45%, #0a1711 0%, #050806 60%, #020302 100%);
+    overflow:hidden;
+    box-shadow:inset 0 0 60px rgba(0,0,0,.9),inset 0 0 12px rgba(61,255,155,.12);
+    isolation:isolate;
+  }
+  /* vignette + curvature shading */
+  .screen::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:4;
+    background:radial-gradient(130% 130% at 50% 50%,transparent 60%,rgba(0,0,0,.55) 100%);
+  }
+  /* scanlines */
+  .scanlines{position:absolute;inset:0;pointer-events:none;z-index:5;
+    background:repeating-linear-gradient(to bottom,rgba(0,0,0,0) 0 2px,rgba(0,0,0,.28) 2px 4px);
+    mix-blend-mode:multiply;
+  }
+  /* flicker + roll */
+  .flicker{position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:rgba(61,255,155,.02);
+    animation:flick 0.16s steps(2) infinite;
+  }
+  @keyframes flick{0%{opacity:.25}50%{opacity:.55}100%{opacity:.3}}
+  .roll{position:absolute;left:0;right:0;height:120px;z-index:5;pointer-events:none;
+    background:linear-gradient(to bottom,transparent,rgba(61,255,155,.06),transparent);
+    animation:roll 7s linear infinite;}
+  @keyframes roll{0%{top:-120px}100%{top:100%}}
+
+  /* phosphor text */
+  .term{
+    position:absolute;inset:0;z-index:3;
+    padding:clamp(16px,3.4vw,34px);
+    font-size:clamp(.7rem,2.1vw,1.12rem);
+    line-height:1.55;
+    letter-spacing:.04em;
+    color:var(--ph);
+    text-shadow:0 0 4px rgba(61,255,155,.8),0 0 14px rgba(61,255,155,.45);
+    white-space:pre-wrap;word-break:break-word;
+    overflow:hidden;
+  }
+  .term .dim{color:var(--ph-dim);text-shadow:0 0 3px rgba(61,255,155,.5)}
+  .term .ok{color:#9dffc0}
+  .term .warn{color:#ffe08a;text-shadow:0 0 4px rgba(255,224,139,.7)}
+
+  /* cursor */
+  .cursor{display:inline-block;width:.62em;height:1.15em;vertical-align:-0.18em;background:var(--ph);
+    box-shadow:0 0 8px rgba(61,255,155,.9);margin-left:2px;animation:blink 1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+
+  /* power-on animation */
+  .poweron{position:absolute;inset:0;z-index:7;pointer-events:none;background:var(--bg)}
+  .poweron .line{position:absolute;left:0;right:0;top:50%;height:2px;background:#d6ffe8;
+    box-shadow:0 0 20px 4px rgba(214,255,232,.8);transform:translateY(-50%) scaleX(0);transform-origin:center}
+  .booting .poweron{animation:powon 1.1s ease-out forwards}
+  .booting .poweron .line{animation:lineon 1.1s ease-out forwards}
+  @keyframes powon{0%{opacity:1}70%{opacity:1}100%{opacity:0}}
+  @keyframes lineon{0%{transform:translateY(-50%) scaleX(0);opacity:0}18%{transform:translateY(-50%) scaleX(1);opacity:1}60%{transform:translateY(-50%) scaleX(1);opacity:1;height:60%}100%{transform:translateY(-50%) scaleX(1);opacity:0;height:220%}}
+
+  @media (prefers-reduced-motion:reduce){
+    .flicker,.roll,.cursor{animation:none}
+    .booting .poweron,.booting .poweron .line{animation:none;opacity:0}
+    .term{animation:none}
+  }
+</style>
+</head>
+<body>  <div class="crt">
+    <div class="screen">
+      <div class="poweron" aria-hidden="true"><div class="line"></div></div>
+      <div class="term" id="term" aria-live="assertive" aria-label="Boot sequence"></div>
+      <div class="roll" aria-hidden="true"></div>
+      <div class="scanlines" aria-hidden="true"></div>
+      <div class="flicker" aria-hidden="true"></div>
+    </div>
+    <div class="bezel-dot"><i class="on" id="pwr"></i><span>Orinth</span></div>
+  </div>
+
+  <script>
+  (function(){
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var crt=document.querySelector('.crt');
+    var term=document.getElementById('term');
+
+    var LINES=[
+      {t:'ORINTH ROM BIOS  v4.1.2', c:''},
+      {t:'(C) 1982-2026 Orthogonal Systems Inc.', c:'dim'},
+      {t:'', c:''},
+      {t:'CPU  : ORTH-122B @ 4.70 GHz', c:''},
+      {t:'TEST : 1024 KB MEMORY ........ OK', c:''},
+      {t:'TEST : CACHE L0/L1/L2 ........ OK', c:''},
+      {t:'', c:''},
+      {t:'DETECT: IDE0  ... ORINTH SSD 512GB', c:''},
+      {t:'DETECT: NET0  ... GIGABIT LINK', c:''},
+      {t:'', c:''},
+      {t:'LOAD  : /boot/kernel ........ ', c:''},
+      {t:'        ████████████████████', c:'ok'},
+      {t:'MOUNT : /dev/sda0  [rw] .... OK', c:'ok'},
+      {t:'MOUNT : /dev/shm   [rw] .... OK', c:'ok'},
+      {t:'', c:''},
+      {t:'START : daemon  .phosphor ... OK', c:''},
+      {t:'START : daemon  .scanline . OK', c:''},
+      {t:'START : daemon  .flicker .. ', c:'warn'},
+      {t:'        .. enabled (authentic CRT)', c:'warn'},
+      {t:'', c:''},
+      {t:'NET   : 192.168.0.101  dhcp', c:''},
+      {t:'NET   : ipv6 2001:db8::101 ', c:''},
+      {t:'', c:''},
+      {t:'ORINTH OS READY.', c:'ok'},
+      {t:'last login: Tue Oct 20 2026  09:41:02', c:'dim'}
+    ];
+
+    var speed=reduce?16:26;
+    var lineGap=reduce?30:70;
+    var bootGap=reduce?120:240;
+
+    function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+    var done=[], cur='';
+    function rebuild(){
+      var head=done.length?done.join('\n')+'\n':'';
+      term.innerHTML=head+esc(cur)+'<span class="cursor"></span>';
+    }
+
+    function typeLine(line, cb){
+      var s=line.t, i=0;
+      (function step(){
+        if(i<=s.length){
+          cur=s.slice(0,i);
+          rebuild();
+          i++;
+          setTimeout(step, speed + Math.random()*speed*0.5);
+        } else {
+          cur='';
+          done.push(s);
+          cb();
+        }
+      })();
+    }
+
+    function run(){
+      var n=0;
+      (function next(){
+        if(n>=LINES.length){
+          setTimeout(function(){
+            cur='orinth:~$ ';
+            rebuild();
+            crt.addEventListener('click', replay);
+          }, 600);
+          return;
+        }
+        var line=LINES[n++];
+        if(line.t===''){
+          done.push('');
+          rebuild();
+          setTimeout(next, lineGap);
+          return;
+        }
+        typeLine(line, function(){ setTimeout(next, lineGap); });
+      })();
+    }
+
+    function start(){
+      done=[];cur='';
+      term.innerHTML='';
+      crt.classList.add('booting');
+      setTimeout(run, bootGap);
+    }
+    function replay(){
+      crt.classList.remove('booting');
+      void crt.offsetWidth;
+      start();
+    }
+
+    start();
+  })();
+  </script>
+</body>
+</html>

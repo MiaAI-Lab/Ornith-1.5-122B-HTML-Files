@@ -1,0 +1,26 @@
+PROMPT
+------
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+File: 084-misty-mountain.html + 084-misty-mountain.txt — Misty layered mountain ranges with drifting fog and a soft sun. Palette: soft blue-grey, pale luminous sky. Signature: stacked SVG ridge layers with parallax drift, animated fog bands, gentle sun glow, birds.
+
+TITLE
+-----
+Misty Mountains — Layered Ridges
+
+DESIGN DESCRIPTION
+------------------
+A serene, pale luminous sky fades from cool blue-grey at the top to a faint warm haze at the horizon, where a soft sun glows and slowly breathes. Below it, four mountain ridges are stacked as inline SVG silhouettes, each a step deeper and more saturated blue-grey than the one behind it — atmospheric perspective in pure vector — and each drifting horizontally at its own speed so nearer ranges slide further than distant ones, giving a living parallax. Bands of heavily-blurred fog weave between and over the ranges, moving counter to the ridges, while a small flock of simple stroked birds circles high in the sky, bobbing gently. The palette is entirely soft blue-grey with a whisper of warmth, and the composition is quiet and horizontal, evoking a still alpine morning.
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Stacked inline SVG ridge layers: four hand-drawn <path> silhouettes with jagged peaks, stretched via viewBox + preserveAspectRatio="none", filled in a graded blue-grey ramp (far #c9d2dc → near #64737f) for atmospheric perspective — no images.
+- Parallax drift: each ridge layer oscillates horizontally at a different duration/amplitude (nearer = faster, larger), so the ranges shift relative to one another like real depth.
+- Animated fog bands: full-width divs with a soft top-bottom fade and heavy filter:blur(20px), drifting on their own slow loops, some weaving between the mountain layers for depth.
+- Gentle sun glow: a large radial-gradient disc with a blurred bright core, slowly pulsing opacity/scale (sunPulse) for a luminous, breathing light.
+- Birds: minimal double-arc stroked paths in four small flock members, each with a staggered vertical bob plus a slow horizontal drift.
+- Fully responsive fixed inset:0 scene with vmin/vh units scaling 320px to 4K; complete prefers-reduced-motion fallback that freezes all motion and holds the parallax at a resting offset.
+
+INTENDED INTERACTION MODEL
+--------------------------
+Purely contemplative and ambient — there is no click target. The viewer simply watches the scene breathe: ridges drift, fog weaves, the sun pulses and birds bob in an endless, calm loop. Motion is deliberately slow and non-distracting. When reduced motion is requested, everything holds still at a composed resting frame. No navigation — the frame is the landscape.

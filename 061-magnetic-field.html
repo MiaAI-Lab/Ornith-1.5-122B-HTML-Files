@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FERRO No.061 — The Invisible Field</title>
+<style>
+  :root{ --steel:#aab3bd; --ink:#050a12; --navy:#0a1424; --line:#4696eb; --glow:#46a0ff; --north:#ff5f5a; --south:#5abeff; --paper:#dff0ff; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--ink);overflow:hidden;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--paper);overflow:hidden;}
+  .stage{position:fixed;inset:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .frame{position:fixed;inset:0;pointer-events:none;}
+  .vignette{position:absolute;inset:0;background:radial-gradient(120% 90% at 52% 50%,rgba(30,70,120,.10),rgba(4,12,24,.72) 62%,rgba(2,7,14,.96));}
+  .grid{position:absolute;inset:0;opacity:.10;background-image:linear-gradient(rgba(120,170,220,.5) 1px,transparent 1px),linear-gradient(90deg,rgba(120,170,220,.5) 1px,transparent 1px);background-size:clamp(34px,5vw,64px) clamp(34px,5vw,64px);-webkit-mask:radial-gradient(120% 90% at 52% 50%,#000 55%,transparent 82%);mask:radial-gradient(120% 90% at 52% 50%,#000 55%,transparent 82%);}
+  .tag{position:absolute;left:clamp(18px,3vw,44px);top:clamp(18px,3vw,44px);max-width:min(34ch,42vw);}
+  .kicker{font-size:.72rem;letter-spacing:.42em;text-transform:uppercase;opacity:.66;font-weight:600;}
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  .title{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;margin:.16em 0 .06em;font-size:clamp(1.9rem,5.2vw,3.5rem);line-height:.98;letter-spacing:.005em;text-shadow:0 2px 30px rgba(0,0,0,.55);}
+  .title b{font-style:normal;color:var(--glow);font-weight:400;}
+  .sub{max-width:34ch;font-size:.9rem;line-height:1.5;opacity:.66;text-shadow:0 1px 12px rgba(0,0,0,.6);}
+  .legend{position:absolute;right:clamp(18px,3vw,44px);bottom:clamp(18px,3vw,44px);text-align:right;}
+  .stat{font-variant-numeric:tabular-nums;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;opacity:.62;margin:.34em 0;}
+  .stat b{color:var(--glow);font-weight:600;opacity:1;}
+  .pole{position:absolute;font-family:Georgia,"Times New Roman",serif;font-style:italic;font-size:1.5rem;transform:translate(-50%,-50%);padding:2px 10px;border-radius:20px;letter-spacing:.04em;text-shadow:0 1px 10px rgba(0,0,0,.6);pointer-events:none;}
+  #tagN{color:#ffd7d3;background:rgba(255,95,90,.14);box-shadow:0 0 22px rgba(255,95,90,.35);}
+  #tagS{color:#cfeeff;background:rgba(90,190,255,.14);box-shadow:0 0 22px rgba(90,190,255,.35);}
+  .hint{position:absolute;left:50%;bottom:clamp(14px,2.4vw,26px);transform:translateX(-50%);font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;opacity:.5;white-space:nowrap;}
+  @media (max-width:520px){ .sub{display:none;} .stat{font-size:.66rem;} .hint{font-size:.62rem;letter-spacing:.2em;} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="c"></canvas>
+  <div class="frame">
+    <div class="vignette"></div>
+    <div class="grid"></div>
+    <div class="tag">
+      <div class="kicker">Ferro · Magnetostatics · No. 061</div>
+      <h1 class="title">The Invisible <b>Field</b></h1>
+      <p class="sub">A bar magnet hides a living geometry. Field lines are traced from the north pole and curve back into the south; glowing filings ride those exact paths, crowding and brightening where the field is strongest.</p>
+    </div>
+    <div class="legend">
+      <div class="stat">|B| <b id="bVal">0.00</b> mT</div>
+      <div class="stat">Filings <b id="pCount">0</b></div>
+    </div>
+    <div class="pole" id="tagN">N</div>
+    <div class="pole" id="tagS">S</div>
+    <div class="hint">Hover to read the field · <span class="serif" style="font-style:italic;text-transform:none;letter-spacing:.02em">move to part the filings</span></div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("c");
+  var ctx=canvas.getContext("2d");
+  var bVal=document.getElementById("bVal");
+  var pCountEl=document.getElementById("pCount");
+  var tagN=document.getElementById("tagN");
+  var tagS=document.getElementById("tagS");
+
+  var W=0,H=0,DPR=1;
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var mouse={x:-9999,y:-9999,active:false,vx:0,vy:0,px:-9999,py:-9999};
+
+  // ---- magnet geometry (CSS px) ----
+  var cx=0,cy=0,halfLen=0,bodyH=0,Nx=0,Ny=0,Sx=0,Sy=0;
+  var captureR=0;
+
+  function geom(){
+    cx=W/2; cy=H/2;
+    halfLen=Math.max(60,Math.min(W,H)*0.17);
+    bodyH=halfLen*0.62;
+    Nx=cx+halfLen; Ny=cy;
+    Sx=cx-halfLen; Sy=cy;
+    captureR=halfLen*0.16;
+  }
+
+  // two magnetic monopoles: + at N (source), - at S (sink)
+  var soft=1.0;
+  function field(x,y){
+    var dxN=x-Nx, dyN=y-Ny, rN2=dxN*dxN+dyN*dyN+soft, rN=Math.sqrt(rN2);
+    var dxS=x-Sx, dyS=y-Sy, rS2=dxS*dxS+dyS*dyS+soft, rS=Math.sqrt(rS2);
+    var invN=1/(rN2*rN), invS=1/(rS2*rS);
+    return {x:dxN*invN-dxS*invS, y:dyN*invN-dyS*invS};
+  }
+  function mag(x,y){var f=field(x,y);return Math.sqrt(f.x*f.x+f.y*f.y);}
+
+  // trace a field line by RK4 along the unit tangent of B
+  function dir(x,y){var f=field(x,y);var m=Math.sqrt(f.x*f.x+f.y*f.y)||1e-9;return {x:f.x/m,y:f.y/m};}
+  function traceLine(x0,y0,steps,ds){
+    var pts=[{x:x0,y:y0}]; var x=x0,y=y0;
+    for(var i=0;i<steps;i++){
+      var k1=dir(x,y);
+      var k2=dir(x+0.5*ds*k1.x, y+0.5*ds*k1.y);
+      var k3=dir(x+0.5*ds*k2.x, y+0.5*ds*k2.y);
+      var k4=dir(x+ds*k3.x, y+ds*k3.y);
+      x += ds/6*(k1.x+2*k2.x+2*k3.x+k4.x);
+      y += ds/6*(k1.y+2*k2.y+2*k3.y+k4.y);
+      pts.push({x:x,y:y});
+      var dxS=x-Sx, dyS=y-Sy;
+      if(dxS*dxS+dyS*dyS < captureR*captureR) break;      // reached south pole
+      if(x<-halfLen*2.2||x>W+halfLen*2.2||y<-halfLen*2.2||y>H+halfLen*2.2) break; // escaped
+    }
+    return pts;
+  }
+
+  var lines=[];
+  function buildLines(){
+    lines=[];
+    var r0=halfLen*0.10;
+    var rings=[0.55,1.0];
+    for(var r=0;r<rings.length;r++){
+      var rad=r0*rings[r];
+      // semicircle on the outer (+x) side of the N pole
+      var NANG=86, M=8;
+      for(var a=0;a<=M;a++){
+        var ang=(-NANG + (2*NANG)*a/M) * Math.PI/180;
+        var sx=Nx + Math.cos(ang)*rad;
+        var sy=Ny + Math.sin(ang)*rad;
+        lines.push(traceLine(sx,sy,420, halfLen>140?2.4:3.2));
+      }
+    }
+  }
+
+  // ---- filings (particles riding the lines) ----
+  var filings=[];
+  function arcLen(pts){var t=0;for(var i=1;i<pts.length;i++){var dx=pts[i].x-pts[i-1].x,dy=pts[i].y-pts[i-1].y;t+=Math.sqrt(dx*dx+dy*dy);}return t||1;}
+  function spawn(){
+    var ln=lines[(Math.random()*lines.length)|0]||{points:[{x:Nx,y:Ny}]};
+    var L=arcLen(ln);
+    return {ln:ln, L:L, s:Math.random()*L,
+            pxPerSec: 70+Math.random()*150,
+            size: Math.random()*1.6+0.7,
+            hue: 196+Math.random()*26,
+            tw: Math.random()*6.28};
+  }
+  function makeFilings(){
+    filings=[];
+    var area=W*H;
+    var n=Math.round(Math.min(Math.max(area/1400,260),1500));
+    for(var i=0;i<n;i++) filings.push(spawn());
+    pCountEl.textContent=n;
+  }
+
+  function pointOnLine(ln,s){
+    // s is arc distance from start
+    var acc=0;
+    for(var i=1;i<ln.length;i++){
+      var dx=ln[i].x-ln[i-1].x, dy=ln[i].y-ln[i-1].y, seg=Math.sqrt(dx*dx+dy*dy);
+      if(acc+seg>=s){var f=(s-acc)/ (seg||1);return {x:ln[i-1].x+dx*f, y:ln[i-1].y+dy*f};}
+      acc+=seg;
+    }
+    return {x:ln[ln.length-1].x, y:ln[ln.length-1].y};
+  }
+
+  function insideMagnet(x,y){
+    var x0=Sx, x1=Nx, y0=cy-bodyH/2, y1=cy+bodyH/2;
+    return x>x0-4 && x<x1+4 && y>y0-4 && y<y1+4;
+  }
+
+  // ---- input ----
+  function ptr(e){
+    var p=e.touches?e.touches[0]:e; if(!p) return;
+    var r=canvas.getBoundingClientRect();
+    mouse.px=mouse.x; mouse.py=mouse.y;
+    mouse.x=(p.clientX-r.left); mouse.y=(p.clientY-r.top);
+    mouse.active=true;
+  }
+  window.addEventListener("pointermove",ptr,{passive:true});
+  window.addEventListener("pointerdown",ptr,{passive:true});
+  window.addEventListener("pointerup",function(){mouse.active=false;});
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    geom(); buildLines(); makeFilings(); positionTags();
+  }
+  function positionTags(){
+    tagN.style.left=(Nx+14)+ "px"; tagN.style.top=(Ny-16)+"px";
+    tagS.style.left=(Sx-26)+"px"; tagS.style.top=(Sy-16)+"px";
+  }
+  window.addEventListener("resize",function(){clearTimeout(tt);tt=setTimeout(resize,120);});
+  var tt=null;
+
+  window.addEventListener("load",resize);
+  if(document.readyState!=="loading") resize();
+
+  var time=0, last=0;
+
+  function drawMagnet(){
+    ctx.save();
+    // soft glow behind the steel
+    ctx.shadowColor="rgba(60,90,120,.5)"; ctx.shadowBlur=30;
+    var r=bodyH/2*0.9;
+    var x0=Sx, x1=Nx;
+    var g=ctx.createLinearGradient(0,cy-bodyH/2,0,cy+bodyH/2);
+    g.addColorStop(0,"#8b96a3");
+    g.addColorStop(0.28,"#d7dde4");
+    g.addColorStop(0.5,"#aab3bd");
+    g.addColorStop(0.72,"#7c8794");
+    g.addColorStop(1,"#4a525c");
+    ctx.fillStyle=g;
+    roundRect(x0,cy-bodyH/2,x1-x0,bodyH,r);
+    ctx.fill();
+    ctx.shadowBlur=0;
+    // pole caps tint
+    var capW=Math.max(6,bodyH*0.28);
+    var gn=ctx.createLinearGradient(Nx-capW,0,Nx+capW,0);
+    gn.addColorStop(0,"rgba(255,120,110,0)"); gn.addColorStop(1,"rgba(255,95,90,.55)");
+    ctx.fillStyle=gn; roundRect(Nx-capW,cy-bodyH/2,capW,bodyH,{tl:0,tr:r,br:r,bl:0}); ctx.fill();
+    var gs=ctx.createLinearGradient(Sx-capW,0,Sx+capW,0);
+    gs.addColorStop(0,"rgba(90,190,255,.55)"); gs.addColorStop(1,"rgba(90,190,255,0)");
+    ctx.fillStyle=gs; roundRect(Sx,cy-bodyH/2,capW,bodyH,{tl:r,tr:0,bl:0,br:r}); ctx.fill();
+    // seam line
+    ctx.strokeStyle="rgba(20,26,34,.5)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(cx,cy-bodyH/2); ctx.lineTo(cx,cy+bodyH/2); ctx.stroke();
+    // top highlight
+    ctx.strokeStyle="rgba(255,255,255,.35)"; ctx.lineWidth=1.4;
+    ctx.beginPath(); ctx.moveTo(x0+6,cy-bodyH/2+4); ctx.lineTo(x1-6,cy-bodyH/2+4); ctx.stroke();
+    ctx.restore();
+  }
+  function roundRect(x,y,w,h,r){
+    if(typeof r==="number") r={tl:r,tr:r,br:r,bl:r};
+    ctx.beginPath();
+    ctx.moveTo(x+r.tl,y);
+    ctx.lineTo(x+w-r.tr,y); ctx.arcTo(x+w,y,x+w,y+r.tr,r.tr);
+    ctx.lineTo(x+w,y+h-r.br); ctx.arcTo(x+w,y+h,x+w-r.br,y+h,r.br);
+    ctx.lineTo(x+r.bl,y+h); ctx.arcTo(x,y+h,x,y+h-r.bl,r.bl);
+    ctx.closePath();
+  }
+
+  function drawLines(){
+    ctx.save();
+    ctx.lineWidth=1.1;
+    for(var i=0;i<lines.length;i++){
+      var pts=lines[i]; if(pts.length<2) continue;
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x,pts[0].y);
+      for(var j=1;j<pts.length;j++) ctx.lineTo(pts[j].x,pts[j].y);
+      ctx.strokeStyle="rgba(70,150,235,.20)";
+      ctx.shadowColor="rgba(70,160,255,.75)"; ctx.shadowBlur=7;
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawFilings(dt){
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<filings.length;i++){
+      var f=filings[i];
+      f.s += f.pxPerSec*dt;
+      if(f.s>=f.L){ f.s -= f.L; if(f.s<0)f.s=0; }
+      var p=pointOnLine(f.ln,f.s);
+      f._px=p.x; f._py=p.y;
+      // mouse repel
+      if(mouse.active){
+        var rx=p.x-mouse.x, ry=p.y-mouse.y, r2=rx*rx+ry*ry, RR=120;
+        if(r2<RR*RR){ var rr=Math.sqrt(r2)||1, ff=(RR-rr)/RR;
+          p.x += (rx/rr)*ff*2.2; p.y += (ry/rr)*ff*2.2; }
+      }
+      var tw=0.6+0.4*Math.sin(time*4+f.tw);
+      var alpha=0.55*tw + 0.35;
+      var rad=f.size*(1+0.25*tw);
+      var gg=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,rad*3.2);
+      gg.addColorStop(0,"hsla("+f.hue+",100%,72%,"+Math.min(1,alpha)+")");
+      gg.addColorStop(0.4,"hsla("+f.hue+",100%,60%,"+(alpha*0.5)+")");
+      gg.addColorStop(1,"hsla("+f.hue+",100%,55%,0)");
+      ctx.fillStyle=gg;
+      ctx.beginPath(); ctx.arc(p.x,p.y,rad*3.2,0,6.2832); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawVector(){
+    if(!mouse.active) return;
+    var f=field(mouse.x,mouse.y);
+    var m=Math.sqrt(f.x*f.x+f.y*f.y)||1e-9;
+    var ux=f.x/m, uy=f.y/m;
+    var L=52;
+    var ex=mouse.x+ux*L, ey=mouse.y+uy*L;
+    ctx.save();
+    // compass ring
+    ctx.strokeStyle="rgba(120,180,220,.25)"; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(mouse.x,mouse.y,17,0,6.2832); ctx.stroke();
+    // shaft
+    ctx.strokeStyle="rgba(150,225,255,.9)"; ctx.lineWidth=2;
+    ctx.shadowColor="rgba(120,220,255,.9)"; ctx.shadowBlur=12;
+    ctx.beginPath(); ctx.moveTo(mouse.x,mouse.y); ctx.lineTo(ex,ey); ctx.stroke();
+    // head
+    var a=Math.atan2(uy,ux), hs=11;
+    ctx.fillStyle="rgba(150,225,255,.95)";
+    ctx.beginPath();
+    ctx.moveTo(ex,ey);
+    ctx.lineTo(ex-Math.cos(a-0.4)*hs, ey-Math.sin(a-0.4)*hs);
+    ctx.lineTo(ex-Math.cos(a+0.4)*hs, ey-Math.sin(a+0.4)*hs);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    // readout
+    var disp = (m*120).toFixed(2);
+    bVal.textContent=disp;
+  }
+
+  function frame(ts){
+    if(!last) last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.25;
+    time+=dt;
+
+    // trail fade instead of hard clear
+    ctx.fillStyle="rgba(5,8,15,0.22)";
+    ctx.fillRect(0,0,W,H);
+
+    drawLines();
+    drawFilings(dt);
+
+    // cursor velocity (for future use / subtle)
+    mouse.vx=mouse.x-mouse.px; mouse.vy=mouse.y-mouse.py; mouse.px=mouse.x; mouse.py=mouse.y;
+
+    drawMagnet();
+    drawVector();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

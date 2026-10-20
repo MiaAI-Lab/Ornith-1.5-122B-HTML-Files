@@ -1,0 +1,20 @@
+PROMPT (exact):
+014-art-deco.html + 014-art-deco.txt — Art Deco frame inspired by 1920s posters; gold geometric ornaments, symmetry. Palette: black, gold, deep emerald or burgundy. Signature: CSS/SVG symmetric ornaments, gold gradient rules, fan motifs, elegant serif.
+
+TITLE:
+Grand Soirée du Siècle — 1925 Deco Poster
+
+DESIGN DESCRIPTION:
+A 1920s event poster framed like a gilded jewel. A deep emerald radial ground sits inside a multi-layered gold-and-black keyline border with stepped ziggurat corners — the signature Deco motif — at all four edges. Above the title, a 48-ray sunburst (generated in SVG) rotates imperceptibly behind a soft golden core, its long and short rays alternating like a rising fan. The headline is set in heavy, wide-tracked serif caps stacked in three tiers, filled with a top-lit gold gradient that reads as polished brass. A symmetric chevron-and-diamond rule underlines the title, followed by French cabaret-style small caps and a gold gradient rule capped with a lozenge. A circular medallion bearing "19 / 25" anchors the base. A diagonal light shimmer sweeps the whole poster on a slow loop, so the gold appears to catch the light.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered box-shadow "frame stack" (alternating gold-deep / ink / gold-lo bands) to build the stepped Deco border with no images.
+- Stepped ziggurat corners assembled from six thin gold bars per corner, mirrored with scaleX/scaleY for the other three corners.
+- 48 alternating long/short sunburst rays generated in JS and drawn as SVG paths radiating from center, slowly rotating.
+- Gold gradient text (background-clip:text) on the headline for a brushed-metal look.
+- Symmetric hand-built SVG chevron rule (mirrored point lists) with a center diamond.
+- A screen-blended diagonal shimmer gradient animating across the poster for a metallic light-catch.
+- Subtle pointer-driven parallax tilt (rotateX/Y) on the poster for depth; full prefers-reduced-motion fallback.
+
+INTENDED INTERACTION MODEL:
+Largely static and elegant, with quiet life: the sunburst turns slowly, the gold shimmer drifts, and hovering the poster tilts it gently in 3D toward the pointer (pointermove), resetting on leave. All motion honors prefers-reduced-motion. On mobile it's a tap-to-look, no controls needed — the poster simply presents itself and stays crisp from 320px to 4K via clamp() sizing and aspect-ratio.

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OFFCUT — A Magazine of Raw Ideas · Issue 07</title>
+  <style>
+  :root{
+    --paper:#f2efe6; --ink:#0a0a0a; --accent:#ff2b1f; --paper2:#e7e2d4;
+    --serif:Georgia,"Times New Roman",serif;
+    --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --edge:4px solid var(--ink);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:var(--serif); background:var(--paper); color:var(--ink);
+    line-height:1.5; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(rgba(10,10,10,.05) 1px,transparent 1px); background-size:3px 3px;
+  }
+  a{color:inherit}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+
+  /* ---- top bar ---- */
+  .topbar{border-bottom:var(--edge); background:var(--ink); color:var(--paper);
+    font-family:var(--mono); font-size:12px; letter-spacing:.06em; text-transform:uppercase}
+  .topbar .wrap{display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 20px}
+  .topbar .wrap a{text-decoration:none}
+  .topbar b{color:var(--accent)}
+
+  /* ---- masthead ---- */
+  .masthead{padding:26px 0 14px; border-bottom:var(--edge)}
+  .masthead .wrap{display:flex; justify-content:space-between; align-items:flex-end}
+  .kicker{font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase}
+  .masthead h1{font-size:clamp(2.6rem,11vw,8rem); font-weight:700; line-height:.86; letter-spacing:-.02em}
+  .masthead h1 em{font-style:italic; color:var(--accent)}
+  .issue-tag{font-family:var(--mono); font-size:12px; text-align:right; text-transform:uppercase;
+    border:3px solid var(--ink); padding:8px 12px; background:var(--paper)}
+  .issue-tag b{color:var(--accent)}
+
+  /* ---- marquee ---- */
+  .marquee{border-bottom:var(--edge); background:var(--accent); color:var(--ink); overflow:hidden;
+    font-family:var(--mono); font-weight:700; text-transform:uppercase; letter-spacing:.08em}
+  .marquee .track{display:inline-flex; gap:40px; white-space:nowrap; padding:10px 0;
+    animation:slide 22s linear infinite; will-change:transform}
+  .marquee .track span{font-size:14px}
+  .marquee .track span::before{content:"✦"; color:var(--ink)}
+  @keyframes slide{to{transform:translateX(-50%)}}
+
+  /* ---- feature grid ---- */
+  .feature{display:grid; grid-template-columns:1.7fr 1fr; gap:0; border-bottom:var(--edge)}
+  .feature .lead{padding:40px 28px 40px 0; border-right:var(--edge)}
+  .tag{display:inline-block; font-family:var(--mono); font-size:11px; letter-spacing:.16em;
+    text-transform:uppercase; background:var(--ink); color:var(--paper); padding:5px 10px; margin-bottom:18px}
+  .tag.red{background:var(--accent); color:var(--ink)}
+  .feature h2{font-size:clamp(2rem,5vw,3.6rem); line-height:1.0; letter-spacing:-.02em; margin-bottom:16px}
+  .feature h2 em{font-style:italic}
+  .byline{font-family:var(--mono); font-size:12px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--ink); border-top:2px solid var(--ink); border-bottom:2px solid var(--ink);
+    padding:8px 0; margin:6px 0 18px; display:flex; justify-content:space-between}
+  .feature p{font-size:1.06rem; margin-bottom:14px; max-width:52ch}
+  .feature p:first-of-type::first-letter{font-size:3.4rem; font-weight:700; float:left; line-height:.8;
+    padding:6px 10px 0 0; color:var(--accent)}
+  .readmore{display:inline-block; font-family:var(--mono); font-size:13px; text-transform:uppercase;
+    letter-spacing:.1em; text-decoration:none; border:3px solid var(--ink); padding:11px 18px;
+    background:var(--paper); box-shadow:6px 6px 0 var(--ink); transition:transform .12s,box-shadow .12s,background .2s}
+  .readmore:hover{transform:translate(-3px,-3px); box-shadow:9px 9px 0 var(--ink); background:var(--accent)}
+  .readmore:active{transform:translate(3px,3px); box-shadow:2px 2px 0 var(--ink)}
+
+  .side{padding:40px 0 40px 28px}
+  .side h3{font-family:var(--mono); font-size:13px; letter-spacing:.16em; text-transform:uppercase;
+    border-bottom:3px solid var(--ink); padding-bottom:8px; margin-bottom:16px}
+  .most{list-style:none; counter-reset:m}
+  .most li{counter-increment:m; display:flex; gap:14px; align-items:baseline;
+    padding:14px 0; border-bottom:2px solid rgba(10,10,10,.25); cursor:pointer}
+  .most li::before{content:counter(m,decimal-leading-zero); font-family:var(--mono); font-weight:700;
+    font-size:15px; color:var(--accent)}
+  .most li span{font-size:1.02rem; transition:color .2s}
+  .most li:hover span{color:var(--accent)}
+
+  /* ---- halftone image blocks ---- */
+  .halftone{height:100%; min-height:220px; border:var(--edge); position:relative; overflow:hidden}
+  .halftone.a{background:
+    radial-gradient(circle at center, var(--ink) 22%, transparent 24%) 0 0 / 18px 18px,
+    var(--accent)}
+  .halftone.b{background:repeating-linear-gradient(45deg,var(--ink) 0 8px,var(--paper) 8px 16px)}
+  .halftone.c{background:
+    radial-gradient(circle at 30% 30%, var(--accent) 0 10%, transparent 12%),
+    repeating-radial-gradient(circle at 30% 30%, var(--ink) 0 6px, var(--paper) 6px 16px)}
+  .halftone .cap{position:absolute; left:0; bottom:0; background:var(--ink); color:var(--paper);
+    font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; padding:6px 10px}
+  .halftone .flip{position:absolute; top:10px; right:10px; background:var(--accent); color:var(--ink);
+    font-family:var(--mono); font-weight:700; font-size:11px; padding:4px 8px; transform:rotate(6deg)}
+
+  /* ---- sections grid ---- */
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:26px; padding:44px 0}
+  .grid h3.sec-head{grid-column:1/-1; font-size:clamp(1.6rem,4vw,2.6rem); letter-spacing:-.02em}
+  .grid h3.sec-head em{font-style:italic; color:var(--accent)}
+  .card{background:var(--paper); border:var(--edge); box-shadow:9px 9px 0 var(--ink);
+    display:flex; flex-direction:column; transition:transform .14s,box-shadow .14s}
+  .card:hover{transform:translate(-4px,-4px); box-shadow:13px 13px 0 var(--ink)}
+  .card .body{padding:20px}
+  .card h4{font-size:1.35rem; line-height:1.05; margin:10px 0}
+  .card p{font-size:.95rem; color:#2a2a2a}
+  .card .foot{margin-top:auto; padding:12px 20px; border-top:3px solid var(--ink);
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.1em;
+    display:flex; justify-content:space-between}
+
+  /* ---- pull quote ---- */
+  .quote{border-block:var(--edge); padding:52px 0; background:var(--ink); color:var(--paper)}
+  .quote blockquote{font-size:clamp(1.6rem,4.4vw,3rem); font-weight:700; line-height:1.08;
+    letter-spacing:-.01em; max-width:22ch}
+  .quote blockquote em{font-style:italic; color:var(--accent)}
+  .quote cite{display:block; margin-top:22px; font-family:var(--mono); font-size:13px;
+    font-style:normal; letter-spacing:.1em; text-transform:uppercase}
+
+  /* ---- vertical rotating label ---- */
+  .rot{position:absolute; right:0; top:0; writing-mode:vertical-rl; transform:rotate(180deg);
+    font-family:var(--mono); font-size:11px; letter-spacing:.3em; text-transform:uppercase;
+    background:var(--ink); color:var(--paper); padding:10px 6px}
+
+  /* ---- footer ---- */
+  footer{padding:44px 0 60px}
+  footer .wrap{display:grid; grid-template-columns:2fr 1fr 1fr; gap:24px}
+  footer h5{font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    border-bottom:3px solid var(--ink); padding-bottom:8px; margin-bottom:12px}
+  footer ul{list-style:none; font-size:.95rem}
+  footer li{padding:5px 0}
+  footer li a{text-decoration:none; border-bottom:1px solid transparent}
+  footer li a:hover{border-bottom:1px solid var(--accent); color:var(--accent)}
+  .colophon{margin-top:34px; border-top:var(--edge); padding-top:16px;
+    font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px}
+  .colophon b{color:var(--accent)}
+
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s cubic-bezier(.16,.84,.44,1),transform .7s cubic-bezier(.16,.84,.44,1)}
+  .reveal.in{opacity:1; transform:none}
+
+  @media (max-width:880px){
+    .feature{grid-template-columns:1fr}
+    .feature .lead{border-right:none; border-bottom:var(--edge); padding:32px 20px}
+    .side{padding:32px 20px}
+    .grid{grid-template-columns:1fr}
+    footer .wrap{grid-template-columns:1fr}
+    .halftone{min-height:180px}
+  }
+  @media (max-width:480px){
+    .topbar .wrap{font-size:10px}
+    .feature p:first-of-type::first-letter{font-size:2.6rem}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .marquee .track{animation:none}
+    .card,.readmore{transition:none}
+  }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="wrap">
+      <span>ISSUE <b>07</b> · WINTER 2026 · PRINT + WEB</span>
+      <span>EST. 2019 · NEW YORK</span>
+      <a href="#subscribe">SUBSCRIBE →</a>
+    </div>
+  </div>
+
+  <header class="masthead">
+    <div class="wrap">
+      <div>
+        <div class="kicker">A Magazine of Raw Ideas</div>
+        <h1>OFF<em>CUT</em></h1>
+      </div>
+      <div class="issue-tag">VOL. VII<br><b>NO. 07</b><br>DEC 2026</div>
+    </div>
+  </header>
+
+  <div class="marquee" aria-hidden="true">
+    <div class="track">
+      <span>THE DESIGN ISSUE</span><span>RAW OVER POLISHED</span><span>GRID IS A TOOL, NOT A CAGE</span>
+      <span>PRINT ENDURES</span><span>TYPOGRAPHY IS AN ARGUMENT</span><span>NO GRADIENTS WERE HARMED</span>
+      <span>THE DESIGN ISSUE</span><span>RAW OVER POLISHED</span><span>GRID IS A TOOL, NOT A CAGE</span>
+      <span>PRINT ENDURES</span><span>TYPOGRAPHY IS AN ARGUMENT</span><span>NO GRADIENTS WERE HARMED</span>
+    </div>
+  </div>
+
+  <div class="feature">
+    <div class="lead">
+      <span class="tag red">Feature / 01</span>
+      <h2>The beauty of a <em>hard edge.</em></h2>
+      <div class="byline"><span>Words · J. Marchetti</span><span>18 min</span></div>
+      <p>In an age of soft gradients and rounded corners, a quiet rebellion is
+        reclaiming the right angle. Brutalism on the web is not laziness — it is a
+        refusal to pretend the medium is anything other than structure, ink and grid.</p>
+      <p>The best editorial layouts treat type as architecture: heavy serifs stacked
+        against monospace, borders that do not hide, shadows that refuse to blur.
+        Nothing apologizes. Everything is on the record.</p>
+      <a href="#read" class="readmore">Read the Essay →</a>
+    </div>
+    <div class="side">
+      <h3>Most Read</h3>
+      <ul class="most">
+        <li><span>Why the grid is a political statement</span></li>
+        <li><span>The return of the drop cap, weaponized</span></li>
+        <li><span>Monospace, from typewriters to interfaces</span></li>
+        <li><span>In defense of the ugly-bold move</span></li>
+        <li><span>What print designers know that the web forgot</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="grid">
+    <div class="wrap" style="width:100%">
+      <h3 class="sec-head reveal">More from the <em>issue</em></h3>
+      <div class="card reveal">
+        <div class="halftone a"><span class="flip">NEW</span><span class="cap">Fig. 01 — Halftone</span></div>
+        <div class="body">
+          <span class="tag">Culture</span>
+          <h4>The object that refused to be photographed well.</h4>
+          <p>On anti-aesthetic product design and the strange trust a raw image earns.</p>
+        </div>
+        <div class="foot"><span>Culture</span><span>06 min</span></div>
+      </div>
+      <div class="card reveal">
+        <div class="halftone b"><span class="flip">ESSAY</span><span class="cap">Fig. 02 — Stripes</span></div>
+        <div class="body">
+          <span class="tag">Craft</span>
+          <h4>Alignment is an attitude, not a ruler.</h4>
+          <p>How obsessive edge-matching changed the way a whole studio thinks.</p>
+        </div>
+        <div class="foot"><span>Craft</span><span>09 min</span></div>
+      </div>
+      <div class="card reveal">
+        <div class="halftone c"><span class="flip">COVER</span><span class="cap">Fig. 03 — Dots</span></div>
+        <div class="body">
+          <span class="tag">Interview</span>
+          <h4>"I make the seams visible on purpose."</h4>
+          <p>A conversation with the designer turning constraints into a signature.</p>
+        </div>
+        <div class="foot"><span>Interview</span><span>12 min</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="quote">
+    <div class="wrap">
+      <blockquote class="reveal">Design that hides its structure <em>hides its honesty.</em></blockquote>
+      <cite class="reveal">— from the OFFCUT manifesto, entry 04</cite>
+    </div>
+  </section>
+
+  <section id="subscribe" style="padding:48px 0 8px">
+    <div class="wrap">
+      <div class="card reveal" style="box-shadow:9px 9px 0 var(--accent)">
+        <div class="body" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:20px">
+          <div>
+            <span class="tag red">Print + Digital</span>
+            <h4 style="font-size:clamp(1.6rem,4vw,2.6rem); margin-top:10px">Get Issue 08 in your box.</h4>
+          </div>
+          <button class="readmore" style="white-space:nowrap">Subscribe · $48/yr →</button>
+        </div>
+        <div class="foot"><span>NO SPAM · CANCEL ANYTIME</span><span>ISSUES 07 → 12</span></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <div>
+        <h5>OFFCUT</h5>
+        <p style="max-width:40ch">A quarterly magazine about design, typography and the courage of the hard edge. Printed in an edition of 5,000.</p>
+      </div>
+      <div>
+        <h5>Sections</h5>
+        <ul>
+          <li><a href="#">Culture</a></li>
+          <li><a href="#">Craft</a></li>
+          <li><a href="#">Interviews</a></li>
+          <li><a href="#">The Archive</a></li>
+        </ul>
+      </div>
+      <div>
+        <h5>Elsewhere</h5>
+        <ul>
+          <li><a href="#">Instagram</a></li>
+          <li><a href="#">RSS Feed</a></li>
+          <li><a href="#">Newsletter</a></li>
+          <li><a href="#">Contact</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="wrap">
+      <div class="colophon">
+        <span>© 2026 <b>OFFCUT</b> — ALL MARGINS RESERVED</span>
+        <span>SET IN GEORGIA + MONOSPACE</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+  (function(){
+    var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var els=[].slice.call(document.querySelectorAll('.reveal'));
+    if(reduce||!('IntersectionObserver' in window)){
+      els.forEach(function(e){e.classList.add('in');});
+    }else{
+      var io=new IntersectionObserver(function(entries){
+        entries.forEach(function(en){
+          if(en.isIntersecting){en.target.classList.add('in');io.unobserve(en.target);}
+        });
+      },{threshold:.12});
+      els.forEach(function(e){io.observe(e);});
+    }
+  })();
+  </script>
+</body>
+</html>

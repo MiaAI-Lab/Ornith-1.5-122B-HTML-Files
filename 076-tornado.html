@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maelstrom — Storm Cell 076</title>
+<style>
+  :root{
+    --ink:#e9e4da;
+    --ink-dim:#a7a196;
+    --accent:#c9b79a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    overflow:hidden;
+    background:
+      radial-gradient(120% 90% at 50% 12%, #3a3a40 0%, #26262b 32%, #141417 62%, #08080a 100%);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    color:var(--ink);
+    cursor: crosshair;
+    -webkit-user-select:none; user-select:none;
+  }
+  /* stormy horizon glow, painted behind the canvas */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(80% 55% at 50% 78%, rgba(180,150,100,0.20) 0%, rgba(120,96,70,0.10) 40%, transparent 72%),
+      linear-gradient(180deg, rgba(20,22,28,0) 55%, rgba(40,32,24,0.35) 100%);
+    mix-blend-mode:screen;
+    pointer-events:none;
+  }
+  canvas{ position:fixed; inset:0; z-index:1; display:block; }
+
+  .frame{
+    position:fixed; z-index:3; inset:0;
+    pointer-events:none;
+    display:flex; flex-direction:column;
+    justify-content:space-between;
+    padding: clamp(18px, 4vw, 46px);
+  }
+  .wordmark{ max-width:100%; }
+  .wordmark .kicker{
+    font-size: clamp(10px, 1.4vw, 13px);
+    letter-spacing:0.55em; text-transform:uppercase;
+    color:var(--accent); opacity:0.85;
+    display:flex; align-items:center; gap:14px;
+  }
+  .wordmark .kicker::before{
+    content:""; width: clamp(26px,5vw,58px); height:1px;
+    background:linear-gradient(90deg,var(--accent),transparent);
+  }
+  .wordmark h1{
+    font-family: Georgia, "Times New Roman", serif;
+    font-style:italic; font-weight:700;
+    font-size: clamp(40px, 10vw, 132px);
+    line-height:0.86; letter-spacing:0.01em;
+    margin-top: 0.12em;
+    color:#f3eee4;
+    text-shadow: 0 2px 30px rgba(0,0,0,0.55);
+  }
+  .wordmark h1 span{
+    background:linear-gradient(100deg,#f6f1e7 20%, #bfae90 55%, #8f8271 100%);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+  .wordmark .sub{
+    margin-top:0.5em; font-size:clamp(10px,1.3vw,12.5px);
+    letter-spacing:0.28em; text-transform:uppercase; color:var(--ink-dim);
+  }
+
+  .meta{
+    align-self:flex-start;
+    width: min(268px, 72vw);
+    padding:14px 16px 15px;
+    border:1px solid rgba(201,183,154,0.22);
+    border-radius:10px;
+    background:linear-gradient(180deg, rgba(24,24,28,0.55), rgba(14,14,16,0.55));
+    backdrop-filter: blur(6px);
+    box-shadow: 0 10px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.04);
+    font-size:11px; color:var(--ink-dim);
+  }
+  .meta .row{ display:flex; justify-content:space-between; align-items:baseline; padding:4px 0; }
+  .meta .row + .row{ border-top:1px solid rgba(201,183,154,0.10); }
+  .meta .lab{ letter-spacing:0.18em; text-transform:uppercase; font-size:9.5px; color:#8b857a; }
+  .meta .val{ font-family: Georgia, serif; font-style:italic; color:var(--ink); font-size:14px; }
+  .meta .val.warn{ color:#e6b589; }
+  .meter{ height:4px; border-radius:3px; margin-top:10px;
+    background:rgba(255,255,255,0.07); overflow:hidden; position:relative; }
+  .meter i{ position:absolute; left:0; top:0; bottom:0; width:12%;
+    background:linear-gradient(90deg,#7f93b0, #c9b79a, #e6b589); border-radius:3px; }
+  .hint{
+    align-self:center; margin-bottom:0.15em;
+    font-size:10px; letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--ink-dim); opacity:0.7;
+  }
+
+  @media (max-width:520px){
+    .meta{ display:none; }
+    .frame{ padding:16px; }
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="frame">
+  <div class="wordmark">
+    <div class="kicker">Storm Cell 076 · Supercell Observation</div>
+    <h1><span>Maelstrom</span></h1>
+    <div class="sub">Condensed Funnel · Est. F3 · Track NE</div>
+  </div>
+
+  <div class="meta">
+    <div class="row"><span class="lab">Wind</span><span class="val" id="mWind">— kt</span></div>
+    <div class="row"><span class="lab">Lean</span><span class="val" id="mLean">0.00</span></div>
+    <div class="row"><span class="lab">Debris</span><span class="val" id="mDeb">0</span></div>
+    <div class="row"><span class="lab">State</span><span class="val" id="mState">steady</span></div>
+    <div class="meter"><i id="mGust"></i></div>
+  </div>
+
+  <div class="hint">Move pointer to steer the funnel · Click for a gust</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas = document.getElementById("scene");
+  var ctx = canvas.getContext("2d");
+  var W = 0, H = 0, dpr = 1, cx = 0, groundY = 0, funnelH = 0, Rb = 0, Rt = 0;
+
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var paused = reduce;
+
+  var TAU = Math.PI * 2;
+  function lerp(a,b,t){ return a + (b-a)*t; }
+  function clamp01(v){ return v < 0 ? 0 : v > 1 ? 1 : v; }
+  function clamp(v,a,b){ return v < a ? a : v > b ? b : v; }
+
+  // ---- geometry ----
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2.2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cx = W * 0.5;
+    groundY = H * 0.9;
+    funnelH = Math.min(H * 0.74, H - groundY + H * 0.14);
+    Rb = Math.min(W, H) * 0.17;
+    Rt = Rb * 0.11;
+    buildDust();
+  }
+
+  // ---- vortex state ----
+  var particles = [];
+  var debris = [];
+  var NPART = 640;
+  var NDEB = 46;
+
+  function makeP(){
+    return {
+      a: Math.random() * TAU,
+      h: Math.random(),
+      r: Math.random(),                 // radial fraction within the funnel
+      vy: 0.10 + Math.random() * 0.18,  // updraft (per sec)
+      sp: 0.6 + Math.random() * 1.3,    // angular factor
+      sz: 0.6 + Math.random() * 1.7,
+      tw: Math.random() * TAU,
+      warm: Math.random()
+    };
+  }
+  function makeDeb(){
+    return {
+      a: Math.random() * TAU,
+      h: Math.random() * 0.5,
+      r: 0.7 + Math.random() * 0.5,
+      vy: 0.05 + Math.random() * 0.10,
+      sp: 1.4 + Math.random() * 2.2,
+      sz: 2.0 + Math.random() * 4.5,
+      rot: Math.random() * TAU,
+      vr: (Math.random() - 0.5) * 8,
+      shade: 12 + Math.random() * 22
+    };
+  }
+  function build(){
+    particles = [];
+    for(var i = 0; i < NPART; i++) particles.push(makeP());
+    debris = [];
+    for(var j = 0; j < NDEB; j++) debris.push(makeDeb());
+  }
+
+  // ---- ground dust ----
+  var dust = [];
+  var NDUST = 70;
+  function buildDust(){
+    dust = [];
+    for(var i = 0; i < NDUST; i++) dust.push({
+      x: (Math.random() - 0.5) * Rb * 4,
+      y: groundY - Math.random() * Math.min(H*0.14, 90),
+      vx: (Math.random() - 0.5) * 26,
+      vy: -(Math.random() * 14),
+      r: 10 + Math.random() * 34,
+      a: 0.03 + Math.random() * 0.06
+    });
+  }
+
+  // ---- interaction ----
+  var leanX = 0, leanTarget = 0;
+  var gust = 0, lastPX = null, lastPY = null;
+  var flash = 0, flashTimer = 2 + Math.random() * 4;
+
+  function onMove(x, y){
+    if(lastPX === null){ lastPX = x; lastPY = y; return; }
+    var dx = x - lastPX, dy = y - lastPY;
+    lastPX = x; lastPY = y;
+    leanTarget = clamp((x - cx) / (W * 0.5), -1.1, 1.1);
+    gust = clamp(gust + (Math.abs(dx) + Math.abs(dy)) * 0.012, 0, 3);
+  }
+  canvas.addEventListener("pointermove", function(e){ onMove(e.clientX, e.clientY); });
+  canvas.addEventListener("pointerdown", function(e){
+    gust = 2.4;
+    leanTarget = clamp((e.clientX - cx) / (W * 0.5), -1.1, 1.1);
+    lastPX = e.clientX; lastPY = e.clientY;
+  });
+  window.addEventListener("keydown", function(e){
+    if(e.code === "Space"){ e.preventDefault(); paused = false; gust = 2.2; }
+  });
+
+  // ---- geometry helpers ----
+  function axisX(h){
+    return cx + leanX * Math.min(W,H) * 0.13 * (h*h) + Math.sin(t * 0.35) * 8;
+  }
+  function funnelR(h){
+    var base = lerp(Rb, Rt, h) * (1 - h * 0.5);
+    var turb = Math.sin(t * 2.3 + h * 9.0) * (4 + h * 16) + Math.sin(t * 5.1 + h * 20) * (2 + h*6);
+    return Math.max(6, base + turb);
+  }
+  function projY(h){ return groundY - funnelH * Math.pow(h, 0.72); }
+
+  var t = 0;
+  var last = performance.now();
+
+  function update(dt){
+    t += dt;
+    leanX += (leanTarget - leanX) * clamp(dt * 4.0, 0, 1);
+    gust *= Math.pow(0.18, dt);
+
+    // lightning
+    flashTimer -= dt;
+    if(flashTimer <= 0){
+      flash = 0.7 + Math.random() * 0.5;
+      flashTimer = 3 + Math.random() * 6;
+    }
+    flash *= Math.pow(0.02, dt);
+
+    var spin0 = 1.6;
+    for(var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      p.a += (spin0 + p.sp) * (0.6 + p.h * 1.5) * dt;   // faster near the neck
+      p.h += p.vy * dt;
+      if(p.h > 1){
+        p.h = 0; p.a = Math.random() * TAU;
+        p.vy = 0.10 + Math.random() * 0.18;
+      }
+    }
+    for(var j = 0; j < debris.length; j++){
+      var d = debris[j];
+      d.a += (d.sp + gust * 0.6) * dt;
+      d.h += d.vy * dt;
+      d.rot += d.vr * dt;
+      if(d.h > 0.55){ d.h = 0; d.a = Math.random() * TAU; }
+    }
+    for(var k = 0; k < dust.length; k++){
+      var q = dust[k];
+      q.x += q.vx * dt + leanX * 30 * dt;
+      q.y += q.vy * dt;
+      q.vx *= Math.pow(0.4, dt);
+      if(q.y < groundY - Math.min(H*0.16,110) || q.vx < 2 && Math.random() < 0.01){
+        q.x = (Math.random()-0.5) * Rb * 4;
+        q.y = groundY - Math.random() * 20;
+        q.vx = (Math.random()-0.5) * 30;
+        q.vy = -(4 + Math.random() * 16);
+      }
+    }
+  }
+
+  // ---- draw ----
+  function drawSky(){
+    // subtle storm wash on the canvas over the CSS backdrop
+    var g = ctx.createLinearGradient(0, 0, 0, H);
+    g.addColorStop(0, "rgba(30,32,38,0.0)");
+    g.addColorStop(0.6, "rgba(24,22,20,0.18)");
+    g.addColorStop(1, "rgba(18,14,10,0.42)");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  function drawGround(){
+    var gg = ctx.createLinearGradient(0, groundY - 40, 0, H);
+    gg.addColorStop(0, "rgba(46,38,30,0.0)");
+    gg.addColorStop(0.35, "rgba(40,33,26,0.85)");
+    gg.addColorStop(1, "rgba(16,13,10,1)");
+    ctx.fillStyle = gg;
+    ctx.fillRect(0, groundY - 40, W, H - groundY + 40);
+    // wet ground highlight
+    ctx.globalCompositeOperation = "screen";
+    var hg = ctx.createLinearGradient(0, groundY, 0, groundY + 14);
+    hg.addColorStop(0, "rgba(150,120,80,0.22)");
+    hg.addColorStop(1, "rgba(150,120,80,0)");
+    ctx.fillStyle = hg;
+    ctx.fillRect(0, groundY, W, 14);
+    ctx.globalCompositeOperation = "source-over";
+  }
+
+  function drawDust(){
+    for(var k = 0; k < dust.length; k++){
+      var q = dust[k];
+      var grd = ctx.createRadialGradient(cx + q.x, q.y, 0, cx + q.x, q.y, q.r);
+      grd.addColorStop(0, "rgba(150,120,86," + (q.a) + ")");
+      grd.addColorStop(1, "rgba(150,120,86,0)");
+      ctx.fillStyle = grd;
+      ctx.beginPath();
+      ctx.arc(cx + q.x, q.y, q.r, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  function drawFunnel(){
+    var N = 30, h0 = 0.0, h1 = 1.0;
+    // solid rippling funnel body
+    ctx.beginPath();
+    for(var i = 0; i < N; i++){
+      var h = h0 + (h1 - h0) * i / (N - 1);
+      var x = axisX(h) - funnelR(h);
+      if(i === 0) ctx.moveTo(x, projY(h)); else ctx.lineTo(x, projY(h));
+    }
+    for(var j = N - 1; j >= 0; j--){
+      var h2 = h0 + (h1 - h0) * j / (N - 1);
+      ctx.lineTo(axisX(h2) + funnelR(h2), projY(h2));
+    }
+    ctx.closePath();
+    var fg = ctx.createLinearGradient(0, groundY, 0, groundY - funnelH);
+    fg.addColorStop(0.0, "rgba(70,56,42,0.92)");
+    fg.addColorStop(0.28, "rgba(54,52,54,0.9)");
+    fg.addColorStop(0.6, "rgba(40,42,46,0.86)");
+    fg.addColorStop(1.0, "rgba(26,28,32,0.82)");
+    ctx.fillStyle = fg;
+    ctx.fill();
+
+    // dark core (depth)
+    ctx.save();
+    ctx.beginPath();
+    for(var a = 0; a < N; a++){
+      var ha = (h1 - h0) * a / (N - 1);
+      var xr = axisX(ha) - funnelR(ha) * 0.42;
+      if(a === 0) ctx.moveTo(xr, projY(ha)); else ctx.lineTo(xr, projY(ha));
+    }
+    for(var b = N - 1; b >= 0; b--){
+      var hb = (h1 - h0) * b / (N - 1);
+      ctx.lineTo(axisX(hb) + funnelR(hb) * 0.42, projY(hb));
+    }
+    ctx.closePath();
+    var cg = ctx.createLinearGradient(0, groundY, 0, groundY - funnelH);
+    cg.addColorStop(0, "rgba(10,10,12,0.55)");
+    cg.addColorStop(0.5, "rgba(8,8,10,0.35)");
+    cg.addColorStop(1, "rgba(6,6,8,0.15)");
+    ctx.fillStyle = cg;
+    ctx.fill();
+    ctx.restore();
+
+    // rotating lit streak (screen blend)
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    var off = Math.sin(t * 0.8) * 0.5 + 0.5; // 0..1 across the funnel width
+    ctx.beginPath();
+    for(var c = 0; c < N; c++){
+      var hc = (h1 - h0) * c / (N - 1);
+      var rad = funnelR(hc);
+      var xcl = axisX(hc) - rad * (0.1 + off * 0.7);
+      if(c === 0) ctx.moveTo(xcl, projY(hc)); else ctx.lineTo(xcl, projY(hc));
+    }
+    for(var d = N - 1; d >= 0; d--){
+      var hd = (h1 - h0) * d / (N - 1);
+      var rad2 = funnelR(hd);
+      ctx.lineTo(axisX(hd) - rad2 * (0.1 + off * 0.7 - 0.18), projY(hd));
+    }
+    ctx.closePath();
+    ctx.globalAlpha = 0.16 + flash * 0.5;
+    var sg = ctx.createLinearGradient(0, groundY, 0, groundY - funnelH);
+    sg.addColorStop(0, "rgba(210,190,150,0.9)");
+    sg.addColorStop(0.5, "rgba(180,190,210,0.5)");
+    sg.addColorStop(1, "rgba(150,160,180,0.1)");
+    ctx.fillStyle = sg;
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawParticles(){
+    var fl = 1 + flash * 2.2;
+    // sort far (top) first
+    particles.sort(function(p,q){ return p.h - q.h; });
+    for(var i = 0; i < particles.length; i++){
+      var p = particles[i];
+      var h = p.h;
+      var rad = funnelR(h) * (0.42 + p.r * 0.62);
+      var wob = Math.sin(t * 3 + p.tw) * (2 + h * 5);
+      var x = axisX(h) + Math.cos(p.a) * rad + wob;
+      var y = projY(h);
+      var sz = p.sz * (1 - h * 0.62);
+      var al = lerp(0.85, 0.38, h) * clamp(fl, 0, 2.4);
+      var L = clamp((26 + p.r * 34 + flash * 60) * fl, 8, 235);
+      var tint = p.warm > 0.72 ? "150,120,90" : "176,182,192";
+      ctx.fillStyle = "rgba(" + Math.round(L) + "," + Math.round(L*0.98) + "," + Math.round(L*0.95) + "," + al.toFixed(3) + ")";
+      // warm-tinted motes get their own tint
+      if(p.warm > 0.72){
+        ctx.fillStyle = "rgba(" + Math.round(L*0.9) + "," + Math.round(L*0.78) + "," + Math.round(L*0.62) + "," + al.toFixed(3) + ")";
+      }
+      ctx.beginPath();
+      ctx.arc(x, y, Math.max(0.4, sz), 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  function drawDebris(){
+    for(var j = 0; j < debris.length; j++){
+      var d = debris[j];
+      var h = d.h;
+      var rad = funnelR(h) * (0.5 + d.r * 0.5);
+      var x = axisX(h) + Math.cos(d.a) * rad;
+      var y = projY(h);
+      var sz = d.sz * (1 - h * 0.5);
+      var al = lerp(0.95, 0.5, h);
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(d.rot);
+      ctx.fillStyle = "rgba(" + d.shade + "," + Math.round(d.shade*0.9) + "," + Math.round(d.shade*0.78) + "," + al.toFixed(3) + ")";
+      ctx.fillRect(-sz*0.5, -sz*0.5, sz, sz * 0.7);
+      ctx.restore();
+    }
+  }
+
+  function drawRain(){
+    var wind = leanX + gust * 0.5;
+    ctx.save();
+    ctx.strokeStyle = "rgba(180,186,196,0.10)";
+    ctx.lineWidth = 1;
+    var n = 52;
+    for(var i = 0; i < n; i++){
+      var rx = ((i * 97.3 + t * 240 * (0.6 + wind * 0.3)) % (W + 200)) - 100;
+      var ry = ((i * 61.7 + t * 900) % (H * 0.86));
+      ctx.beginPath();
+      ctx.moveTo(rx, ry);
+      ctx.lineTo(rx - 6 - wind * 8, ry + 16);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  function drawFlash(){
+    if(flash < 0.02) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    var fg = ctx.createRadialGradient(cx + leanX*40, groundY - funnelH*0.6, 0, cx, groundY - funnelH*0.5, Math.max(W,H));
+    fg.addColorStop(0, "rgba(210,220,255," + (flash * 0.5) + ")");
+    fg.addColorStop(1, "rgba(210,220,255,0)");
+    ctx.fillStyle = fg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  function drawVignette(){
+    ctx.save();
+    var vg = ctx.createRadialGradient(cx, H*0.45, Math.min(W,H)*0.3, cx, H*0.5, Math.max(W,H)*0.75);
+    vg.addColorStop(0, "rgba(0,0,0,0)");
+    vg.addColorStop(1, "rgba(0,0,0,0.55)");
+    ctx.fillStyle = vg;
+    ctx.fillRect(0, 0, W, H);
+    ctx.restore();
+  }
+
+  function render(){
+    ctx.clearRect(0, 0, W, H);
+    drawSky();
+    drawGround();
+    drawDust();
+    drawFunnel();
+    drawParticles();
+    drawDebris();
+    drawRain();
+    drawFlash();
+    drawVignette();
+  }
+
+  // ---- meta ----
+  var mWind = document.getElementById("mWind");
+  var mLean = document.getElementById("mLean");
+  var mDeb = document.getElementById("mDeb");
+  var mState = document.getElementById("mState");
+  var mGust = document.getElementById("mGust");
+
+  function updateMeta(){
+    var wind = Math.round(78 + gust * 46 + Math.sin(t*0.6)*6);
+    mWind.textContent = wind + " kt";
+    mLean.textContent = leanX.toFixed(2);
+    mDeb.textContent = debris.length;
+    mState.textContent = gust > 1.2 ? "gust" : (wind > 120 ? "violent" : "steady");
+    mState.className = "val" + (gust > 1.2 || wind > 120 ? " warn" : "");
+    mGust.style.width = clamp(10 + gust * 30 + (wind-78)*0.3, 6, 100) + "%";
+  }
+
+  function frame(now){
+    var dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    if(!paused){
+      update(dt);
+      render();
+      updateMeta();
+    }
+    raf = requestAnimationFrame(frame);
+  }
+  var raf;
+
+  // ---- boot ----
+  resize();
+  build();
+  window.addEventListener("resize", resize);
+  if(!paused) raf = requestAnimationFrame(frame);
+  else { render(); updateMeta(); } // draw one still frame
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hexapod — a crystal that grows itself</title>
+<style>
+  :root{
+    --bg0:#071021; --bg1:#0c1c37; --bg2:#0a2440;
+    --ice:#dff3ff; --cyan:#7fd0ff; --pale:#eaf9ff; --frost:#5aa9e6;
+    --ink:#eaf4ff; --muted:#8fb0d4;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 34%, var(--bg2) 0%, var(--bg1) 42%, var(--bg0) 100%);
+    min-height:100vh; overflow-x:hidden;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  /* faint drifting frost dust */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1px 1px at 20% 30%, rgba(180,225,255,.5), transparent 60%),
+      radial-gradient(1px 1px at 70% 60%, rgba(180,225,255,.4), transparent 60%),
+      radial-gradient(1.5px 1.5px at 40% 80%, rgba(200,235,255,.35), transparent 60%),
+      radial-gradient(1px 1px at 85% 20%, rgba(200,235,255,.4), transparent 60%),
+      radial-gradient(1px 1px at 10% 70%, rgba(180,225,255,.35), transparent 60%);
+    animation:drift 26s linear infinite;
+  }
+  @keyframes drift{ to{ transform:translateY(-14px); } }
+  @keyframes draw{ to{ stroke-dashoffset:0; } }
+  @keyframes tw{ 0%,100%{ opacity:.15; transform:scale(.6);} 50%{ opacity:.95; transform:scale(1.1);} }
+
+  .wrap{ position:relative; z-index:1; width:100%; max-width:1180px;
+    padding:clamp(18px,4vw,48px); display:flex; flex-direction:column; gap:clamp(14px,2.4vw,26px); }
+
+  header{ display:flex; flex-direction:column; gap:10px; }
+  .eyebrow{ font-size:.72rem; letter-spacing:.42em; text-transform:uppercase;
+    color:var(--cyan); font-weight:600; opacity:.9; }
+  h1{ margin:0; font-family:Georgia,"Times New Roman",serif; font-weight:500;
+    font-size:clamp(2rem,6vw,3.7rem); line-height:1.02; letter-spacing:-.01em;
+    background:linear-gradient(180deg,#ffffff,var(--cyan));
+    -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .sub{ margin:0; color:var(--muted); font-size:clamp(.85rem,1.8vw,1.05rem); max-width:52ch; }
+
+  .stage{ position:relative; width:100%;
+    aspect-ratio:1 / 1; max-height:78vh; margin:0 auto; }
+  #snow{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:12px; align-items:center; }
+  button{ appearance:none; cursor:pointer; border:1px solid rgba(120,190,255,.35);
+    color:var(--pale); font:inherit; font-size:.9rem; letter-spacing:.02em;
+    padding:.72em 1.15em; border-radius:999px;
+    background:linear-gradient(180deg, rgba(90,160,220,.16), rgba(60,120,190,.08));
+    backdrop-filter:blur(8px);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 6px 22px rgba(0,0,0,.25);
+    transition:transform .18s ease, box-shadow .25s ease, border-color .25s ease; }
+  button:hover{ transform:translateY(-2px); border-color:rgba(150,215,255,.7);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.25), 0 10px 30px rgba(40,120,200,.35); }
+  button:active{ transform:translateY(0) scale(.98); }
+  button.primary{ background:linear-gradient(180deg,#bfe8ff,#6fc4ff); color:#06263f;
+    border-color:rgba(255,255,255,.5); font-weight:600; }
+  button.primary:hover{ box-shadow:0 0 26px rgba(120,200,255,.6), 0 10px 30px rgba(40,120,200,.35); }
+  .toggle{ display:inline-flex; align-items:center; gap:.5em; color:var(--muted);
+    font-size:.85rem; user-select:none; }
+  .toggle input{ width:15px; height:15px; accent-color:var(--cyan); }
+  .meta{ margin-left:auto; color:var(--muted); font-size:.78rem; letter-spacing:.04em;
+    font-variant-numeric:tabular-nums; }
+
+  footer{ color:var(--muted); font-size:.75rem; letter-spacing:.28em;
+    text-transform:uppercase; opacity:.7; padding:8px 0 24px; }
+
+  .spark{ transform-box:fill-box; transform-origin:center; animation:tw var(--td,4s) ease-in-out var(--tt,0s) infinite; }
+
+  @media (max-width:520px){ .meta{ display:none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Crystallography · No. 095</div>
+    <h1>Hexapod</h1>
+    <p class="sub">Every snowflake is a fingerprint. Press <em>Grow a new crystal</em> to let a fresh six-fold dendrite grow itself, branch by branch, from a single seed of ice.</p>
+  </header>
+
+  <main class="stage">
+    <svg id="snow" viewBox="0 0 1000 1000" role="img"
+         aria-label="A procedurally generated six-fold snowflake that draws its branches on as it grows.">
+      <defs>
+        <linearGradient id="iceGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"  stop-color="#ffffff"/>
+          <stop offset="45%" stop-color="#cdeeff"/>
+          <stop offset="100%" stop-color="#7fc8ff"/>
+        </linearGradient>
+        <linearGradient id="coreGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#a9e2ff"/>
+        </linearGradient>
+        <filter id="halo" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur stdDeviation="16"/>
+        </filter>
+      </defs>
+      <!-- soft bloom behind the crystal -->
+      <radialGradient id="bloom" cx="500" cy="500" r="300" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#8fd2ff" stop-opacity="0.30"/>
+        <stop offset="60%" stop-color="#4aa0e0" stop-opacity="0.10"/>
+        <stop offset="100%" stop-color="#4aa0e0" stop-opacity="0"/>
+      </radialGradient>
+      <circle cx="500" cy="500" r="300" fill="url(#bloom)"/>
+      <g id="root" transform="translate(500,500)">
+        <g id="rotator">
+          <g id="arms"></g>
+        </g>
+        <g id="sparkles"></g>
+      </g>
+    </svg>
+  </main>
+
+  <div class="controls">
+    <button id="growBtn" class="primary">❄ Grow a new crystal</button>
+    <label class="toggle"><input type="checkbox" id="spinChk" checked> Slow spin</label>
+    <span class="meta" id="meta">arms · 6 · depth 4</span>
+  </div>
+</div>
+
+<footer>Hexapod · Orthin Light Lab — 095</footer>
+
+<script>
+
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var svg=document.getElementById("snow");
+  var armsG=document.getElementById("arms");
+  var rotator=document.getElementById("rotator");
+  var sparkG=document.getElementById("sparkles");
+  var growBtn=document.getElementById("growBtn");
+  var spinChk=document.getElementById("spinChk");
+  var metaEl=document.getElementById("meta");
+
+  var rand=function(a,b){ return a+Math.random()*(b-a); };
+  var pick=function(a,b){ return a<0?a:(Math.random()<a?b:a); };
+
+  var ARM=60;                 // degrees of symmetry
+  var SEGS=6;                 // six-fold
+  var DRAW_MS=15;             // stagger per segment
+  var DRAW_DUR=2.5;           // seconds each stroke takes to draw
+  var MIN_SPARK=140, MAX_SPARK=430;
+
+  /* ---- procedural dendrite: one arm, drawn from the centre outward ---- */
+  function newParams(){
+    var depth = Math.random()<0.35 ? 5 : 4;
+    return {
+      spine:  rand(150, 235),
+      depth:  depth,
+      spread: rand(25, 34) * Math.PI/180,
+      minLen: rand(9, 15),
+      baseW:  rand(2.2, 3.3),
+      forward:rand(0.18, 0.55),
+      tipBar: Math.random()<0.7
+    };
+  }
+
+  function genArm(p){
+    var segs=[]; var order=0;
+    function seg(x1,y1,x2,y2,d,w){
+      if(segs.length>620) return;
+      segs.push({x1:x1,y1:y1,x2:x2,y2:y2,d:d,w:w,o:order++});
+    }
+    function branch(x,y,a,len,d,w){
+      if(len<p.minLen || d<0) return;
+      var x2=x+Math.cos(a)*len, y2=y+Math.sin(a)*len;
+      seg(x,y,x2,y2,d,w);
+      if(segs.length>620) return;
+      var sp=p.spread*rand(0.82,1.16);
+      // two symmetric side dendrites
+      branch(x2,y2,a-sp, len*rand(0.6,0.78), d-1, w*0.72);
+      branch(x2,y2,a+sp, len*rand(0.6,0.78), d-1, w*0.72);
+      // occasional forward sub-dendrite for lushness
+      if(d>=3 && Math.random()<p.forward)
+        branch(x2,y2,a, len*rand(0.4,0.55), d-2, w*0.5);
+      // flat hexagonal tip: a short perpendicular pair near the ends
+      if(d<=1 && p.tipBar){
+        var cl=len*rand(0.42,0.62);
+        seg(x2,y2, x2+Math.cos(a+Math.PI/2)*cl, y2+Math.sin(a+Math.PI/2)*cl, 0, w*0.6);
+        seg(x2,y2, x2+Math.cos(a-Math.PI/2)*cl, y2+Math.sin(a-Math.PI/2)*cl, 0, w*0.6);
+      }
+    }
+    branch(0,0,-Math.PI/2, p.spine, p.depth, p.baseW);
+    return segs;
+  }
+
+  /* ---- build a fresh crystal ---- */
+  var lastDepth=4;
+  function buildCrystal(){
+    var p=newParams(); lastDepth=p.depth;
+    while(armsG.firstChild) armsG.removeChild(armsG.firstChild);
+    var armSegs=genArm(p);
+
+    // draw six rotated copies
+    for(var k=0;k<SEGS;k++){
+      var rot=k*ARM*Math.PI/180;
+      var ca=Math.cos(rot), sa=Math.sin(rot);
+      for(var i=0;i<armSegs.length;i++){
+        var s=armSegs[i];
+        var line=document.createElementNS(NS,"line");
+        line.setAttribute("x1", rotPt(s.x1,s.y1,ca,sa));
+        line.setAttribute("y1", rotPt(s.y1,-s.x1,ca,sa));
+        line.setAttribute("x2", rotPt(s.x2,s.y2,ca,sa));
+        line.setAttribute("y2", rotPt(s.y2,-s.x2,ca,sa));
+        var L=Math.hypot(s.x2-s.x1, s.y2-s.y1);
+        line.style.stroke="url(#iceGrad)";
+        line.style.strokeLinecap="round";
+        line.style.strokeWidth=(s.w).toFixed(2);
+        line.style.strokeDasharray=L.toFixed(2);
+        line.style.strokeDashoffset=L.toFixed(2);
+        line.style.opacity="0.96";
+        line.style.animation="draw "+DRAW_DUR+"s cubic-bezier(.22,.7,.2,1) forwards";
+        line.style.animationDelay=(s.o*DRAW_MS)+"ms";
+        armsG.appendChild(line);
+      }
+    }
+
+    // central hexagonal hub, drawn on last
+    var hub=document.createElementNS(NS,"polygon");
+    var hr=26+p.baseW*6, pts=[];
+    for(var h=0;h<6;h++){
+      var ang=h*Math.PI/3 - Math.PI/6;
+      pts.push((500+Math.cos(ang)*hr).toFixed(1)+","+(500+Math.sin(ang)*hr).toFixed(1));
+    }
+    hub.setAttribute("points",pts.join(" "));
+    hub.setAttribute("transform","translate(-500,-500)");
+    hub.setAttribute("fill","url(#coreGrad)");
+    hub.setAttribute("stroke","url(#iceGrad)");
+    hub.setAttribute("stroke-width","2.5");
+    hub.style.strokeDasharray="220"; hub.style.strokeDashoffset="220";
+    hub.style.animation="draw 1.1s ease forwards";
+    hub.style.animationDelay=(armSegs.length*DRAW_MS+40)+"ms";
+    armsG.appendChild(hub);
+
+    metaEl.textContent="arms · "+SEGS+" · depth "+p.depth;
+  }
+
+  function rotPt(x,y,ca,sa){ return (x*ca - y*sa); }
+
+  /* ---- sparkles: scattered twinkling six-point stars around the crystal ---- */
+  function scatterSparkles(){
+    while(sparkG.firstChild) sparkG.removeChild(sparkG.firstChild);
+    var n = 24 + Math.floor(Math.random()*24);
+    for(var i=0;i<n;i++){
+      var base = rand(0, 360) * Math.PI/180;
+      var rr = rand(3.2, 6.5);
+      var star = document.createElementNS(NS,"path");
+      var d = "";
+      for(var k=0;k<12;k++){
+        var a0 = base + k*Math.PI/6;
+        var rad = (k%2===0) ? rr : rr*0.42;
+        var px = Math.cos(a0)*rad, py = Math.sin(a0)*rad;   // local origin = crystal centre
+        d += (k===0?"M":"L") + px.toFixed(1) + "," + py.toFixed(1);
+      }
+      star.setAttribute("d", d + "Z");
+      star.setAttribute("fill", "#dff3ff");
+      star.style.setProperty("--td", rand(2.4,5.2).toFixed(2) + "s");
+      star.style.setProperty("--tt", rand(0,4).toFixed(2) + "s");
+      star.classList.add("spark");
+      sparkG.appendChild(star);
+    }
+  }
+
+  /* ---- slow continuous spin of the whole crystal ---- */
+  var spin=0, spinOn=true, lastT=performance.now();
+  function tick(now){
+    var dt = (now - lastT)/1000; lastT = now;
+    spinOn = spinChk.checked;
+    if(spinOn){
+      spin += dt * 6.0;                       // degrees per second
+      rotator.setAttribute("transform", "rotate(" + (spin % 360) + ")");
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function grow(){ buildCrystal(); scatterSparkles(); }
+
+  growBtn.addEventListener("click", grow);
+  grow();                                      // first crystal on load
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

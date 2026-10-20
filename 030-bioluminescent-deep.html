@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABYSSAL · Bioluminescence in the Dark</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#02040a;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .deep{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:
+      radial-gradient(120% 90% at 50% 12%, rgba(10,40,52,.35), transparent 55%),
+      radial-gradient(120% 130% at 60% 100%, rgba(4,26,40,.55), transparent 60%),
+      radial-gradient(120% 120% at 50% 50%, transparent 30%, rgba(0,2,6,.7) 100%);}
+  .wordmark{position:fixed;left:clamp(20px,4vw,54px);top:clamp(20px,4vh,46px);z-index:5;pointer-events:none}
+  .wordmark .k{font-size:clamp(.6rem,1.5vw,.78rem);letter-spacing:.42em;text-transform:uppercase;color:#5f8c94}
+  .wordmark h1{margin:.35em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.7rem,5.4vw,3.3rem);letter-spacing:.02em;line-height:.98;color:#dff6f2}
+  .wordmark h1 em{font-style:italic;font-weight:300;color:#57e6c9;
+    text-shadow:0 0 24px rgba(87,230,201,.5)}
+  .foot{position:fixed;left:clamp(20px,4vw,54px);bottom:clamp(18px,4vh,40px);z-index:5;max-width:min(540px,80vw)}
+  .foot p{margin:0;color:#7fa7ac;font-size:clamp(.72rem,1.55vw,.9rem);line-height:1.55;letter-spacing:.02em}
+  .foot .hint{margin-top:.7em;font-size:.72em;letter-spacing:.14em;text-transform:uppercase;color:#6f9a9f}
+  .depth{position:fixed;right:clamp(18px,3.4vw,44px);top:clamp(18px,3.4vh,40px);z-index:5;text-align:right;pointer-events:none;
+    font-variant-numeric:tabular-nums}
+  .depth .lab{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:#5f8c94}
+  .depth .val{display:block;font-size:1.5rem;color:#dff6f2;letter-spacing:.02em;margin-top:.2em;
+    text-shadow:0 0 18px rgba(87,230,201,.35)}
+  .depth .unit{font-size:.62rem;letter-spacing:.2em;color:#5f8c94}
+  @media (prefers-reduced-motion: reduce){
+    .foot .hint::after{content:" · reduced motion"}
+  }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="Deep-sea bioluminescent particles drifting and pulsing in the dark"></canvas>
+<div class="deep"></div>
+
+<div class="wordmark">
+  <div class="k">Pelagia · No. 030</div>
+  <h1>Living light<br>in the <em>abyss</em>.</h1>
+</div>
+
+<div class="depth">
+  <div class="lab">Depth</div>
+  <span class="val" id="depthVal">0</span>
+  <span class="unit">metres</span>
+</div>
+
+<div class="foot">
+  <p>Below the photic zone, life makes its own light. Drifting motes pulse with
+     cyan-green luciferin; disturbed, they flare — a living constellation breathing in the black.</p>
+  <div class="hint">Move to stir the water · click to trigger a flash · scroll to descend</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("c");
+  var ctx=canvas.getContext("2d");
+  var depthVal=document.getElementById("depthVal");
+
+  var W=0,H=0,DPR=1;
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var mouse={x:-999,y:-999,active:false};
+  var ripples=[];
+  var depth=0, depthTarget=0;
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",resize);
+  resize();
+
+  // palette: cyan -> green -> teal in HSLA
+  function hue(){ return 150 + Math.random()*48; } // 150..198
+
+  function makeMote(big){
+    return {
+      x:Math.random()*W, y:Math.random()*H,
+      vx:(Math.random()-0.5)*0.14, vy:(big?-0.06:-0.02)-(Math.random()*0.05),
+      size:big?(Math.random()*4+3):(Math.random()*2.1+0.5),
+      base:(Math.random()*0.5+0.25),
+      phase:Math.random()*Math.PI*2,
+      spd:(Math.random()*0.9+0.4),
+      sway:(Math.random()*0.5+0.15),
+      swaySpd:(Math.random()*0.6+0.2),
+      hue:hue(),
+      flash:0, big:!!big
+    };
+  }
+
+  var countBase=Math.round(Math.min(W*H/9000, 200));
+  var motes=[];
+  for(var i=0;i<countBase;i++) motes.push(makeMote(false));
+  for(var j=0;j<8;j++) motes.push(makeMote(true));
+
+  function pointer(e){
+    var p=e.touches?e.touches[0]:e;
+    if(!p) return;
+    mouse.x=p.clientX||0; mouse.y=p.clientY||0; mouse.active=true;
+  }
+  window.addEventListener("pointermove",pointer,{passive:true});
+  window.addEventListener("pointerdown",function(e){
+    pointer(e);
+    ripples.push({x:mouse.x,y:mouse.y,r:0,a:1});
+    // flare motes near the point
+    for(var k=0;k<motes.length;k++){
+      var dx=motes[k].x-mouse.x, dy=motes[k].y-mouse.y;
+      if(dx*dx+dy*dy < 160*160) motes[k].flash=Math.min(1,motes[k].flash+0.9);
+    }
+  });
+  window.addEventListener("pointerup",function(){ mouse.active=false; });
+  window.addEventListener("wheel",function(e){
+    depthTarget += e.deltaY*0.4;
+    depthTarget = Math.max(0, Math.min(4000, depthTarget));
+  },{passive:true});
+
+  var time=0, last=0;
+
+  function step(ts){
+    if(!last) last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.25;
+    time+=dt;
+
+    depth += (depthTarget-depth)*0.08;
+    depthVal.textContent=Math.round(depth);
+
+    // occasional random flash
+    if(Math.random()<0.012 && motes.length){
+      var f=motes[(Math.random()*motes.length)|0];
+      f.flash=Math.max(f.flash,0.7+Math.random()*0.3);
+    }
+
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+
+    for(var i=0;i<motes.length;i++){
+      var m=motes[i];
+      // drift
+      m.x += m.vx + Math.sin(time*m.swaySpd+m.phase)*m.sway*0.12;
+      m.y += m.vy;
+      // wrap
+      if(m.y<-20){ m.y=H+20; m.x=Math.random()*W; }
+      if(m.y>H+20){ m.y=-20; }
+      if(m.x<-20) m.x=W+20; else if(m.x>W+20) m.x=-20;
+
+      // mouse stir: gentle push + brighten
+      var boost=0;
+      if(mouse.active){
+        var dx=m.x-mouse.x, dy=m.y-mouse.y;
+        var d2=dx*dx+dy*dy;
+        var R=150;
+        if(d2<R*R){
+          var d=Math.sqrt(d2)||1;
+          var f=(R-d)/R;
+          m.x += (dx/d)*f*1.4;
+          m.y += (dy/d)*f*1.4;
+          boost=f*0.6;
+        }
+      }
+
+      // flash decay
+      if(m.flash>0) m.flash*= (reduce?0.94:0.965);
+      if(m.flash<0.004) m.flash=0;
+
+      var pulse=0.5+0.5*Math.sin(time*m.spd+m.phase);
+      var alpha=(m.base*(0.35+0.65*pulse) + m.flash*0.9 + boost*0.5);
+      if(alpha<0.02) continue;
+      if(alpha>1) alpha=1;
+
+      var r=m.size*(1+m.flash*3.2);
+      var g=ctx.createRadialGradient(m.x,m.y,0,m.x,m.y,r);
+      var col="hsla("+m.hue+",100%,62%,";
+      g.addColorStop(0, col+(alpha).toFixed(3)+")");
+      g.addColorStop(0.35, col+(alpha*0.55).toFixed(3)+")");
+      g.addColorStop(1, col+"0)");
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.arc(m.x,m.y,r,0,6.2832);
+      ctx.fill();
+    }
+
+    // ripples (expanding flash rings)
+    ctx.lineWidth=1.5;
+    for(var k=ripples.length-1;k>=0;k--){
+      var rp=ripples[k];
+      rp.r += dt*240;
+      rp.a -= dt*0.9;
+      if(rp.a<=0){ ripples.splice(k,1); continue; }
+      var rg=ctx.createRadialGradient(rp.x,rp.y,Math.max(0,rp.r-10),rp.x,rp.y,rp.r);
+      rg.addColorStop(0,"rgba(120,255,220,0)");
+      rg.addColorStop(0.5,"rgba(120,255,220,"+(rp.a*0.5).toFixed(3)+")");
+      rg.addColorStop(1,"rgba(120,255,220,0)");
+      ctx.strokeStyle=rg;
+      ctx.beginPath();
+      ctx.arc(rp.x,rp.y,rp.r,0,6.2832);
+      ctx.stroke();
+    }
+
+    ctx.globalCompositeOperation="source-over";
+    requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

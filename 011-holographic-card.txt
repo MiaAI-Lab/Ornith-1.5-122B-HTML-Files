@@ -1,0 +1,102 @@
+TITLE
+Holographic Card — Iridescent Tilt
+
+RECREATION PROMPT
+Build a single self-contained HTML page (no external libraries) that shows a
+photoreal-ish "holographic" membership/credit card which tilts in 3D and shifts
+its rainbow iridescent foil as the cursor moves across it.
+
+Layout / chrome:
+- Centered vertically and horizontally. Body background is a dark radial gradient
+  (#16171f → #0a0b10 → #050507) with an off-white text color (#e9e9f2).
+- Behind the card, a large (60vmax) blurred (blur ~70px) conic-gradient "bloom"
+  (rose→amber→green→blue→violet, mix-blend-mode:screen, ~35% opacity) that
+  slowly rotates via a 26s linear infinite spin keyframe.
+- A stage element with CSS perspective (~1400px) holds the card. The card is a
+  fixed aspect ratio (~1.72:1, like a credit card) with 18px rounded corners, a
+  deep drop shadow, and an inset 1px white hairline. It uses transform-style:
+  preserve-3d and rotates on X/Y axes driven by CSS custom properties
+  (--rx, --ry), with a smooth cubic-bezier(.16,1,.3,1) transition.
+
+Card layers (back to front):
+- .card-bg: dark base with a soft metallic sheen — a 135deg linear gradient
+  (#14151d → #0c0d14 → #1b1c28) plus two faint radial highlights (::after).
+- .foil: an iridescent rainbow foil layer, inset slightly outside the card
+  (-18%), filled with an 8-stop conic gradient (rose #ff2d92 → orange → amber
+  #ffbd2e → lime → green #2ee6a6 → blue #2d9cff → violet #7b2dff → magenta →
+  back to rose). mix-blend-mode:screen, ~62% opacity, saturate(1.2). Its rotate
+  transform is driven by JS so the rainbow sweeps as the mouse moves.
+- .foil2: a finer repeating-conic-gradient interference layer (white 0–3deg,
+  transparent 3–12deg) in mix-blend-mode:overlay at ~25% opacity to give true
+  holographic banding.
+- .glare: a radial-gradient specular highlight positioned at CSS vars --mx/--my
+  (cursor position), with variable --glare intensity and --glare-op overall
+  opacity, mix-blend-mode:screen; fades in/out on hover.
+- .edge: an inset embossed-edge box-shadow framing the card.
+- .content: the card "print", pushed toward the viewer with translateZ(42px): a
+  serif brand "Aurora" + "Platinum · No. 0042", a contactless-payment SVG icon,
+  a gold EMV chip (linear gold gradient with etched line details via ::before/
+  ::after), a large embossed card number "4921 · 1024 · 7788 · 0042", holder
+  name "J. Meridian", and a "Valid thru 09 / 31" block.
+
+Below the card, a caption: a serif headline "The Holographic / Membership", a
+letter-spaced uppercase sub "Iridescent foil · 3D tilt · live specular", and a
+hint: "Move your cursor across the card — it tilts, the rainbow sweeps, and the
+highlight follows."
+
+Core behavior (JS):
+- Track the cursor position within the stage as normalized 0..1 values (mx, my).
+- Map position to a target tilt: rotateY = (px-0.5)*2*MAX_TILT (±16°),
+  rotateX = -(py-0.5)*2*MAX_TILT. Map mx to a foil rotation sweep
+  (spin + (mx-0.5)*2*MAX_FOIL_ROT, ~±55°) and to the glare position/intensity.
+- Run a requestAnimationFrame loop that eases the current values toward the
+  targets (~0.08 factor) and continuously increments a base foil "spin" (~+0.25/
+  frame) for a living holographic drift even at rest. Every frame it writes the
+  custom properties (--rx, --ry, --mx, --my, --glare, --glare-op) and the foil
+  transform.
+- On mouseleave (and touchend) return tilt/foil/glare to neutral; the glare
+  opacity drops to 0 so the highlight only exists while hovering. Support
+  touchmove/touchend.
+
+Palette: near-black card base with warm/cool metallic sheen; full ROYGBIV
+iridescent foil; gold chip; cool off-white text on a deep navy-black room with a
+soft rainbow bloom. Typography: Georgia serif for brand/headline/number, Segoe UI
+system sans for labels. Mood: premium, luxe, iridescent, interactive.
+
+DESIGN DESCRIPTION
+A premium interactive demo of a holographic membership card. A dark, credit-card-
+proportioned object sits in a 3D perspective stage against a deep room with a
+slowly rotating rainbow bloom. Two stacked conic-gradient layers — a bold 8-stop
+rainbow foil and a finer repeating-conic interference banding layer — create the
+iridescent sheen, while a cursor-following radial glare supplies the live
+specular highlight. As the pointer moves across the card, JavaScript eases a 3D
+tilt (±16° on both axes), sweeps the foil rotation, and slides the glare, with a
+continuous slow spin so the hologram shimmers even at rest. Real card furniture —
+a serif brand, contactless icon, etched gold chip, embossed number, holder name
+and expiry — is layered on top and pushed toward the viewer with translateZ for
+genuine depth.
+
+MAJOR VISUAL TECHNIQUES
+- CSS 3D transform with perspective + preserve-3d and per-axis rotateX/rotateY
+  driven by custom properties for the tilt.
+- Two conic-gradient hologram layers: an 8-stop rainbow foil (mix-blend-mode:
+  screen) and a repeating-conic interference banding layer (mix-blend-mode:
+  overlay) for authentic iridescence.
+- Cursor-position-driven specular glare via a radial gradient placed at --mx/--my
+  with eased --glare intensity, blended with mix-blend-mode:screen.
+- A continuously rotating, blurred conic-gradient ambient bloom behind the card
+  (mix-blend-mode:screen, 26s spin keyframe).
+- requestAnimationFrame easing loop (lerp current→target ~0.08) plus a constant
+  per-frame foil "spin" increment for living drift at rest.
+- translateZ(42px) on the printed content for real parallax depth; embossed
+  inset edge shadows and a gold EMV chip built purely from gradients/pseudo-
+  elements.
+- Smooth cubic-bezier(.16,1,.3,1) transition for the tilt, plus touch support.
+
+INTENDED INTERACTION MODEL
+Cursor-driven parallax showcase. Moving the pointer across the card tilts it in
+3D toward the cursor, sweeps the rainbow foil, and slides a bright specular
+highlight that only appears while hovering; leaving returns the card to a neutral
+front-facing rest. On touch devices, dragging a finger reproduces the tilt and
+foil sweep, and lifting the finger resets it. The continuous slow spin keeps the
+hologram gently alive even when idle.

@@ -1,0 +1,79 @@
+RECREATION PROMPT
+=================
+Build these standalone HTML page(s) as files in the current working directory.
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one
+  <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only),
+  no external images, no external SVG files, no libraries. Build all visuals
+  with CSS, HTML, inline SVG, or <canvas>.
+- Works fully offline by double-clicking. No network requests. Responsive
+  320px->4K; include <meta name="viewport" content="width=device-width,
+  initial-scale=1">. Valid HTML5.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic.
+  Distinctive art direction, curated palette, refined typography, deliberate
+  composition, real intentional motion, delightful details, one signature
+  effect. Handcrafted, unique, take design risks.
+- For each page also create a matching .txt with the SAME base name.
+
+PROMPT FOR THIS PAGE
+--------------------
+An abstract quantum probability-wave grid, a warped 3D-ish lattice of glowing
+nodes. Palette: deep space, electric blue/magenta probability waves. Signature:
+canvas perspective warping grid, animated probability waves rippling through
+nodes, glowing intersection particles.
+
+TITLE
+=====
+QUANTUM · Probability Field
+
+DESIGN DESCRIPTION
+==================
+A deep-space data-vision piece. A large lattice of glowing nodes is rendered as
+a warped plane tilted toward the viewer in perspective, its surface displaced
+up and down by a live "wavefunction" — the probability amplitude of each node.
+The amplitude field is a sum of travelling planar waves, a concentric outburst
+ripple and one bright wavepacket that sweeps diagonally across the grid, so the
+lattice continuously breathes and ripples. Lines connecting neighbouring nodes
+and the nodes themselves are coloured along an electric-blue → violet → magenta
+gradient driven by their amplitude, drawn with additive (lighter) blending so
+intersections bloom like excited quantum states. A field of faint drifting
+motes and a star-dust layer float behind, while a vignette and inset haze give
+it a monitor-in-a-dark-room feel. Over this sits a restrained editorial HUD: a
+gradient wordmark, a mono readout panel (state, entangled-node count, live
+amplitude, wavepacket phase), a probability legend bar and an interaction hint.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- 3D lattice projected with true perspective: per-node rotate-around-X (tilt)
+  and rotate-around-Y (mouse steer), then focal/(focal+z+cam) perspective
+  divide; perspective scale also drives node size/brightness (depth cue).
+- Amplitude field = interference of planar sine waves + concentric ripple ×
+  exponential falloff + a Gaussian wavepacket that travels across the lattice.
+- Node world-height y = amplitude × k, so the probability wave is a visible 3D
+  surface, not just a colour map.
+- Additive blending (globalCompositeOperation:'lighter') for lines and nodes;
+  radial-gradient haloes per node for the glowing intersections.
+- Luminous trail persistence: each frame fades the previous with a translucent
+  deep-space fill instead of a hard clear.
+- Drifting motes + a radial-gradient star-dust ::before layer, twinkle via a
+  sine of a phase accumulator.
+- Click "collapse" fires an expanding ripple (ring radius grows, amplitude
+  decays) plus a radial burst of motes from the pointer.
+- Cursor drives yaw/pitch targets with eased easing for the "warp the
+  viewpoint" signature; DPR-aware canvas scaling; responsive focal length.
+- Editorial HUD with gradient background-clip text, mono type, pulsing status
+  dot, and a probability legend gradient bar.
+- prefers-reduced-motion freezes all integration/animation and kills the dot
+  pulse; small screens drop the side panels.
+
+INTENDED INTERACTION MODEL
+==========================
+Ambient-first with light pointer interaction. The wavefield, motes and ripples
+animate automatically and loop forever. Moving the cursor warps the viewpoint
+(eased yaw + pitch tilt of the whole lattice). Clicking / tapping "collapses" a
+probability burst: an expanding amplitude ring radiates from the field and a
+spray of glowing motes erupts from the pointer. Everything is pointer/touch and
+resize friendly, runs offline, and degrades to a static-but-still-animated (or
+fully still under prefers-reduced-motion) experience on small screens and for
+motion-sensitive users.

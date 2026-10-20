@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>折り鶴 · Paper Crane</title>
+<style>
+  :root{
+    --cream:#f5ecda;      /* rice paper */
+    --cream-2:#efe3cb;
+    --vermilion:#d1453b;  /* 朱 */
+    --vermilion-d:#b2322a;
+    --indigo:#2f3f68;     /* 藍 */
+    --ink:#3a3230;
+    --shadow:rgba(58,50,48,.28);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Hiragino Mincho ProN","Yu Mincho",Georgia,"Times New Roman",serif;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #fbf6ec 0%, #f3ead8 45%, #e7dcc6 100%);
+    color:var(--ink);
+    display:flex;align-items:center;justify-content:center;
+    min-height:100%;overflow:hidden;position:relative;
+  }
+  /* faint washi fiber texture over the whole page */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background-image:
+      repeating-linear-gradient(92deg, rgba(120,100,70,.05) 0 1px, transparent 1px 4px),
+      repeating-linear-gradient(2deg, rgba(120,100,70,.04) 0 1px, transparent 1px 5px),
+      radial-gradient(60% 50% at 50% 50%, transparent 60%, rgba(150,120,80,.06));
+  }
+
+  .stage{
+    width:min(92vw,680px);
+    display:flex;flex-direction:column;align-items:center;gap:34px;
+    padding:36px 20px 44px;position:relative;z-index:1;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead{text-align:center;position:relative}
+  .kanji{
+    font-size:clamp(2.4rem,9vw,4.6rem);font-weight:600;letter-spacing:.28em;
+    color:var(--vermilion-d);line-height:1;margin-left:.28em;
+    text-shadow:0 1px 0 rgba(255,255,255,.6);
+  }
+  .romaji{
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:.62rem;letter-spacing:.52em;text-transform:uppercase;
+    color:var(--indigo);opacity:.75;margin-top:12px;margin-left:.52em;
+  }
+  .rule{width:56px;height:1px;background:var(--vermilion);opacity:.5;margin:16px auto 0}
+
+  /* ---------- scene ---------- */
+  .scene{
+    width:min(70vw,420px);height:min(70vw,420px);
+    perspective:1600px;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .tilt{
+    width:100%;height:100%;position:relative;
+    transform-style:preserve-3d;
+    transform:rotateX(64deg) rotateZ(0deg);
+    animation:sway 9s ease-in-out infinite;
+  }
+  @keyframes sway{
+    0%,100%{transform:rotateX(64deg) rotateZ(-2deg)}
+    50%{transform:rotateX(60deg) rotateZ(2deg)}
+  }
+
+  /* ground shadow */
+  .ground{
+    position:absolute;left:50%;top:52%;
+    width:260px;height:260px;transform:translate(-50%,-50%) translateZ(-2px);
+    background:radial-gradient(ellipse at center, var(--shadow) 0%, transparent 62%);
+    filter:blur(6px);
+    animation:shadow-breathe 6.4s ease-in-out infinite;
+  }
+  @keyframes shadow-breathe{
+    0%,15%,85%,100%{opacity:.25;transform:translate(-50%,-50%) translateZ(-2px) scale(.85)}
+    40%,62%{opacity:.5;transform:translate(-50%,-50%) translateZ(-2px) scale(1)}
+  }
+
+  .paper{
+    position:absolute;inset:0;transform-style:preserve-3d;
+  }
+
+  /* shared panel */
+  .panel{
+    position:absolute;inset:0;
+    transform-style:preserve-3d;
+    backface-visibility:hidden;
+  }
+  .face{
+    position:absolute;inset:0;
+    backface-visibility:hidden;
+  }
+  .face.back{transform:rotateY(180deg)}
+
+  /* washi paper faces */
+  .paper-vermilion .face.front{
+    background:
+      repeating-linear-gradient(94deg, rgba(255,255,255,.06) 0 2px, transparent 2px 6px),
+      linear-gradient(145deg, var(--vermilion) 0%, var(--vermilion-d) 100%);
+  }
+  .paper-vermilion .face.back{
+    background:
+      repeating-linear-gradient(86deg, rgba(0,0,0,.05) 0 2px, transparent 2px 6px),
+      linear-gradient(145deg, var(--cream) 0%, var(--cream-2) 100%);
+  }
+  .paper-cream .face.front{
+    background:
+      repeating-linear-gradient(90deg, rgba(120,100,70,.06) 0 1px, transparent 1px 4px),
+      linear-gradient(150deg, var(--cream) 0%, var(--cream-2) 100%);
+  }
+  .paper-cream .face.back{
+    background:linear-gradient(150deg, var(--vermilion) 0%, var(--vermilion-d) 100%);
+  }
+  .paper-indigo .face.front{
+    background:
+      repeating-linear-gradient(88deg, rgba(255,255,255,.06) 0 2px, transparent 2px 7px),
+      linear-gradient(150deg, var(--indigo) 0%, #24314f 100%);
+  }
+  .paper-indigo .face.back{
+    background:linear-gradient(150deg, var(--cream) 0%, var(--cream-2) 100%);
+  }
+
+  /* ---------- body (rhombus) ---------- */
+  .body{
+    transform-style:preserve-3d;
+    animation:fold-body 6.4s ease-in-out infinite;
+  }
+  .body .face{clip-path:polygon(50% 5%, 61% 50%, 50% 95%, 39% 50%)}
+  @keyframes fold-body{
+    0%,15%{transform:translateZ(0)}
+    30%,70%{transform:translateZ(14px)}
+    85%,100%{transform:translateZ(0)}
+  }
+
+  /* ---------- wings ---------- */
+  .wing-l{ transform-origin:50% 50%; animation:fold-l 6.4s ease-in-out infinite; }
+  .wing-l .face{clip-path:polygon(50% 37%, 50% 63%, 8% 50%)}
+  @keyframes fold-l{
+    0%,15%{transform:rotateY(0deg) translateZ(0)}
+    34%,66%{transform:rotateY(-112deg) translateZ(10px)}
+    85%,100%{transform:rotateY(0deg) translateZ(0)}
+  }
+  .wing-r{ transform-origin:50% 50%; animation:fold-r 6.4s ease-in-out infinite; }
+  .wing-r .face{clip-path:polygon(50% 37%, 50% 63%, 92% 50%)}
+  @keyframes fold-r{
+    0%,20%{transform:rotateY(0deg) translateZ(0)}
+    40%,66%{transform:rotateY(112deg) translateZ(10px)}
+    85%,100%{transform:rotateY(0deg) translateZ(0)}
+  }
+
+  /* ---------- neck + head ---------- */
+  .neck{ transform-origin:52% 42%; animation:fold-neck 6.4s ease-in-out infinite; }
+  .neck .face{clip-path:polygon(49% 44%, 55% 44%, 34% 2%)}
+  @keyframes fold-neck{
+    0%,26%{transform:rotateY(0deg) translateZ(0)}
+    46%,66%{transform:rotateY(-96deg) translateZ(16px)}
+    85%,100%{transform:rotateY(0deg) translateZ(0)}
+  }
+  .head{
+    position:absolute;left:0;top:0;width:100%;height:100%;
+    transform-origin:20% 30%;
+    animation:fold-head 6.4s ease-in-out infinite;
+  }
+  .head .face{clip-path:polygon(34% 2%, 40% 12%, 18% 16%)}
+  @keyframes fold-head{
+    0%,40%{transform:rotateY(0deg) translateZ(0)}
+    56%,66%{transform:rotateY(-70deg) translateZ(6px)}
+    85%,100%{transform:rotateY(0deg) translateZ(0)}
+  }
+
+  /* ---------- tail ---------- */
+  .tail{ transform-origin:48% 58%; animation:fold-tail 6.4s ease-in-out infinite; }
+  .tail .face{clip-path:polygon(45% 56%, 51% 56%, 66% 98%)}
+  @keyframes fold-tail{
+    0%,32%{transform:rotateY(0deg) translateZ(0)}
+    52%,66%{transform:rotateY(96deg) translateZ(16px)}
+    85%,100%{transform:rotateY(0deg) translateZ(0)}
+  }
+
+  /* fold crease highlights */
+  .crease{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;opacity:.35}
+  .crease::before{content:"";position:absolute;inset:0;
+    background:linear-gradient(115deg, transparent 48.6%, rgba(255,255,255,.5) 49.3%, transparent 50%);}
+
+  /* ---------- controls ---------- */
+  .controls{display:flex;flex-direction:column;align-items:center;gap:14px}
+  .btn{
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:.68rem;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--indigo);background:rgba(255,255,255,.5);
+    border:1px solid rgba(47,63,104,.28);
+    padding:11px 26px;border-radius:40px;cursor:pointer;
+    backdrop-filter:blur(4px);
+    transition:transform .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .btn:hover{background:rgba(255,255,255,.75);box-shadow:0 6px 18px rgba(58,50,48,.14);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  .state{font-family:system-ui,sans-serif;font-size:.58rem;letter-spacing:.34em;
+    text-transform:uppercase;color:var(--vermilion-d);opacity:.75;min-height:1em}
+
+  .caption{
+    position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);
+    writing-mode:vertical-rl;font-size:.7rem;letter-spacing:.3em;color:var(--indigo);opacity:.5;
+  }
+  @media(max-width:480px){ .caption{display:none} }
+  /* pause all fold animations when the crane is held flat */
+  body.paused .panel, body.paused .ground{ animation-play-state:paused !important; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="masthead">
+      <div class="kanji">折り鶴</div>
+      <div class="romaji">Orizuru — the folded crane</div>
+      <div class="rule"></div>
+    </div>
+
+    <div class="scene">
+      <div class="tilt" id="tilt">
+        <div class="ground"></div>
+        <div class="paper">
+          <!-- body -->
+          <div class="panel body paper-vermilion">
+            <div class="face front"></div><div class="face back"></div>
+            <div class="crease"></div>
+          </div>
+          <!-- wings -->
+          <div class="panel wing-l paper-cream">
+            <div class="face front"></div><div class="face back"></div>
+          </div>
+          <div class="panel wing-r paper-cream">
+            <div class="face front"></div><div class="face back"></div>
+          </div>
+          <!-- neck + head -->
+          <div class="panel neck paper-vermilion">
+            <div class="face front"></div><div class="face back"></div>
+            <div class="panel head paper-indigo">
+              <div class="face front"></div><div class="face back"></div>
+            </div>
+          </div>
+          <!-- tail -->
+          <div class="panel tail paper-indigo">
+            <div class="face front"></div><div class="face back"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn" id="toggle">Unfold</button>
+      <div class="state" id="state">folding…</div>
+    </div>
+
+    <div class="caption">一期一会</div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    var btn=document.getElementById("toggle"), state=document.getElementById("state");
+    var playing=false;
+
+    function setPlay(open){
+      // open=true -> hold the flat (unfolded) state; open=false -> play the fold cycle
+      document.body.classList.toggle("paused", open);
+      btn.textContent = open ? "Fold" : "Unfold";
+      state.textContent = open ? "resting flat" : "folding…";
+      playing=!open;
+    }
+    btn.addEventListener("click",function(){ setPlay(!playing); });
+    setPlay(false);
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRYSTALLINE · Crystal Growth</title>
+<style>
+  :root{
+    --bg0:#06060f;
+    --indigo:#100e28;
+    --amethyst:#a78bfa;
+    --rose:#f4a9c6;
+    --cyan:#67e8f0;
+    --ink:#eef0ff;
+    --muted:#9a95c9;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(130% 100% at 50% -10%, #1d1846 0%, transparent 55%),
+      radial-gradient(150% 150% at 50% 125%, #331738 0%, transparent 62%),
+      radial-gradient(120% 120% at 50% 50%, #0e0b26 0%, #06060f 68%);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    touch-action:none;
+  }
+  canvas{position:fixed;inset:0;display:block;width:100%;height:100%}
+
+  .ui{position:fixed;inset:0;z-index:2;pointer-events:none;
+      font-feature-settings:"tnum" 1;}
+
+  .wordmark{position:absolute;top:clamp(20px,4.2vw,52px);left:clamp(20px,4.2vw,52px);
+            max-width:64vw}
+  .wm-kicker{font-size:clamp(10px,1.1vw,13px);letter-spacing:.42em;font-weight:600;
+             color:var(--muted);text-transform:uppercase;margin-bottom:14px;
+             padding-left:.1em}
+  .wm-kicker::before{content:"◆";color:var(--cyan);margin-right:.55em;
+                     text-shadow:0 0 12px var(--cyan)}
+  .wm-title{font-family:Georgia,"Times New Roman",serif;font-weight:400;
+            font-size:clamp(30px,7.4vw,104px);line-height:.92;letter-spacing:.01em;
+            margin:0;
+            background:linear-gradient(100deg,#cbb6ff 0%,#f6b8d2 46%,#92e9f2 100%);
+            background-size:220% 220%;
+            -webkit-background-clip:text;background-clip:text;color:transparent;
+            animation:shimmer 14s ease-in-out infinite}
+  .wm-sub{margin-top:14px;font-size:clamp(11px,1.25vw,15px);letter-spacing:.26em;
+          color:var(--muted);text-transform:uppercase}
+  .wm-sub b{color:#d9d2ff;font-weight:600}
+
+  .readout{position:absolute;top:clamp(18px,3.4vw,42px);right:clamp(18px,3.4vw,42px);
+           text-align:right;font-family:Menlo,Consolas,"Liberation Mono",monospace;
+           font-size:clamp(10px,1.05vw,12.5px);letter-spacing:.14em;color:#c9c2f0;
+           line-height:1.7;text-shadow:0 1px 10px rgba(0,0,0,.6)}
+  .readout .val{color:var(--cyan);font-weight:700}
+  .swatches{margin-top:10px;display:flex;gap:7px;justify-content:flex-end;align-items:flex-end}
+  .swatches i{width:26px;height:5px;border-radius:3px;display:block;
+              box-shadow:0 0 10px rgba(0,0,0,.5)}
+
+  .hint{position:absolute;bottom:clamp(18px,3.4vw,40px);left:50%;
+        transform:translateX(-50%);font-size:clamp(10px,1.1vw,13px);
+        letter-spacing:.24em;text-transform:uppercase;color:var(--muted);
+        transition:opacity 1.1s ease}
+  .hint span{color:#cbb6ff}
+
+  .vignette{position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:radial-gradient(120% 120% at 50% 50%, transparent 55%, rgba(4,3,12,.55) 100%)}
+
+  @keyframes shimmer{
+    0%,100%{background-position:0% 50%}
+    50%{background-position:100% 50%}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .wm-title{animation:none}
+  }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="vignette"></div>
+<div class="ui">
+  <div class="wordmark">
+    <div class="wm-kicker">Crystallography</div>
+    <h1 class="wm-title">CRYSTAL<br>GROWTH</h1>
+    <div class="wm-sub"><b>amethyst</b> &nbsp;·&nbsp; rose quartz &nbsp;·&nbsp; <b>cyan</b></div>
+  </div>
+
+  <div class="readout" id="readout">
+    <div>CRYSTALS <span class="val" id="rCount">0</span></div>
+    <div>MAX GEN <span class="val" id="rGen">0</span></div>
+    <div>GROWTH <span class="val" id="rGrow">0%</span></div>
+    <div class="swatches">
+      <i style="background:#a78bfa;box-shadow:0 0 10px #a78bfa"></i>
+      <i style="background:#f4a9c6;box-shadow:0 0 10px #f4a9c6"></i>
+      <i style="background:#67e8f0;box-shadow:0 0 12px #67e8f0"></i>
+    </div>
+  </div>
+
+  <div class="hint" id="hint">click to <span>seed</span> &nbsp;·&nbsp; drag to <span>tilt</span></div>
+</div>
+<script>
+"use strict";
+(function(){
+  const cv = document.getElementById("c");
+  const ctx = cv.getContext("2d");
+  const el = {
+    count: document.getElementById("rCount"),
+    gen:   document.getElementById("rGen"),
+    grow:  document.getElementById("rGrow"),
+    hint:  document.getElementById("hint")
+  };
+
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // ---- palette (HSL for easy lightness control) ----
+  const HUES = [271, 276, 328, 333];     // amethyst + rose quartz
+  const CYAN = 189;
+
+  let W = 0, H = 0, CX = 0, CYc = 0, DPR = 1;
+  let crystals = [];
+  let motes = [];
+  let globalAngle = 0;
+  let t0 = performance.now();
+  let fullyGrown = false;
+
+  // pointer state (tilt + light direction)
+  const pointer = { tx:0, ty:0, x:0, y:0, down:false };
+
+  function rand(a,b){ return a + Math.random()*(b-a); }
+  function clamp(v,a,b){ return v<a?a:v>b?b:v; }
+  function hsl(h,s,l,a){ return a===undefined ? `hsl(${h},${s}%,${l}%)`
+                                              : `hsla(${h},${s}%,${l}%,${a})`; }
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W*DPR); cv.height = Math.round(H*DPR);
+    CX = W/2; CYc = H/2;
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---------------- crystals ----------------
+  const MAX_C = 300;
+
+  function makeCrystal(o){
+    const gen = o.gen|0;
+    const hueBase = o.hue!==undefined ? o.hue
+        : (Math.random()<0.55 ? HUES[gen%2] : HUES[(gen%2)+2]);
+    // higher generations trend brighter + occasionally toward cyan tips
+    const tipCyan = gen>=2 && Math.random()<0.34 ? CYAN : hueBase;
+    return {
+      x: o.x, y: o.y,
+      angle: o.angle,
+      length: o.length,
+      width: o.width,
+      gen: gen,
+      hue: hueBase,
+      tipHue: tipCyan,
+      sat: clamp(74 - gen*5, 44, 84),
+      baseLight: clamp(26 + gen*5, 20, 52),
+      tipLight:  clamp(60 + gen*4, 56, 82),
+      growth: 0,
+      born: performance.now() + (o.delay||0),
+      wait: o.delay||0,
+      growTime: o.growTime || rand(1.1, 2.0),
+      matured: false,
+      spawn: false,
+      sparkles: [],
+      spec: gen<=2 && Math.random()<0.7   // tip specular glint?
+    };
+  }
+
+  function spawnChildren(cr){
+    if(cr.spawned) return;
+    cr.spawned = true;
+    if(cr.gen>=5 || crystals.length>=MAX_C) return;
+    const dir = cr.angle;
+    const spread = 0.42;               // forward branch fan
+    const side = 0.9;                  // lateral branch
+    const nKids = cr.gen===0 ? 3 : (Math.random()<0.72?2:1);
+    for(let i=0;i<nKids && crystals.length<MAX_C;i++){
+      const atTip = i%2===0;
+      const baseX = atTip ? cr.x + Math.cos(dir)*cr.length : cr.x + Math.cos(dir)*rand(cr.length*0.42, cr.length*0.72);
+      const baseY = cr.y + Math.sin(dir)*rand(cr.length*0.42, cr.length*0.72);
+      const sideSign = (i%2===0)?1:(Math.random()<0.5?-1:1);
+      const ang = dir + (atTip ? rand(-spread, spread) : sideSign*rand(0.55, side));
+      const scale = atTip ? rand(0.62, 0.82) : rand(0.45, 0.68);
+      const len = cr.length*scale;
+      crystals.push(makeCrystal({
+        x: baseX, y: baseY, angle: ang,
+        length: len,
+        width: cr.width*scale*rand(0.8,1.05),
+        gen: cr.gen+1,
+        delay: rand(60, 340),
+        growTime: clamp(cr.growTime*scale*rand(0.8,1.1), 0.5, 2.0)
+      }));
+    }
+    // seed a few sparkles along the grown crystal
+    if(cr.sparkles.length===0){
+      const n = 1 + (Math.random()*3|0);
+      for(let i=0;i<n;i++){
+        const p = rand(0.55, 1.0);
+        const ox = Math.cos(dir)*cr.length*p;
+        const oy = Math.sin(dir)*cr.length*p + rand(-cr.width, cr.width);
+        cr.sparkles.push({ ox:ox, oy:oy, phase:rand(0,6.28), speed:rand(1.4,3.2), size:rand(0.7,1.7) });
+      }
+    }
+  }
+
+  function seedCluster(x, y, burst){
+    const n = burst ? 9 : 7;
+    const baseAng = burst ? rand(0,6.283) : 0;
+    for(let i=0;i<n;i++){
+      const a = baseAng + (burst? (i/n)*6.283 : rand(-0.15,0.15)) + (burst?0:0);
+      const ring = i;
+      crystals.push(makeCrystal({
+        x: x + Math.cos(a)*rand(2,7),
+        y: y + Math.sin(a)*rand(2,7),
+        angle: a + Math.PI/2 + rand(-0.28,0.28),
+        length: rand(46, 84) * (burst? rand(0.7,1.05): (i<3?1.15:0.9)),
+        width: rand(9, 15) * (burst? rand(0.7,1):1),
+        gen: 0,
+        delay: i*rand(40,120),
+        growTime: rand(1.4, 2.4)
+      }));
+    }
+  }
+
+  // init: a single central seed that grows outward
+  function initScene(){
+    crystals = [];
+    const seed = { x:0, y:0, angle:-Math.PI/2, length:64, width:13, gen:0, delay:0, growTime:2.2 };
+    crystals.push(makeCrystal(seed));
+    // first radiating ring starts a beat later
+    const c = Math.PI*2/6;
+    for(let i=0;i<6;i++){
+      crystals.push(makeCrystal({
+        x: Math.cos(c*i)*6, y: Math.sin(c*i)*6,
+        angle: c*i + rand(-0.2,0.2),
+        length: rand(52, 78), width: rand(9,14),
+        gen:0, delay: rand(200,620), growTime: rand(1.5,2.3)
+      }));
+    }
+  }
+
+  // ---------------- ambient motes ----------------
+  function initMotes(){
+    motes = [];
+    const n = Math.round(clamp(W*H/26000, 26, 70));
+    for(let i=0;i<n;i++){
+      motes.push({
+        x: rand(0,W), y: rand(0,H), z: rand(0.35,1.15),
+        vx: rand(-3,3), vy: rand(-6,-1),
+        r: rand(0.5,1.8), a: rand(0.15,0.6), ph: rand(0,6.28)
+      });
+    }
+  }
+
+  // ---------------- drawing helpers ----------------
+  function drawGlow(cr, alpha){
+    // additive soft glow hugging the crystal shaft
+    const gx = Math.cos(cr.angle), gy = Math.sin(cr.angle);
+    const nx = -gy, ny = gx;
+    const midx = cr.x + gx*cr.length*0.5;
+    const midy = cr.y + gy*cr.length*0.5;
+    const rad = cr.width*2.4 + cr.length*0.16;
+    const g = ctx.createRadialGradient(midx,midy,0, midx,midy,rad);
+    const h = cr.hue;
+    g.addColorStop(0, hsl(h, 80, 62, alpha));
+    g.addColorStop(0.5, hsl(h, 80, 48, alpha*0.5));
+    g.addColorStop(1, hsl(h, 80, 40, 0));
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    // oriented ellipse along the shaft
+    ctx.translate(midx,midy);
+    ctx.rotate(cr.angle);
+    ctx.ellipse(0,0, cr.length*0.62, rad, 0, 0, 6.283);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function facetBrightness(cr, i, lightPhase){
+    const faceFactor = [0.72, 1.2, 1.02][i];         // shadow / highlight / mid
+    const shimmer = 1 + 0.17*Math.cos(lightPhase + [ -1.0, 0, 1.0 ][i]);
+    return faceFactor * shimmer;
+  }
+
+  function drawCrystal(cr, now){
+    const raw = (now - cr.born)/1000/cr.growTime;
+    if(raw < 0) return;
+    const g = clamp(raw, 0, 1);
+    cr.growth = g;
+    if(g>=1 && !cr.matured){
+      cr.matured = true;
+      spawnChildren(cr);
+    }
+
+    const len = cr.length*g;
+    if(len < 0.5) return;
+    const w = cr.width*(0.6 + 0.4*g);
+    const dir = cr.angle;
+    const gx = Math.cos(dir), gy = Math.sin(dir);
+    const nx = -gy, ny = gx;
+
+    const pointLen = len*0.32;
+    const bodyLen = len - pointLen;
+
+    const offs = [-w, -w*0.5, w*0.5, w];
+    const base = {x:cr.x, y:cr.y};
+    const bend = {x:cr.x + gx*bodyLen, y:cr.y + gy*bodyLen};
+    const tip  = {x:cr.x + gx*len,     y:cr.y + gy*len};
+
+    // vertices: base[i] at x=0, end[i] at body end
+    const bv = offs.map(o=>({x: base.x + nx*o, y: base.y + ny*o}));
+    const ev = offs.map(o=>({x: bend.x + nx*o, y: bend.y + ny*o}));
+
+    const lightPhase = pointer.light + dir;
+
+    // --- glow for large crystals ---
+    if(cr.gen<=2) drawGlow(cr, 0.26*(1.2-cr.gen*0.25));
+
+    ctx.lineJoin = "round";
+
+    // faces (quads) + termination (triangles)
+    for(let i=0;i<3;i++){
+      const b = facetBrightness(cr, i, lightPhase);
+      const l0 = clamp(cr.baseLight*b, 6, 94);
+      const l1 = clamp(cr.tipLight*b, 6, 96);
+      const grad = ctx.createLinearGradient(bv[i].x,bv[i].y, ev[i].x,ev[i].y);
+      grad.addColorStop(0, hsl(cr.hue, cr.sat, l0));
+      grad.addColorStop(1, hsl(i===1?cr.tipHue:cr.hue, i===1?78:cr.sat, l1));
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(bv[i].x, bv[i].y);
+      ctx.lineTo(bv[i+1].x, bv[i+1].y);
+      ctx.lineTo(ev[i+1].x, ev[i+1].y);
+      ctx.lineTo(ev[i].x, ev[i].y);
+      ctx.closePath();
+      ctx.fill();
+
+      // termination triangle (pyramid point) — brighter, cyan tip highlight
+      const tb = clamp(b*1.06, 0.4, 1.4);
+      const tl = clamp(cr.tipLight*tb, 8, 96);
+      const tgrad = ctx.createLinearGradient(ev[i].x,ev[i].y, tip.x,tip.y);
+      const th = i===1 ? cr.tipHue : cr.hue;
+      tgrad.addColorStop(0, hsl(th, i===1?80:cr.sat, tl*0.8));
+      tgrad.addColorStop(1, hsl(th, i===1?86:cr.sat, clamp(tl+8,8,97)));
+      ctx.fillStyle = tgrad;
+      ctx.beginPath();
+      ctx.moveTo(ev[i].x, ev[i].y);
+      ctx.lineTo(ev[i+1].x, ev[i+1].y);
+      ctx.lineTo(tip.x, tip.y);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // crisp specular ridge along the two center edges + silhouette
+    ctx.strokeStyle = hsl(cr.tipHue, 88, 86, 0.28 + 0.18*Math.cos(lightPhase));
+    ctx.lineWidth = Math.max(0.5, w*0.05);
+    ctx.beginPath();
+    ctx.moveTo(bv[1].x,bv[1].y); ctx.lineTo(ev[1].x,ev[1].y); ctx.lineTo(tip.x,tip.y);
+    ctx.moveTo(bv[2].x,bv[2].y); ctx.lineTo(ev[2].x,ev[2].y); ctx.lineTo(tip.x,tip.y);
+    ctx.stroke();
+
+    // thin bright silhouette edges
+    ctx.strokeStyle = hsl(cr.hue, 70, 74, 0.18);
+    ctx.lineWidth = Math.max(0.4, w*0.03);
+    ctx.beginPath();
+    ctx.moveTo(bv[0].x,bv[0].y); ctx.lineTo(ev[0].x,ev[0].y); ctx.lineTo(tip.x,tip.y);
+    ctx.moveTo(bv[3].x,bv[3].y); ctx.lineTo(ev[3].x,ev[3].y); ctx.lineTo(tip.x,tip.y);
+    ctx.stroke();
+
+    // tip specular glint
+    if(cr.spec && g>=1){
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const rg = ctx.createRadialGradient(tip.x,tip.y,0, tip.x,tip.y, w*1.1);
+      rg.addColorStop(0, hsl(cr.tipHue, 95, 92, 0.85));
+      rg.addColorStop(0.4, hsl(cr.tipHue, 95, 78, 0.35));
+      rg.addColorStop(1, hsl(cr.tipHue, 95, 70, 0));
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(tip.x,tip.y, w*1.1, 0, 6.283); ctx.fill();
+      ctx.restore();
+    }
+
+    // attached sparkles
+    for(const s of cr.sparkles){
+      const sx = base.x + gx*s.ox - gy*s.oy;
+      const sy = base.y + gy*s.ox + gx*s.oy;
+      drawSparkle(sx, sy, s, now);
+    }
+  }
+
+  function drawSparkle(x, y, s, now){
+    const tw = 0.5 + 0.5*Math.sin(now/ (1000/s.speed) + s.phase);
+    const a = tw*tw;
+    if(a < 0.04) return;
+    const sz = s.size*(0.6 + tw*0.9);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    ctx.translate(x,y);
+    ctx.rotate(s.phase + now*0.0004);
+    // bloom
+    const rg = ctx.createRadialGradient(0,0,0, 0,0, sz*7);
+    rg.addColorStop(0, hsl(CYAN, 95, 90, 0.5*a));
+    rg.addColorStop(1, hsl(CYAN, 95, 70, 0));
+    ctx.fillStyle = rg;
+    ctx.beginPath(); ctx.arc(0,0, sz*7, 0, 6.283); ctx.fill();
+    // 4-point star
+    ctx.fillStyle = hsl(CYAN, 90, 96, 0.9*a);
+    ctx.beginPath();
+    ctx.moveTo(0,-sz*4); ctx.lineTo(sz*0.7, -sz*0.7);
+    ctx.lineTo(sz*4, 0); ctx.lineTo(sz*0.7, sz*0.7);
+    ctx.lineTo(0, sz*4); ctx.lineTo(-sz*0.7, sz*0.7);
+    ctx.lineTo(-sz*4, 0); ctx.lineTo(-sz*0.7, -sz*0.7);
+    ctx.closePath();
+    ctx.fill();
+    // bright core
+    ctx.fillStyle = hsl(CYAN, 60, 100, a);
+    ctx.beginPath(); ctx.arc(0,0, sz*0.5, 0, 6.283); ctx.fill();
+    ctx.restore();
+  }
+
+  function drawMotes(now){
+    for(const m of motes){
+      m.x += m.vx*0.016; m.y += m.vy*0.016;
+      if(m.y < -10){ m.y = H+10; m.x = rand(0,W); }
+      if(m.x < -10) m.x = W+10; if(m.x > W+10) m.x = -10;
+      const tw = 0.55 + 0.45*Math.sin(now/700*m.z + m.ph);
+      const px = m.x + pointer.x*-14*m.z;
+      const py = m.y + pointer.y*-14*m.z;
+      ctx.save();
+      ctx.globalCompositeOperation = "lighter";
+      const rg = ctx.createRadialGradient(px,py,0, px,py, m.r*5);
+      const h = m.z>0.8 ? CYAN : (Math.random()<0? 330:272);
+      rg.addColorStop(0, hsl(h, 80, 88, m.a*tw));
+      rg.addColorStop(1, hsl(h, 80, 70, 0));
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(px,py, m.r*5, 0, 6.283); ctx.fill();
+      ctx.fillStyle = hsl(h, 40, 98, m.a*tw);
+      ctx.beginPath(); ctx.arc(px,py, m.r*0.7, 0, 6.283); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  // ---------------- main loop ----------------
+  let last = performance.now();
+  let uiTimer = 0;
+
+  function frame(now){
+    const dt = Math.min(0.05, (now-last)/1000);
+    last = now;
+
+    // ease pointer
+    pointer.x += (pointer.tx - pointer.x)*0.06;
+    pointer.y += (pointer.ty - pointer.y)*0.06;
+    pointer.light = Math.atan2(pointer.y, pointer.x) + (reduceMotion?0:now*0.00015);
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,H);
+
+    // ambient dust (screen space)
+    drawMotes(now);
+
+    // cluster transform: parallax + slow rotation + breathing
+    const breathe = reduceMotion?1:(1 + Math.sin(now*0.0005)*0.012);
+    const rot = globalAngle + pointer.x*0.14;
+    ctx.save();
+    ctx.translate(CX + pointer.x*18, CYc + pointer.y*18);
+    ctx.rotate(rot);
+    ctx.scale(breathe, breathe);
+
+    // draw back-to-front: higher gen (smaller) first
+    const order = crystals.slice().sort((a,b)=> b.gen - a.gen);
+    for(const cr of order) drawCrystal(cr, now);
+
+    // central seed bloom
+    const seedA = 0.5 + 0.3*Math.sin(now*0.002);
+    ctx.save();
+    ctx.globalCompositeOperation = "lighter";
+    const sg = ctx.createRadialGradient(0,0,0, 0,0, 46);
+    sg.addColorStop(0, hsl(CYAN, 90, 90, 0.5*seedA));
+    sg.addColorStop(0.4, hsl(300, 80, 70, 0.22*seedA));
+    sg.addColorStop(1, hsl(272, 80, 60, 0));
+    ctx.fillStyle = sg;
+    ctx.beginPath(); ctx.arc(0,0,46,0,6.283); ctx.fill();
+    ctx.restore();
+
+    ctx.restore();
+
+    // growth bookkeeping + idle auto-regen
+    let mature = 0;
+    for(const cr of crystals){ if(cr.matured) mature++; }
+    const totalLen = crystals.reduce((s,c)=>s+c.length,0);
+
+    if(!fullyGrown && mature>crystals.length*0.85 && crystals.length>12){
+      fullyGrown = true;
+    }
+
+    // gentle auto re-seed after the cluster has filled, to keep it alive
+    if(fullyGrown && Math.random()<0.012 && crystals.length<MAX_C){
+      const cr = crystals[(Math.random()*crystals.length)|0];
+      if(cr && cr.matured && cr.gen<4){
+        const dir = cr.angle;
+        crystals.push(makeCrystal({
+          x: cr.x+Math.cos(dir)*cr.length, y: cr.y+Math.sin(dir)*cr.length,
+          angle: dir+rand(-0.4,0.4), length: cr.length*rand(0.5,0.7),
+          width: cr.width*0.6, gen: cr.gen+1, delay: rand(0,180),
+          growTime: rand(0.6,1.4)
+        }));
+      }
+    }
+
+    // UI readout (throttled)
+    uiTimer += dt;
+    if(uiTimer>0.25){
+      uiTimer = 0;
+      el.count.textContent = crystals.length;
+      el.gen.textContent = crystals.reduce((m,c)=>Math.max(m,c.gen),0);
+      el.grow.textContent = Math.round(clamp(mature/Math.max(1,crystals.length),0,1)*100)+"%";
+    }
+
+    if(!reduceMotion) globalAngle += dt*0.03;
+
+    requestAnimationFrame(frame);
+  }
+
+  // ---------------- interaction ----------------
+  function onMove(px, py){
+    pointer.tx = clamp((px/W)*2-1, -1, 1);
+    pointer.ty = clamp((py/H)*2-1, -1, 1);
+  }
+  window.addEventListener("pointermove", e=> onMove(e.clientX, e.clientY));
+
+  let dragStart = null;
+  window.addEventListener("pointerdown", e=>{
+    dragStart = { x:e.clientX, y:e.clientY, ang:globalAngle };
+    pointer.down = true;
+  });
+  window.addEventListener("pointermove", e=>{
+    if(pointer.down && dragStart){
+      const dx = e.clientX - dragStart.x;
+      globalAngle = dragStart.ang + dx*0.005;
+    }
+  });
+  window.addEventListener("pointerup", ()=>{ pointer.down=false; dragStart=null; });
+
+  // click (not drag) seeds a new cluster
+  window.addEventListener("pointerup", e=>{
+    if(dragStart && Math.abs(e.clientX-dragStart.x)<6 && Math.abs(e.clientY-dragStart.y)<6){
+      seedCluster(e.clientX - CX, e.clientY - CYc, true);
+      // flash the hint off
+      el.hint.style.opacity = "0";
+    }
+  });
+
+  // hide hint after a while
+  setTimeout(()=>{ el.hint.style.opacity = "0"; }, 7000);
+
+  // ---------------- boot ----------------
+  initScene();
+  initMotes();
+  requestAnimationFrame(frame);
+
+  // keyboard: spacebar reseeds the whole scene
+  window.addEventListener("keydown", e=>{
+    if(e.code==="Space"){
+      e.preventDefault();
+      fullyGrown=false;
+      globalAngle = rand(0,6.283);
+      initScene();
+      el.hint.style.opacity = "0";
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MERIDIAN · Halftone Field</title>
+<style>
+  :root{
+    --paper:#f6f2e9;
+    --paper-2:#efe9dc;
+    --ink:#14151a;
+    --ink-soft:#3a3c45;
+    --desk:#ded6c6;
+    --desk-2:#cfc6b2;
+    --rule:rgba(20,21,26,.55);
+    --mono:"SFMono-Regular",ui-monospace,Menlo,Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:var(--sans);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% 8%, #ece5d5 0%, var(--desk) 45%, var(--desk-2) 100%);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(12px,3.5vw,44px);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ---- the sheet ---- */
+  .sheet{
+    position:relative;
+    width:min(96vw, 900px);
+    aspect-ratio:4/3;
+    background:
+      linear-gradient(180deg, var(--paper), var(--paper-2));
+    border-radius:4px;
+    box-shadow:
+      0 2px 0 rgba(255,255,255,.6) inset,
+      0 1px 2px rgba(60,50,30,.18),
+      0 30px 60px -24px rgba(50,40,25,.45),
+      0 60px 120px -60px rgba(50,40,25,.5);
+    overflow:hidden;
+    isolation:isolate;
+  }
+  /* faint paper grain */
+  .sheet::before{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+    background-image:
+      radial-gradient(rgba(120,105,80,.05) 1px, transparent 1.4px),
+      radial-gradient(rgba(120,105,80,.04) 1px, transparent 1.4px);
+    background-size:3px 3px, 4.5px 4.5px;
+    background-position:0 0, 1px 2px;
+    mix-blend-mode:multiply;
+    opacity:.7;
+  }
+  /* soft vignette */
+  .sheet::after{
+    content:"";position:absolute;inset:0;pointer-events:none;z-index:6;
+    box-shadow:inset 0 0 120px 20px rgba(90,75,50,.16);
+  }
+
+  #field{position:absolute;inset:0;width:100%;height:100%;z-index:2}
+
+  /* ---- registration marks + plot frame ---- */
+  .frame{position:absolute;inset:5%;border:1px dashed rgba(20,21,26,.28);z-index:3;pointer-events:none}
+  .reg{position:absolute;width:16px;height:16px;z-index:3;pointer-events:none;opacity:.7}
+  .reg::before,.reg::after{content:"";position:absolute;background:var(--rule)}
+  .reg::before{left:50%;top:0;bottom:0;width:1px;transform:translateX(-50%)}
+  .reg::after{top:50%;left:0;right:0;height:1px;transform:translateY(-50%)}
+  .reg.tl{top:10px;left:10px}.reg.tr{top:10px;right:10px}.reg.bl{bottom:10px;left:10px}.reg.br{bottom:10px;right:10px}
+  .reg .ring{position:absolute;inset:3px;border:1px solid var(--rule);border-radius:50%}
+
+  /* ---- plotter gantry / pen ---- */
+  .rail{position:absolute;left:0;right:0;top:5%;height:2px;background:linear-gradient(90deg,transparent,rgba(20,21,26,.5),transparent);z-index:5}
+  .rail::before{content:"";position:absolute;left:8%;right:8%;top:-5px;height:5px;border-bottom:1px solid rgba(20,21,26,.25)}
+  .pen{position:absolute;top:0;left:0;height:100%;width:0;transform:translateX(-50%);z-index:5;will-change:left}
+  .pen .carriage{position:absolute;left:-13px;top:5%;width:26px;height:16px;background:linear-gradient(180deg,#26282e,#121317);border-radius:3px;box-shadow:0 2px 5px rgba(0,0,0,.4)}
+  .pen .carriage::before{content:"";position:absolute;left:50%;top:100%;width:3px;height:8px;background:#1b1d22;transform:translateX(-50%)}
+  .pen .arm{position:absolute;left:-1px;top:calc(5% + 16px);width:2px;background:linear-gradient(180deg,#3a3d45,#20222a)}
+  .pen .nib{position:absolute;left:-4px;top:100%;width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:11px solid #0c0d10;filter:drop-shadow(0 1px .5px rgba(0,0,0,.5))}
+
+  /* ---- HUD ---- */
+  .hud{position:absolute;inset:0;z-index:7;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;padding:clamp(14px,2.6vw,26px)}
+  .hud-top,.hud-bottom{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .brand{font-family:var(--mono);font-size:11px;letter-spacing:.28em;text-transform:uppercase;line-height:1.7;color:var(--ink-soft)}
+  .brand b{display:block;font-size:15px;letter-spacing:.14em;color:var(--ink);margin-top:5px}
+  .spec{text-align:right;font-family:var(--mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft);line-height:1.8}
+  .spec b{color:var(--ink);font-weight:600}
+
+  .foot{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .cap{max-width:40ch;font-size:clamp(11px,1.3vw,13px);line-height:1.6;color:var(--ink-soft)}
+  .meter{width:min(46vw,230px);pointer-events:auto}
+  .meter .lab{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+  .bar{height:6px;border-radius:6px;background:rgba(20,21,26,.12);overflow:hidden;position:relative}
+  .bar i{position:absolute;inset:0 0 0 0;background:var(--ink);border-radius:6px;width:0;transition:width .12s linear}
+  .replot{
+    pointer-events:auto;margin-top:12px;font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+    color:var(--paper);background:var(--ink);border:none;padding:9px 14px;border-radius:2px;cursor:pointer;
+    box-shadow:0 4px 12px rgba(20,21,26,.3);transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .replot:hover{transform:translateY(-1px)}
+  .replot:active{transform:translateY(0)}
+
+  @media (max-width:520px){
+    .sheet{aspect-ratio:3/4}
+    .spec{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+  <div class="sheet" id="sheet">
+    <canvas id="field" aria-hidden="true"></canvas>
+    <div class="frame" aria-hidden="true"></div>
+    <span class="reg tl" aria-hidden="true"><span class="ring"></span></span>
+    <span class="reg tr" aria-hidden="true"><span class="ring"></span></span>
+    <span class="reg bl" aria-hidden="true"><span class="ring"></span></span>
+    <span class="reg br" aria-hidden="true"><span class="ring"></span></span>
+
+    <div class="rail" aria-hidden="true"></div>
+    <div class="pen" id="pen" aria-hidden="true">
+      <div class="carriage"></div>
+      <div class="arm" id="arm"><div class="nib"></div></div>
+    </div>
+
+    <div class="hud">
+      <div class="hud-top">
+        <div class="brand">Meridian Instruments<b>Halftone Field</b></div>
+        <div class="spec">Sheet <b>025</b> · Ink on Cotton<br>Grid <b id="gridread">—</b> · Pass <b id="passread">0</b><br>Plot <b id="pctread">0.0</b>%</div>
+      </div>
+      <div class="foot">
+        <p class="cap">A pen plots a gradient field one inked disc at a time. Dot area follows the luminance of a diagonal light ramp — dense where the page reads dark, dissolving to a whisper at the highlight. Click the sheet to re-plot.</p>
+        <div class="meter">
+          <div class="lab"><span>Progress</span><span id="statuslab">plotting…</span></div>
+          <div class="bar"><i id="bar"></i></div>
+          <button class="replot" id="replot">↻ Re-plot sheet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      var sheet = document.getElementById('sheet');
+      var canvas = document.getElementById('field');
+      var pen = document.getElementById('pen');
+      var arm = document.getElementById('arm');
+      if(!sheet || !canvas) return;
+      var ctx = canvas.getContext('2d');
+
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var MARGIN = 0.09;               // fraction of sheet kept clear
+      var ink = '#14151a';
+
+      var dots = [];
+      var cols = 0, rows = 0, cell = 0;
+      var W = 0, H = 0, dpr = 1;
+
+      // deterministic pseudo-random per index
+      function rng(seed){ var x = Math.sin(seed*127.1+311.7)*43758.5453; return x - Math.floor(x); }
+
+      // the gradient field — luminance in [0,1], 1 = darkest = largest dot
+      function field(u, v){
+        var val = 0.40 + 0.42*(u*0.65 + v*0.95 - 0.42);      // diagonal light ramp
+        var dx = u-0.30, dy = v-0.70;
+        val += 0.30*Math.exp(-(dx*dx+dy*dy)/0.11);            // focal pool (lower-left)
+        var dx2 = u-0.80, dy2 = v-0.22;
+        val += 0.14*Math.exp(-(dx2*dx2+dy2*dy2)/0.05);        // secondary highlight (upper-right)
+        val += (rng(u*97+v*191)-0.5)*0.05;                    // grain
+        return val < 0 ? 0 : val > 1 ? 1 : val;
+      }
+
+      function buildGrid(){
+        cell = Math.max(9, Math.min(W, H) / 52);   // ~52 cells on the short edge
+        cols = Math.max(8, Math.floor((W*(1-2*MARGIN)) / cell));
+        rows = Math.max(6, Math.floor((H*(1-2*MARGIN)) / cell));
+        dots = [];
+        var fw = W*(1-2*MARGIN), fh = H*(1-2*MARGIN);
+        for(var r=0;r<rows;r++){
+          for(var c=0;c<cols;c++){
+            var u = MARGIN + (c+0.5)/cols*fw + (rng(r*cols+c)-0.5)*cell*0.14;
+            var v = MARGIN + (r+0.5)/rows*fh + (rng(r*cols+c+7)-0.5)*cell*0.14;
+            var uu = u/W, vv = v/H;
+            var g = field(uu, vv);
+            var maxR = cell*0.46;
+            dots.push({
+              x: u, y: v,
+              tx: (rng(r*cols+c+3)-0.5)*cell*0.06,
+              ty: (rng(r*cols+c+5)-0.5)*cell*0.06,
+              wob: rng(r*cols+c+11)*6.28,
+              jx: (rng(r*cols+c+13)-0.5)*0.10,   // radius jitter
+              gi: r*cols+c,
+              target: maxR*Math.sqrt(g)*(1+ (rng(r*cols+c+17)-0.5)*0.12),
+              g: g,
+              drawn:false, drawT:0, amt:0
+            });
+          }
+        }
+        var read = document.getElementById('gridread');
+        if(read) read.textContent = cols+'×'+rows;
+      }
+
+      function resize(){
+        dpr = Math.min(window.devicePixelRatio||1, 2);
+        W = sheet.clientWidth; H = sheet.clientHeight;
+        canvas.width = Math.floor(W*dpr); canvas.height = Math.floor(H*dpr);
+        ctx.setTransform(dpr,0,0,dpr,0,0);
+        buildGrid();
+        if(reduce){ for(var i=0;i<dots.length;i++){ dots[i].drawn=true; dots[i].amt=1; dots[i].drawT=0; } plotRows = rows; }
+      }
+
+      // boustrophedon plotting
+      var plotRows = 0;      // float: how many rows fully plotted
+      var pass = 0;
+      var startTime = performance.now();
+      var REPLOT_AT_END = true;
+
+      function smooth(x){ x = x<0?0:x>1?1:x; return x*x*(3-2*x); }
+      function easeOutBack(x){ var c1=1.5, c3=c1+1; return 1 + c3*Math.pow(x-1,3) + c1*Math.pow(x-1,2); }
+
+      function updatePlot(dt, now){
+        if(reduce) return;
+        var speed = 1.55;                 // rows per second
+        plotRows += dt*speed;
+        if(plotRows >= rows){
+          plotRows = rows; pass++;
+          if(REPLOT_AT_END){ /* hold, then restart shortly */ }
+        }
+        var cur = Math.floor(plotRows);
+        var frac = plotRows - cur;
+        var dirRight = (cur % 2 === 0);
+        var pc = dirRight ? frac : (1-frac);   // pen column fraction in current row
+        var penXf, penYf;
+        if(cur < rows){
+          penXf = dirRight ? pc : (1-pc);
+          penYf = cur;
+        } else {
+          penXf = 1; penYf = rows-1;
+        }
+        // pen position in sheet fractions
+        var px = MARGIN + penXf*(1-2*MARGIN);
+        var py = MARGIN + (Math.min(cur,rows-1)/Math.max(1,rows))*(H)/H; // handled below
+        pen.style.left = (px*100)+'%';
+        var rowYpct = MARGIN*100 + (Math.min(cur,rows-1)/rows)*(1-2*MARGIN)*100;
+        var armTopPct = 5 + 16/Math.max(1,H)*100;
+        arm.style.height = Math.max(0, rowYpct - armTopPct)+'%';
+
+        // reveal dots
+        for(var i=0;i<dots.length;i++){
+          var d = dots[i];
+          var dr = Math.floor(d.gi / cols);
+          var dc = d.gi % cols;
+          var already = dr < cur;
+          var onRow = (dr === cur) && (plotRows < rows);
+          var dcNorm = cols>1 ? dc/(cols-1) : 0.5;
+          var beingDrawn = false, amt = already?1:0;
+          if(onRow){
+            var passed = dirRight ? (dcNorm <= pc+0.02) : (dcNorm >= pc-0.02);
+            if(passed){
+              beingDrawn = true;
+              var local = dirRight ? (pc - dcNorm) : (dcNorm - pc);
+              amt = smooth(local/0.06);
+              if(pc<=0) amt = 0;
+            }
+          }
+          if(already || (onRow && beingDrawn)){
+            if(!d.drawn){ d.drawn = true; d.drawT = now; }
+            d.amt = 1;
+          }
+        }
+        // HUD
+        var pct = Math.min(100, (plotRows/rows)*100);
+        var bar = document.getElementById('bar'); if(bar) bar.style.width = pct.toFixed(1)+'%';
+        var pr = document.getElementById('pctread'); if(pr) pr.textContent = pct.toFixed(1);
+        var pa = document.getElementById('passread'); if(pa) pa.textContent = pass;
+        var st = document.getElementById('statuslab'); if(st) st.textContent = plotRows>=rows?'complete':'plotting…';
+        var statusDone = plotRows>=rows;
+        return statusDone;
+      }
+
+      function drawDot(d, now){
+        var r;
+        if(d.amt>0 && d.drawn){
+          var since = (now - d.drawT)/1000;
+          var bloom = 1 + 0.16*Math.exp(-4*since);   // ink bloom settles
+          r = d.target * bloom;
+        } else {
+          r = 0;
+        }
+        if(r<=0.15) return;
+        var wobX = Math.sin(now*0.0006 + d.wob)*cell*0.015;
+        var wobY = Math.cos(now*0.0005 + d.wob)*cell*0.015;
+        var x = d.x + d.tx + wobX;
+        var y = d.y + d.ty + wobY;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, 6.2832);
+        ctx.fillStyle = 'rgba(20,21,26,' + (0.82 + d.jx*0.16).toFixed(3) + ')';
+        ctx.fill();
+      }
+
+      function draw(now){
+        if(!now) now = performance.now();
+        var dt = 1/60;
+        ctx.clearRect(0,0,W,H);
+        var done = updatePlot(dt, now);
+        for(var i=0;i<dots.length;i++) drawDot(dots[i], now);
+
+        if(reduce){ /* static */ }
+        requestAnimationFrame(draw);
+      }
+
+      // re-plot
+      function replot(){
+        plotRows = 0; pass = 0; startTime = performance.now();
+        for(var i=0;i<dots.length;i++){ dots[i].drawn=false; dots[i].amt=0; }
+      }
+      sheet.addEventListener('click', replot);
+      var rb = document.getElementById('replot');
+      if(rb) rb.addEventListener('click', function(e){ e.stopPropagation(); replot(); });
+
+      var raf;
+      function loop(now){
+        var dt = 1/60;
+        ctx.clearRect(0,0,W,H);
+        updatePlot(dt, now);
+        for(var i=0;i<dots.length;i++) drawDot(dots[i], now);
+        // auto loop when finished
+        if(!reduce && plotRows >= rows){
+          // pause at end then restart
+          if(!loop._rest){ loop._rest = now + 1600; }
+          if(now >= loop._rest){ replot(); loop._rest = 0; }
+        }
+        raf = requestAnimationFrame(loop);
+      }
+
+      resize();
+      window.addEventListener('resize', function(){
+        cancelAnimationFrame(raf);
+        resize();
+        if(!reduce){ replot(); }
+        loop(performance.now());
+      });
+      if(reduce){
+        // draw once, static fully-plotted field
+        ctx.clearRect(0,0,W,H);
+        for(var i=0;i<dots.length;i++) drawDot(dots[i], performance.now());
+      } else {
+        loop(performance.now());
+      }
+    })();
+  </script>
+</body>
+</html>

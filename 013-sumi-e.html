@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>竹 · Ink Bamboo (Sumi-e)</title>
+<style>
+  :root{
+    --paper:#f4ead2;
+    --paper-2:#faf3e2;
+    --paper-3:#e7d8b6;
+    --ink:#1b1814;
+    --ink-soft:#6f6657;
+    --seal:#b23b2e;
+    --seal-d:#8f2c22;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:Georgia,"Times New Roman",serif;
+    background:
+      radial-gradient(130% 100% at 50% -10%, #fbf5e6 0%, #f2e7cd 46%, #e3d4b2 100%);
+    color:#3a322a;
+    min-height:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:clamp(14px,4vw,54px);
+    overflow-x:hidden;
+  }
+  /* washi fiber texture over the whole page */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+    background-image:
+      repeating-linear-gradient(91deg, rgba(120,100,70,.05) 0 1px, transparent 1px 5px),
+      repeating-linear-gradient(3deg, rgba(120,100,70,.045) 0 1px, transparent 1px 6px),
+      repeating-linear-gradient(88deg, rgba(90,70,45,.03) 0 1px, transparent 1px 9px);
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background:radial-gradient(120% 90% at 50% 42%, transparent 52%, rgba(90,70,40,.14));
+  }
+
+  .scroll{
+    width:min(94vw,760px);
+    display:flex;align-items:stretch;gap:clamp(14px,3.4vw,44px);
+    position:relative;z-index:1;
+  }
+
+  /* ---- the mount (scroll frame) ---- */
+  .mount{
+    flex:1 1 auto;
+    background:
+      linear-gradient(150deg, var(--paper-2), var(--paper) 55%, var(--paper-3));
+    padding:clamp(14px,3vw,34px);
+    border-radius:4px;
+    box-shadow:
+      inset 0 0 0 1px rgba(120,95,55,.18),
+      inset 0 2px 30px rgba(120,95,55,.14),
+      0 26px 60px -28px rgba(70,52,28,.55),
+      0 4px 14px rgba(70,52,28,.18);
+    position:relative;
+  }
+  /* aged double hairline keyline inside the mount */
+  .mount::before{
+    content:"";position:absolute;inset:clamp(8px,1.4vw,16px);
+    border:1px solid rgba(120,95,55,.35);
+    border-radius:2px;pointer-events:none;
+  }
+
+  .painting{
+    position:relative;
+    aspect-ratio:3/4;
+    width:100%;
+    border-radius:2px;
+    overflow:hidden;
+    background:
+      radial-gradient(120% 100% at 40% 18%, #fbf5e6 0%, #f3e8cf 55%, #e8d9b7 100%);
+    box-shadow:inset 0 0 60px rgba(120,95,55,.16), inset 0 0 0 1px rgba(120,95,55,.12);
+  }
+  #ink{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:pointer}
+  /* faint drifting mist inside the painting */
+  .mist{
+    position:absolute;inset:0;pointer-events:none;mix-blend-mode:multiply;opacity:.5;
+    background:
+      radial-gradient(42% 30% at 30% 78%, rgba(150,135,100,.20), transparent 70%),
+      radial-gradient(34% 24% at 74% 30%, rgba(150,135,100,.16), transparent 70%);
+    filter:blur(6px);
+    animation:breathe 14s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.38;transform:translateY(0)}50%{opacity:.6;transform:translateY(-6px)}}
+  /* aged vignette on top of everything in the painting */
+  .vignette{
+    position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 120px rgba(80,60,30,.28);
+  }
+
+  /* ---- vertical inscription column ---- */
+  .inscription{
+    flex:0 0 auto;
+    writing-mode:vertical-rl;
+    text-orientation:upright;
+    display:flex;align-items:flex-start;gap:.1em;
+    padding-top:6px;
+    color:#4a4034;
+  }
+  .seal-word{
+    font-size:clamp(1.1rem,2.4vw,1.7rem);
+    letter-spacing:.22em;font-weight:600;color:#5a4e3c;
+  }
+  .seal-line{
+    font-size:clamp(.62rem,1.3vw,.86rem);
+    letter-spacing:.34em;opacity:.7;color:#6b5f4b;margin-top:.1em;
+  }
+  .insp-rule{width:1px;height:min(44vh,300px);background:rgba(90,78,59,.4);margin:.1em 0}
+
+  /* ---- footer wordmark ---- */
+  .foot{
+    position:absolute;left:0;right:0;bottom:calc(-1 * clamp(10px,2.4vw,26px));
+    text-align:center;
+  }
+  .foot .jp{font-size:clamp(.7rem,1.6vw,1rem);letter-spacing:.42em;color:#6b5f4b}
+  .foot .en{
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:clamp(.5rem,.9vw,.62rem);letter-spacing:.42em;text-transform:uppercase;
+    color:#8a7c63;margin-top:8px;opacity:.8;
+  }
+
+  /* ---- replay control ---- */
+  .replay{
+    position:fixed;right:clamp(12px,2.4vw,26px);bottom:clamp(12px,2.4vw,26px);
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;
+    color:#6b5f4b;background:rgba(250,245,232,.72);
+    border:1px solid rgba(120,95,55,.35);
+    padding:11px 20px;border-radius:40px;cursor:pointer;
+    backdrop-filter:blur(6px);
+    opacity:0;transform:translateY(8px);
+    transition:opacity .6s ease, transform .6s ease, background .2s ease, box-shadow .2s ease;
+    z-index:5;
+  }
+  .replay.show{opacity:1;transform:translateY(0)}
+  .replay:hover{background:rgba(255,252,244,.95);box-shadow:0 8px 22px -12px rgba(70,52,28,.6)}
+  .replay:active{transform:translateY(1px)}
+  @media(max-width:640px){
+    .scroll{flex-direction:column;align-items:center}
+    .inscription{writing-mode:horizontal-tb;flex-direction:row;align-items:center;gap:.6em;padding:0}
+    .insp-rule{width:min(40vw,120px);height:1px;min-height:0;margin:0}
+  }
+</style>
+</head>
+<body>  <div class="scroll">
+    <div class="mount">
+      <div class="painting" id="stage">
+        <canvas id="ink"></canvas>
+        <div class="mist"></div>
+        <div class="vignette"></div>
+      </div>
+    </div>
+    <div class="inscription">
+      <div class="seal-word">墨竹図</div>
+      <div class="insp-rule"></div>
+      <div class="seal-line">ink · bamboo · on rice paper</div>
+    </div>
+  </div>
+
+  <button class="replay" id="replay">再筆 · repaint</button>
+
+  <script>
+  (function(){
+    "use strict";
+    var canvas = document.getElementById("ink");
+    var ctx = canvas.getContext("2d");
+    var replayBtn = document.getElementById("replay");
+
+    var W=0,H=0,DPR=1;
+    var strokes=[], splatters=[], sealGeo=null;
+    var startTime=0, sealTime=0, total=0, running=false, raf=0;
+    var DRY=1.5;                 // seconds for wet ink to dry
+    var INK="rgb(27,24,20)", INK_SOFT="rgb(76,70,58)", SEAL="rgb(178,59,46)";
+
+    function clamp(v,a,b){return v<a?a:v>b?b:v;}
+    function lerp(a,b,t){return a+(b-a)*t;}
+    function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+    /* ---------- brush stroke as a filled tapered outline ---------- */
+    function brushPath(pts, widths, rgb, alpha, reveal, scale){
+      scale = scale==null ? 1 : scale;
+      var n = pts.length; if(n<2) return;
+      var upto = n-1;
+      if(reveal!=null){ upto = Math.max(1, Math.floor(clamp(reveal,0,1)*(n-1))); }
+      var left=[], right=[], i;
+      for(i=0;i<=upto;i++){
+        var prev = pts[i>0?i-1:0], next = pts[i<n-1?i+1:n-1];
+        var dx=next.x-prev.x, dy=next.y-prev.y, len=Math.hypot(dx,dy)||1;
+        var nx=-dy/len, ny=dx/len;
+        var w = widths[i]*scale*0.5;
+        left.push({x:pts[i].x+nx*w, y:pts[i].y+ny*w});
+        right.push({x:pts[i].x-nx*w, y:pts[i].y-ny*w});
+      }
+      var oldA = ctx.globalAlpha;
+      ctx.globalAlpha = Math.max(0,Math.min(1,alpha));
+      ctx.fillStyle = rgb;
+      ctx.beginPath();
+      ctx.moveTo(left[0].x,left[0].y);
+      for(i=1;i<=upto;i++) ctx.lineTo(left[i].x,left[i].y);
+      ctx.lineTo(right[upto].x,right[upto].y);
+      for(i=upto-1;i>=0;i--) ctx.lineTo(right[i].x,right[i].y);
+      ctx.closePath();
+      ctx.fill();
+      var r0 = widths[0]*scale*0.5;
+      if(r0>0.4){ ctx.beginPath(); ctx.arc(pts[0].x,pts[0].y,r0,0,6.3); ctx.fill(); }
+      var rT = widths[upto]*scale*0.5;
+      if(rT>0.4){ ctx.beginPath(); ctx.arc(pts[upto].x,pts[upto].y,rT,0,6.3); ctx.fill(); }
+      ctx.globalAlpha = oldA;
+    }
+
+    /* a curved leaf: pointed both ends, widest in the middle */
+    function buildLeaf(px,py,angle,len,curv,maxW,steps){
+      steps = steps||22;
+      var P0={x:px,y:py};
+      var tip={x:px+Math.cos(angle)*len, y:py+Math.sin(angle)*len};
+      var mid={x:(P0.x+tip.x)/2, y:(P0.y+tip.y)/2};
+      var perp = angle+Math.PI/2;
+      var C={x:mid.x+Math.cos(perp)*curv, y:mid.y+Math.sin(perp)*curv};
+      var pts=[],widths=[],i;
+      for(i=0;i<=steps;i++){
+        var t=i/steps, mt=1-t;
+        pts.push({
+          x: mt*mt*P0.x + 2*mt*t*C.x + t*t*tip.x,
+          y: mt*mt*P0.y + 2*mt*t*C.y + t*t*tip.y
+        });
+        widths.push(maxW*Math.sin(Math.PI*t));
+      }
+      return {pts:pts, widths:widths};
+    }
+
+    /* ---------- scene geometry (scaled to canvas) ---------- */
+    function buildScene(){
+      var rand = mulberry32(1337);
+      strokes=[]; splatters=[];
+      var t = 0.30;
+      var groundY = H*0.90, topY = H*0.10;
+      var mL = W*0.16, mR = W*0.86;
+
+      function addCulm(x, baseW, alpha, withLeaves){
+        var segs=28, nodeCount = 4 + Math.floor(rand()*2);
+        var pts=[], widths=[], i;
+        for(i=0;i<=segs;i++){
+          var tt=i/segs;
+          var y=lerp(groundY,topY,tt);
+          var sway = Math.sin(tt*Math.PI*1.15 + x*0.006)*(W*0.014)
+                   + Math.sin(tt*Math.PI*3.4 + x*0.02)*(W*0.004);
+          pts.push({x:x+sway+(rand()*2-1)*W*0.0012, y:y});
+          var w = baseW*(0.7+0.3*(1-tt));
+          for(var k=1;k<=nodeCount;k++){
+            var nk = Math.round(segs*(k/(nodeCount+1)));
+            var d = i-nk; w += Math.exp(-(d*d)/(2*1.3*1.3))*baseW*0.4;
+          }
+          widths.push(w*(0.92+rand()*0.16));
+        }
+        strokes.push({pts:pts,widths:widths,rgb:INK,alpha:alpha,start:t,dur:1.0});
+        t += 1.05;
+        if(!withLeaves) return;
+        // branches + leaf clusters rising from some nodes
+        for(var k=1;k<=nodeCount-1;k++){
+          if(rand()<0.55){
+            var ni = Math.round(segs*(k/(nodeCount+1)));
+            var bx=pts[ni].x, by=pts[ni].y;
+            var side = rand()<0.5 ? -1 : 1;
+            var bLen = W*lerp(0.10,0.17,rand());
+            var bAng = side*(Math.PI*0.5+ (0.5+rand()*0.5)) ; // up-and-out
+            bAng = -Math.PI/2 + side*(0.5+rand()*0.55);
+            var bpts=[],bw=[],j,steps=14;
+            for(j=0;j<=steps;j++){
+              var bt=j/steps;
+              var byd = Math.sin(bt*Math.PI)*W*0.03*side;
+              bpts.push({x:bx+Math.cos(bAng)*bLen*bt, y:by+Math.sin(bAng)*bLen*bt - byd});
+              bw.push(baseW*1.15*(1-bt));
+            }
+            strokes.push({pts:bpts,widths:bw,rgb:INK,alpha:alpha*1.1,start:t,dur:0.4});
+            t += 0.42;
+            var leafN = 2+Math.floor(rand()*3);
+            for(var L=0;L<leafN;L++){
+              var lt = 0.35 + (L/Math.max(1,leafN-1))*0.55;
+              var lBase = {x:bx+Math.cos(bAng)*bLen*lt, y:by+Math.sin(bAng)*bLen*lt};
+              var lAng = bAng + side*(0.5+rand()*0.7) + (rand()*2-1)*0.25;
+              var leaf = buildLeaf(lBase.x,lBase.y,lAng, W*lerp(0.08,0.15,rand()),
+                                   (rand()*2-1)*W*0.05, baseW*lerp(2.4,4.2,rand()));
+              strokes.push({pts:leaf.pts,widths:leaf.widths,rgb:INK,alpha:alpha*1.05,start:t,dur:0.34});
+              t += 0.36;
+            }
+          }
+        }
+      }
+
+      // 1) faint background culm (deep soft ink, heavy bleed)
+      addCulm(lerp(mL,mR,0.5+(rand()-0.5)*0.28), W*0.016, 0.15, true);
+      // 2) a couple of main culms
+      var xs=[lerp(mL,mR,0.28+rand()*0.12), lerp(mL,mR,0.55+rand()*0.14)];
+      xs.sort(function(a,b){return a-b;});
+      addCulm(xs[0], W*lerp(0.020,0.027,rand()), 0.86, true);
+      addCulm(xs[1], W*lerp(0.016,0.022,rand()), 0.74, true);
+
+      // 3) a few ink splatters pooling at the base
+      var sc = (xs[0]+xs[1])*0.5;
+      for(var s=0;s<4;s++){
+        splatters.push({
+          x: sc + (rand()*2-1)*W*0.10,
+          y: groundY - rand()*H*0.03,
+          r: W*lerp(0.0016,0.0042,rand()),
+          start: t, dur:0.28, alpha:0.6+rand()*0.2
+        });
+        t += 0.14;
+      }
+
+      sealTime = t + 0.55;
+      total = sealTime + 1.0;
+      sealGeo = {x: W*0.24, y: H*0.82};
+    }
+
+    function size(){
+      DPR = Math.min(window.devicePixelRatio||1, 2.5);
+      var r = canvas.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = Math.max(1,Math.round(W*DPR));
+      canvas.height = Math.max(1,Math.round(H*DPR));
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+
+    /* ---------- drawing per frame ---------- */
+    function drawStroke(s, p, wet){
+      if(wet>0.004){
+        ctx.save();
+        ctx.filter = 'blur('+(2.9*wet)+'px)';
+        brushPath(s.pts,s.widths,s.rgb, s.alpha*0.8*wet, p, 1+0.6*wet);
+        ctx.restore();
+      }
+      ctx.save();
+      ctx.filter = 'blur('+(1.0*wet)+'px)';
+      brushPath(s.pts,s.widths,s.rgb, s.alpha, p, 1);
+      ctx.restore();
+    }
+    function drawSplatter(sp, p, wet){
+      if(wet>0.004){
+        ctx.save(); ctx.filter='blur('+(2*wet)+'px)';
+        ctx.globalAlpha = sp.alpha*0.7*wet;
+        ctx.beginPath(); ctx.arc(sp.x,sp.y,sp.r*(1+0.5*wet),0,6.3); ctx.fill();
+        ctx.restore();
+      }
+      ctx.save(); ctx.filter='blur('+(0.8*wet)+'px)';
+      ctx.globalAlpha = sp.alpha;
+      ctx.beginPath(); ctx.arc(sp.x,sp.y,sp.r,0,6.3); ctx.fill();
+      ctx.restore();
+    }
+
+    function easeOutBack(x){var c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2);}
+
+    function drawSeal(elapsed){
+      if(!sealGeo) return;
+      var raw = clamp(elapsed/0.55,0,1);
+      var scale = raw>=1 ? 1 : easeOutBack(raw);
+      var wobble = raw<1 ? Math.exp(-elapsed*9)*Math.sin(elapsed*26)*0.06 : 0;
+      scale *= (1+wobble);
+      var size = H*0.115;
+      ctx.save();
+      ctx.translate(sealGeo.x, sealGeo.y);
+      ctx.scale(scale,scale);
+      // ink-impact halo at the moment of stamping
+      if(elapsed<0.5){
+        ctx.save();
+        ctx.filter='blur(7px)';
+        ctx.globalAlpha = (0.5-elapsed)/0.5 * 0.45;
+        ctx.fillStyle=SEAL;
+        roundRect(-size*0.62,-size*0.62,size*1.24,size*1.24,size*0.16);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = clamp(scale,0,1.05);
+      ctx.fillStyle=SEAL;
+      roundRect(-size/2,-size/2,size,size,size*0.13);
+      ctx.fill();
+      // inner keyline
+      ctx.strokeStyle="rgba(250,244,226,.85)";
+      ctx.lineWidth=Math.max(1,size*0.03);
+      roundRect(-size/2+size*0.09,-size/2+size*0.09,size*0.82,size*0.82,size*0.09);
+      ctx.stroke();
+      // stylized bamboo seal-script glyph in negative space
+      drawSealGlyph(size);
+      ctx.restore();
+    }
+    function roundRect(x,y,w,h,r){
+      r=Math.min(r,w/2,h/2);
+      ctx.beginPath();
+      ctx.moveTo(x+r,y);
+      ctx.arcTo(x+w,y,x+w,y+h,r);
+      ctx.arcTo(x+w,y+h,x,y+h,r);
+      ctx.arcTo(x,y+h,x,y,r);
+      ctx.arcTo(x,y,x+w,y,r);
+      ctx.closePath();
+    }
+    function drawSealGlyph(size){
+      var rgb="rgb(250,244,226)";
+      var stem=[{x:0,y:size*0.32},{x:0,y:-size*0.28}];
+      var sw=[size*0.052,size*0.052];
+      brushPath(stem,sw,rgb,0.94,1,1);
+      brushPath([{x:-size*0.06,y:-size*0.02},{x:size*0.06,y:-size*0.02}],
+                [size*0.075,size*0.075],rgb,0.94,1,1);
+      var l1=buildLeaf(0,-size*0.20,-0.75,size*0.30,size*0.10,size*0.06);
+      brushPath(l1.pts,l1.widths,rgb,0.94,1,1);
+      var l2=buildLeaf(0,-size*0.15,Math.PI+0.65,size*0.26,-size*0.09,size*0.05);
+      brushPath(l2.pts,l2.widths,rgb,0.94,1,1);
+    }
+
+    function frame(now){
+      if(!startTime) startTime = now;
+      var T = (now - startTime)/1000;
+      ctx.clearRect(0,0,W,H);
+      var i,s,p,wet,fin;
+      for(i=0;i<strokes.length;i++){
+        s=strokes[i];
+        if(T<s.start) continue;
+        p = clamp((T-s.start)/s.dur,0,1);
+        fin = s.start+s.dur;
+        wet = clamp(1-(T-fin)/DRY,0,1);
+        drawStroke(s,p,wet);
+      }
+      for(i=0;i<splatters.length;i++){
+        s=splatters[i];
+        if(T<s.start) continue;
+        p = clamp((T-s.start)/s.dur,0,1);
+        wet = clamp(1-(T-(s.start+s.dur))/DRY,0,1);
+        drawSplatter(s,p,wet);
+      }
+      if(T>=sealTime) drawSeal(T-sealTime);
+
+      if(T<total){ raf=requestAnimationFrame(frame); running=true; }
+      else { running=false; replayBtn.classList.add("show"); }
+    }
+
+    function run(){
+      size();
+      buildScene();
+      startTime=0;
+      if(running) cancelAnimationFrame(raf);
+      running=true;
+      raf=requestAnimationFrame(frame);
+    }
+
+    replayBtn.addEventListener("click", run);
+    canvas.addEventListener("click", run);
+    var rt;
+    window.addEventListener("resize", function(){
+      clearTimeout(rt); rt=setTimeout(run,160);
+    });
+
+    // ensure layout sizes are ready before first paint
+    requestAnimationFrame(function(){ requestAnimationFrame(run); });
+  })();
+  </script>
+</body>
+</html>

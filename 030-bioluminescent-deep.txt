@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 030-bioluminescent-deep.html + 030-bioluminescent-deep.txt — Deep-sea bioluminescent particles drifting in darkness. Palette: abyss black/blue, cyan-green glow. Signature: canvas floating glowing motes with pulsing brightness, occasional flashes, slow drift.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+ABYSSAL — Living Light in the Dark
+
+DESIGN DESCRIPTION:
+Far below the photic zone, a black-water canvas is alive with drifting bioluminescence. Dozens of motes — from faint pinpricks to large soft bokeh — pulse with cyan-green light at their own rhythms, each drawn as an additive radial gradient so overlapping glows bloom white-hot where they meet. A slow buoyant drift and gentle sine sway carry them upward and sideways; occasionally a mote flares on its own, and when the water is disturbed the nearby organisms ignite in a brightening cascade. A layered radial "deep" gradient, a serif wordmark, a live depth readout in metres, and a quiet caption frame the scene as an instrument panel lowered into the abyss.
+
+MAJOR VISUAL TECHNIQUES:
+- Full-bleed <canvas> with devicePixelRatio scaling (capped at 2×) and a transform-based resize that keeps the glow crisp on retina and 4K displays.
+- Per-particle additive rendering (globalCompositeOperation:"lighter") with radial gradients from a cyan-green HSLA core to fully transparent, producing true optical bloom.
+- Independent per-mote pulse phase, drift velocity, sway amplitude and hue (150–198°) so the field never looks uniform; larger "bokeh" motes add depth parallax.
+- Transient flash state on each particle (random spontaneous flares + triggered flares) that inflates the glow radius for a realistic organism ignition, then decays.
+- Expanding radial-gradient ripple rings on click/tap to sell the "disturbed water" bioluminescent reaction.
+- requestAnimationFrame loop with delta-time, buoyant wrap-around, a live depth counter eased toward a scroll target, and prefers-reduced-motion support that slows motion.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch / scroll driven, no buttons. Moving the cursor stirs the water: nearby motes are gently pushed away and brighten, as if displaced by a current. Clicking or tapping triggers an expanding flash ring and ignites the organisms within range — a bioluminescent bloom. Scrolling (or trackpad swipe) descends or ascends through the water column, easing a live "Depth" readout in metres. Motes flare spontaneously at random even when untouched, so the abyss is always quietly breathing. prefers-reduced-motion keeps the scene present but slows it to a near-still drift.

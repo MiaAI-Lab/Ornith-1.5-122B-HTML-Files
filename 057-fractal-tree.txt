@@ -1,0 +1,21 @@
+PROMPT:
+World-class creative technologist & designer. Build standalone HTML page as a self-contained .html with ALL CSS in one <style> and ALL JS in one <script> (inline everything). ZERO external dependencies: no CDN, no external fonts (system stacks only), no external images/SVG files, no libraries — build all visuals with CSS, HTML, inline SVG, or <canvas>. Works fully offline by double-clicking (no network requests). Responsive 320px->4K with <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5. WOW BAR: genuinely stunning, premium, Awwwards-caliber, distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Also create a matching .txt with the same base name containing the exact prompt, a short TITLE, a one-paragraph DESIGN DESCRIPTION, a bulleted list of MAJOR VISUAL TECHNIQUES, and the INTENDED INTERACTION MODEL.
+
+Page: 057-fractal-tree — A recursive fractal tree that grows from a seed and gently sways. Palette: spring blossom pink on fresh green, warm soil. Signature: recursive canvas branches with growth (stroke-length) animation, subtle wind sway, falling blossom particles.
+
+TITLE:
+FRUCTUS — A Tree That Remembers How It Grew
+
+DESIGN DESCRIPTION:
+Presented as an editorial "growing garden" plate, the page pairs a matted canvas artwork with refined serif copy on a warm cream ground. From a single seed at the base of a curved soil bank, a recursive tree reaches upward on the canvas: each limb births two smaller limbs, and each of those two more, until the branches thin into the delicate lace of spring. The trunk and limbs are drawn as tapered, highlighted strokes in warm bark that gradually fade to soft blossom pink toward the tips, while a low sun glow and a diagonal sky gradient set a calm spring light. Once grown, the whole canopy breathes in a wind you cannot see — a layered sine drift applied per generation — and petals drift gently to the ground; clicking the canopy shakes loose a burst of blossoms. The composition is deliberately asymmetric, with the tree weighted left and a warm glow balancing the upper right, framed by an inset keyline and a mono type readout of the live generation, branch and petal counts.
+
+MAJOR VISUAL TECHNIQUES:
+- Recursively generated branch data structure (each node spawns two children) rendered as tapered, rounded canvas strokes with a bark-to-pink color ramp by generation.
+- Growth animation via a per-branch stroke-length factor eased over ~4 seconds, with parents growing slightly ahead of children for an organic reach.
+- Per-generation wind sway from layered sine waves plus mouse/click impulse, so the crown flexes more than the trunk.
+- Radial-gradient blossom petals seeded on terminal twigs, each pulsing open/closed, with gravity-driven falling-petal particles (drag, rotation, fade).
+- Layered radial sun glow, curved soil bank with a vertical gradient, and a matted picture frame with inset keyline for an editorial, gallery feel.
+- Live mono HUD (generation / branches / petals) and a blurred pill control cluster for a crafted instrument aesthetic.
+
+INTENDED INTERACTION MODEL:
+Passive to begin with — the tree grows itself from a seed and then sways and sheds petals on its own. The viewer can press "Regrow" to re-run the growth sequence from scratch, "Bloom" to push the canopy into full blossom and release a petal burst, and click anywhere in the canopy to shake loose a shower of blossoms at that point (the hint fades after the first click). Everything responds to window size, and prefers-reduced-motion disables the drifting petals.

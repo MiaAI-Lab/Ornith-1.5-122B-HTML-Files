@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REFRACTION · Prism on the Windowsill</title>
+<style>
+  :root{
+    --room-dark:#14100c;
+    --room-warm:#241a12;
+    --wall:#3a2c1f;
+    --sill:#2a1f16;
+    --window-light:#bcd6e6;
+  }
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none;background:#0a0806}
+  .scene{position:fixed;inset:0;
+    background:
+      radial-gradient(140% 120% at 18% 30%, rgba(60,46,30,.9), rgba(20,16,12,0) 55%),
+      linear-gradient(180deg,#1a130d 0%, #241a12 42%, #150f0a 100%);
+    perspective:1100px;}
+  /* floor + wall corner */
+  .room{position:absolute;inset:0;overflow:hidden}
+  .backwall{position:absolute;left:0;right:0;top:0;bottom:16%;
+    background:linear-gradient(180deg, rgba(58,44,31,.0), rgba(40,30,20,.55));}
+  .floor{position:absolute;left:0;right:0;bottom:0;height:16%;
+    background:linear-gradient(180deg,#241910,#120c07);
+    box-shadow:inset 0 8px 30px rgba(0,0,0,.6)}
+  /* the wall that receives the rainbow (right) */
+  .projwall{position:absolute;right:0;top:6%;width:46%;bottom:20%;
+    background:linear-gradient(120deg, rgba(70,54,38,.55), rgba(46,34,24,.2));
+    box-shadow:inset 0 0 120px rgba(0,0,0,.55);
+    transform:rotateY(-8deg);transform-origin:right center;
+    filter:saturate(1.05)}
+  /* projected rainbow lives on canvas over the wall */
+  #rainbow{position:absolute;right:2%;top:8%;width:44%;height:70%;
+    pointer-events:none;mix-blend-mode:screen}
+
+  /* WINDOW (left) */
+  .window{position:absolute;left:clamp(2vw,6vw,7vw);top:clamp(6vh,9vh,11vh);
+    width:clamp(120px,20vw,320px);height:clamp(180px,34vh,520px);
+    background:linear-gradient(160deg,#cfe1ec,#9fbfda 45%,#6f93ad);
+    border:10px solid #241a10;
+    box-shadow:0 0 0 4px rgba(0,0,0,.4), 0 24px 60px rgba(0,0,0,.6),
+      inset 0 0 40px rgba(255,255,255,.25);
+    padding:0;z-index:3}
+  .window::before,.window::after{content:"";position:absolute;background:#20170d}
+  .window::before{left:50%;top:0;bottom:0;width:7px;transform:translateX(-50%)}
+  .window::after{top:50%;left:0;right:0;height:7px;transform:translateY(-50%)}
+  .skyglow{position:absolute;inset:0;
+    background:radial-gradient(80% 60% at 30% 20%, rgba(255,255,255,.55), transparent 60%);
+    mix-blend-mode:screen;pointer-events:none}
+  /* window light wash into room */
+  .lightwash{position:absolute;left:-4%;top:4%;width:52%;height:70%;
+    background:linear-gradient(105deg, rgba(190,216,232,.16), rgba(190,216,232,0) 60%);
+    mix-blend-mode:screen;filter:blur(6px);z-index:2;pointer-events:none;
+    animation:wash 9s ease-in-out infinite}
+  @keyframes wash{0%,100%{opacity:.75}50%{opacity:1}}
+
+  /* WINDOWSILL */
+  .sill{position:absolute;left:clamp(1vw,4vw,4vw);top:calc(clamp(6vh,9vh,11vh) + clamp(180px,34vh,520px) - 6px);
+    width:clamp(170px,30vw,460px);height:26px;z-index:4;
+    background:linear-gradient(180deg,#3a2a1b,#1c140c);
+    border-radius:3px;box-shadow:0 12px 26px rgba(0,0,0,.6), inset 0 3px 6px rgba(255,220,170,.12)}
+
+  /* PRISM */
+  .prism-wrap{position:absolute;z-index:5;left:clamp(150px,26vw,380px);
+    top:calc(clamp(6vh,9vh,11vh) + clamp(180px,34vh,520px) - 40px);
+    width:78px;height:84px;animation:prismFloat 7s ease-in-out infinite}
+  @keyframes prismFloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-5px) rotate(-1deg)}}
+  .prism{width:100%;height:100%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.6))}
+
+  /* animated beam from window to prism, then to wall */
+  .beam{position:absolute;z-index:4;pointer-events:none;mix-blend-mode:screen}
+  .beam-in{left:clamp(12vw,22vw,30vw);top:clamp(14vh,20vh,24vh);width:46%;height:5px;
+    transform-origin:left center;transform:rotate(9deg);
+    background:linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.55) 55%, rgba(255,255,255,.85));
+    filter:blur(1.5px);animation:beamPulse 5s ease-in-out infinite}
+  @keyframes beamPulse{0%,100%{opacity:.65}50%{opacity:1}}
+  .beam-out{right:0;top:calc(clamp(6vh,9vh,11vh) + 30%);width:52%;height:9px;
+    transform-origin:left center;transform:rotate(15deg);
+    background:linear-gradient(90deg, rgba(255,255,255,.5), rgba(255,255,255,0));
+    filter:blur(3px);opacity:.55}
+
+  /* dust motes in the beam */
+  #dust{position:absolute;inset:0;z-index:4;pointer-events:none;mix-blend-mode:screen}
+
+  /* vignette + grain */
+  .vignette{position:absolute;inset:0;z-index:6;pointer-events:none;
+    background:radial-gradient(120% 100% at 40% 40%, transparent 45%, rgba(5,3,2,.72) 100%)}
+
+  /* type */
+  .wordmark{position:absolute;left:clamp(22px,5vw,60px);bottom:clamp(22px,5vh,50px);z-index:7;pointer-events:none;max-width:min(560px,82vw)}
+  .wordmark .k{font-size:clamp(.6rem,1.4vw,.76rem);letter-spacing:.4em;text-transform:uppercase;color:#c9a878}
+  .wordmark h1{margin:.32em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.7rem,5vw,3.2rem);line-height:.98;letter-spacing:.01em;color:#f2e6d4;
+    text-shadow:0 2px 20px rgba(0,0,0,.6)}
+  .wordmark h1 em{font-style:italic;color:#f6c98a}
+  .cap{position:absolute;right:clamp(20px,4vw,50px);bottom:clamp(20px,4vh,44px);z-index:7;
+    max-width:min(380px,40vw);text-align:right;pointer-events:none}
+  .cap p{margin:0;color:#b99a78;font-size:clamp(.7rem,1.4vw,.86rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 8px rgba(0,0,0,.7)}
+  @media (prefers-reduced-motion: reduce){
+    .prism-wrap,.lightwash,.beam-in{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="room">
+    <div class="backwall"></div>
+    <div class="projwall"></div>
+    <div class="floor"></div>
+  </div>
+
+  <div class="lightwash"></div>
+
+  <div class="window" aria-label="A bright window with cool daylight">
+    <div class="skyglow"></div>
+  </div>
+
+  <div class="beam beam-in"></div>
+  <div class="beam beam-out"></div>
+
+  <div class="sill"></div>
+  <div class="prism-wrap">
+    <svg class="prism" viewBox="0 0 78 84" aria-hidden="true">
+      <defs>
+        <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#eaf6ff" stop-opacity=".95"/>
+          <stop offset=".45" stop-color="#bfe0f2" stop-opacity=".55"/>
+          <stop offset="1" stop-color="#8fb8d4" stop-opacity=".35"/>
+        </linearGradient>
+        <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffffff" stop-opacity=".8"/>
+          <stop offset="1" stop-color="#9fc6e0" stop-opacity=".25"/>
+        </linearGradient>
+      </defs>
+      <polygon points="39,4 74,74 4,74" fill="url(#glass)" stroke="rgba(255,255,255,.75)" stroke-width="1.4"/>
+      <polygon points="39,4 74,74 39,74" fill="url(#face)" opacity=".5"/>
+      <polygon points="39,4 4,74 39,74" fill="#ffffff" opacity=".12"/>
+      <line x1="39" y1="4" x2="39" y2="74" stroke="rgba(255,255,255,.5)" stroke-width="1"/>
+    </svg>
+  </div>
+
+  <canvas id="dust" aria-hidden="true"></canvas>
+  <canvas id="rainbow" aria-label="A soft rainbow spectrum projected onto the wall"></canvas>
+
+  <div class="vignette"></div>
+
+  <div class="wordmark">
+    <div class="k">Refraction · No. 069</div>
+    <h1>White light,<br>split into its <em>quiet spectrum</em>.</h1>
+  </div>
+  <div class="cap">
+    <p>Cool daylight crosses a still room, enters the glass and bends — each wavelength turning a little more than the last, until the wall wears the colours it was made of all along.</p>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- projected rainbow on the wall ---------- */
+  var rb = document.getElementById("rainbow");
+  var rctx = rb.getContext("2d");
+  var rw=0, rh=0, rdpr=1;
+
+  function sizeRB(){
+    rdpr = Math.min(window.devicePixelRatio||1, 2);
+    rw = rb.clientWidth; rh = rb.clientHeight;
+    rb.width = Math.floor(rw*rdpr); rb.height = Math.floor(rh*rdpr);
+    rctx.setTransform(rdpr,0,0,rdpr,0,0);
+  }
+
+  /* spectrum bands, hue-rotated slowly over time */
+  function drawRainbow(t){
+    rctx.clearRect(0,0,rw,rh);
+    rctx.globalCompositeOperation="lighter";
+    var bands = 7;
+    var baseHue = (t*14) % 360;      // slow colour rotation
+    var spread = rh*0.62;
+    var cx = rw*0.12, cy = rh*0.2;
+    for(var i=0;i<bands;i++){
+      var f = i/(bands-1);
+      var hue = (baseHue + f*70) % 360;   // red -> violet sweep
+      var y = cy + f*spread;
+      var rad = spread*0.9 + f*40;
+      var g = rctx.createRadialGradient(cx,y,0,cx,y,rad);
+      var a = 0.22*(1 - Math.abs(f-0.5)*0.7);
+      g.addColorStop(0, "hsla("+hue+",90%,60%,"+a.toFixed(3)+")");
+      g.addColorStop(0.5, "hsla("+hue+",90%,55%,"+(a*0.4).toFixed(3)+")");
+      g.addColorStop(1, "hsla("+hue+",90%,50%,0)");
+      rctx.fillStyle=g;
+      // soft vertical smear to look "cast on plaster"
+      rctx.fillRect(0, y-rad, rw, rad*2);
+    }
+    // soft bloom core
+    var bloom = rctx.createRadialGradient(cx,cy+spread*0.5,0,cx,cy+spread*0.5,spread*1.1);
+    bloom.addColorStop(0,"rgba(255,240,220,.14)");
+    bloom.addColorStop(1,"rgba(255,240,220,0)");
+    rctx.fillStyle=bloom;
+    rctx.fillRect(0,0,rw,rh);
+    rctx.globalCompositeOperation="source-over";
+  }
+
+  /* ---------- dust motes floating in the beam ---------- */
+  var dc = document.getElementById("dust");
+  var dctx = dc.getContext("2d");
+  var dw=0, dh=0, ddpr=1;
+  var motes=[];
+
+  function sizeDC(){
+    ddpr = Math.min(window.devicePixelRatio||1,2);
+    dw = dc.clientWidth; dh = dc.clientHeight;
+    dc.width=Math.floor(dw*ddpr); dc.height=Math.floor(dh*ddpr);
+    dctx.setTransform(ddpr,0,0,ddpr,0,0);
+  }
+
+  function makeMote(){
+    return {x:Math.random(), y:Math.random(), r:Math.random()*1.6+0.4,
+      vx:(Math.random()-0.3)*0.006, vy:(Math.random()-0.5)*0.004,
+      ph:Math.random()*6.28, sp:Math.random()*0.8+0.3, a:Math.random()*0.5+0.2};
+  }
+
+  function drawDust(time){
+    dctx.clearRect(0,0,dw,dh);
+    dctx.globalCompositeOperation="lighter";
+    for(var i=0;i<motes.length;i++){
+      var m=motes[i];
+      m.x += m.vx + Math.sin(time*m.sp+m.ph)*0.0006;
+      m.y += m.vy + Math.cos(time*m.sp+m.ph)*0.0005;
+      if(m.x<-0.05)m.x=1.05; if(m.x>1.05)m.x=-0.05;
+      if(m.y<-0.05)m.y=1.05; if(m.y>1.05)m.y=-0.05;
+      // fade motes toward edges of the diagonal beam corridor
+      var beam = Math.max(0, 1 - Math.abs((m.y-0.35) - (m.x-0.15)*0.6)*2.2);
+      var pulse = 0.5+0.5*Math.sin(time*m.sp+m.ph);
+      var alpha = m.a*pulse*beam;
+      if(alpha<0.02) continue;
+      var px=m.x*dw, py=m.y*dh, r=m.r*(1+pulse*0.4);
+      var g=dctx.createRadialGradient(px,py,0,px,py,r*3);
+      g.addColorStop(0,"rgba(255,244,220,"+alpha.toFixed(3)+")");
+      g.addColorStop(1,"rgba(255,244,220,0)");
+      dctx.fillStyle=g;
+      dctx.beginPath(); dctx.arc(px,py,r*3,0,6.2832); dctx.fill();
+    }
+    dctx.globalCompositeOperation="source-over";
+  }
+
+  function resize(){ sizeRB(); sizeDC();
+    for(var i=motes.length;i<Math.min(140,Math.round(dw*dh/9000));i++) motes.push(makeMote());
+  }
+  window.addEventListener("resize", resize);
+
+  // init motes after first size
+  sizeDC(); sizeRB();
+  var target = Math.min(160, Math.round(dw*dh/7000));
+  for(var i=0;i<target;i++) motes.push(makeMote());
+
+  var time=0, last=0;
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.2;
+    time+=dt;
+    drawRainbow(time);
+    drawDust(time);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

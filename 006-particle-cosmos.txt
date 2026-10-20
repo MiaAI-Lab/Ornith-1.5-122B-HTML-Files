@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page: an interactive canvas galaxy where particles orbit with mouse gravity. Palette: deep space black, star white, nebula violet/cyan. Signature: requestAnimationFrame attraction to the cursor, and a translucent clear each frame for light trails. One self-contained .html file, all CSS in a single <style> block and all JS in a single <script> block, zero external dependencies (no CDN, fonts, images, or libraries), responsive 320px→4K, valid HTML5, and a genuinely premium Awwwards-caliber look with real motion.
+
+TITLE:
+NEXUS — Interactive Galaxy Field
+
+DESIGN DESCRIPTION:
+NEXUS fills the entire viewport with a living spiral galaxy rendered on a single canvas. Hundreds of star "bodies" are seeded into three logarithmic spiral arms around a soft central core, each given a near-circular tangential velocity so the whole system rotates like a real disk galaxy. A faint central gravity keeps the disk bound, while the cursor acts as a movable gravity well — an inverse-square, softened attraction that pulls nearby stars inward and warps the arms as it passes. Every frame the canvas is wiped with a low-alpha dark fill instead of a full clear, so fast-moving stars leave luminous light trails that bloom and fade. Stars are drawn as additive radial-gradient glows (violet, cyan, hot-pink and white) over a painted nebula backdrop of violet/cyan/pink radial clouds, with a field of twinkling background stars and an inset vignette for depth. A minimal glassy HUD shows live body count, total mass and the current gravity state, and a click fires an expanding attractor pulse that shoves stars outward in a ring.
+
+MAJOR VISUAL TECHNIQUES:
+- requestAnimationFrame physics loop with inverse-square (softened) gravity attraction toward the cursor as a movable gravity well.
+- Translucent per-frame clear (low-alpha fillRect) to produce additive light trails behind moving particles.
+- Spiral-arm disk seeding with tangential orbital velocities for a realistic rotating galaxy.
+- Radial-gradient glow sprites drawn with "lighter" compositing for additive bloom; per-particle color palette.
+- Expanding click-driven attractor pulses that push particles along a shock ring.
+- Painted multi-radial nebula backdrop + twinkling background starfield + CSS vignette for layered depth.
+- Full pointer and touch support, DPR-aware canvas scaling (capped at 2×), and resize re-pivoting.
+
+INTENDED INTERACTION MODEL:
+Direct manipulation of gravity. Moving the cursor/finger bends spacetime and draws stars toward it (a "well"); holding the button deepens the well for a stronger pull; clicking fires an outward attractor pulse; releasing lets the galaxy re-settle into its rotation. The HUD reflects the current state (WELL / PULSE / —). It is a sandbox toy — no fixed script, just continuous reactive motion the user steers with their hand.

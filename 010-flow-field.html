@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Flow Field — Ink on Cream</title>
+<style>
+  :root{
+    --paper:#efe8da;
+    --paper-2:#e4dccB;
+    --ink:#1b1913;
+    --ink-soft:#3a352b;
+    --sans:"Segoe UI", system-ui, -apple-system, Helvetica, sans-serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:
+      radial-gradient(120% 120% at 50% 42%, var(--paper) 0%, var(--paper-2) 70%, #d8cfbc 100%);
+    overflow:hidden;
+    font-family:var(--sans);
+    color:var(--ink-soft);
+    cursor:crosshair;
+  }
+  canvas{position:fixed; inset:0; display:block}
+
+  /* faint paper grain */
+  body::before{
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:5;
+    opacity:.045; mix-blend-mode:multiply;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  }
+
+  .ui{
+    position:fixed; z-index:10; left:clamp(18px,4vw,44px); bottom:clamp(18px,4vw,40px);
+    display:flex; flex-direction:column; gap:12px; max-width:min(52vw,360px);
+    mix-blend-mode:multiply;
+  }
+  .ui .mark{font-family:Georgia,serif;font-style:italic;font-size:clamp(15px,2vw,20px);
+    letter-spacing:.02em;color:var(--ink)}
+  .ui .meta{font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--ink-soft);opacity:.75}
+  .ui .hint{font-size:11px;letter-spacing:.14em;color:var(--ink-soft);opacity:.6;
+    line-height:1.7}
+  .ui .controls{display:flex;gap:10px;flex-wrap:wrap}
+  .ui button{
+    font-family:var(--sans);font-size:10px;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--ink);background:transparent;border:1px solid rgba(27,25,19,.4);
+    padding:9px 16px;border-radius:2px;cursor:pointer;transition:all .3s;
+  }
+  .ui button:hover{background:var(--ink);color:var(--paper)}
+  .ui .seed{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+
+  .title{
+    position:fixed; z-index:10; top:clamp(18px,4vw,44px); left:clamp(18px,4vw,44px);
+    mix-blend-mode:multiply;
+  }
+  .title h1{font-family:Georgia,serif;font-weight:400;font-size:clamp(28px,6vw,72px);
+    line-height:.95;letter-spacing:-.01em;color:var(--ink)}
+  .title p{margin-top:12px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--ink-soft);opacity:.7}
+
+  @media(max-width:520px){ .ui .hint{display:none} }
+</style>
+</head>
+<body>
+  <canvas id="field"></canvas>
+
+  <div class="title">
+    <h1>Flow&nbsp;Field</h1>
+    <p>Seeded noise · thousands of particles · ink on cream</p>
+  </div>
+
+  <div class="ui">
+    <div class="mark">perlin, drawn by hand</div>
+    <div class="meta">Seed <span class="seed" id="seedLabel">0000</span> · <span id="countLabel">0</span> particles</div>
+    <div class="controls">
+      <button id="reseed">New Field</button>
+      <button id="pause">Pause</button>
+    </div>
+    <div class="hint">Move the cursor to part the ink.<br>Click anywhere to seed a new field.</div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+
+    /* ---------- seedable PRNG (mulberry32) ---------- */
+    function mulberry32(a){
+      return function(){
+        a |= 0; a = a + 0x6D2B79F5 | 0;
+        var t = Math.imul(a ^ a >>> 15, 1 | a);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    /* ---------- seeded Perlin noise (2D) ---------- */
+    function Perlin(seed){
+      var rand = mulberry32(seed);
+      var p = new Uint8Array(512);
+      var perm = [];
+      for(var i=0;i<256;i++) perm.push(i);
+      // Fisher-Yates shuffle with the seeded RNG
+      for(var k=255;k>0;k--){ var j=Math.floor(rand()*(k+1)); var t=perm[k];perm[k]=perm[j];perm[j]=t; }
+      for(var n=0;n<512;n++) p[n]=perm[n & 255];
+
+      function fade(x){ return x*x*x*(x*(x*6-15)+10); }
+      function lerp(a,b,t){ return a+(b-a)*t; }
+      function grad(h,x,y){
+        var v = (h & 1) ? -x : x;
+        var w = (h & 2) ? -y : y;
+        return v + w;
+      }
+      this.noise2 = function(x,y){
+        var xi = Math.floor(x)&255, yi = Math.floor(y)&255;
+        var xf = x - Math.floor(x), yf = y - Math.floor(y);
+        var u = fade(xf), v = fade(yf);
+        var aa = p[p[xi]+yi],   ab = p[p[xi]+yi+1];
+        var ba = p[p[xi+1]+yi], bb = p[p[xi+1]+yi+1];
+        var g1 = grad(aa, xf,   yf);
+        var g2 = grad(ba, xf-1, yf);
+        var g3 = grad(ab, xf,   yf-1);
+        var g4 = grad(bb, xf-1, yf-1);
+        return lerp(lerp(g1,g2,u), lerp(g3,g4,u), v); // ~[-1,1]
+      };
+    }
+
+    /* ---------- canvas setup ---------- */
+    var canvas = document.getElementById('field');
+    var ctx = canvas.getContext('2d', { alpha:false });
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var W, H, particles = [], noise;
+    var mouse = { x:-9999, y:-9999, px:-9999, py:-9999, active:false, vx:0, vy:0 };
+    var running = true;
+    var seed = 12345;
+    var time = 0;
+
+    var cfg = {
+      scale: 0.0016,        // spatial frequency of the field
+      octaves: 2,
+      step: 1.15,           // particle speed
+      fade: 0.052,          // trail persistence (higher = shorter trails)
+      mouseRadius: 150,
+      mouseStrength: 0.9
+    };
+
+    function resize(){
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      paintBackground();
+    }
+
+    function paintBackground(){
+      ctx.fillStyle = '#efe8da';
+      // match the CSS radial paper so a full clear keeps the vignette
+      var g = ctx.createRadialGradient(W*0.5, H*0.42, 0, W*0.5, H*0.42, Math.max(W,H)*0.75);
+      g.addColorStop(0, '#f2ecdf');
+      g.addColorStop(0.7, '#e7dfd0');
+      g.addColorStop(1, '#d9d0c0');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+    }
+
+    /* ---------- particles ---------- */
+    function countFor(){
+      var area = W * H;
+      return Math.max(900, Math.min(6500, Math.floor(area / 150)));
+    }
+
+    function seedParticles(){
+      var n = countFor();
+      particles = new Array(n);
+      for(var i=0;i<n;i++){
+        var x = Math.random()*W, y = Math.random()*H;
+        particles[i] = { x:x, y:y, px:x, py:y, life:Math.random()*300+120 };
+      }
+      document.getElementById('countLabel').textContent = n.toLocaleString();
+    }
+
+    function respawn(p){
+      p.x = Math.random()*W; p.y = Math.random()*H;
+      p.px = p.x; p.py = p.y;
+      p.life = Math.random()*300+120;
+    }
+
+    function fieldAngle(x,y){
+      var angle = 0, amp = 1, freq = 1, ampSum = 0;
+      for(var o=0;o<cfg.octaves;o++){
+        angle += noise.noise2(x*cfg.scale*freq + time*0.02,
+                              y*cfg.scale*freq + time*0.015) * amp;
+        ampSum += amp;
+        amp *= 0.5; freq *= 2;
+      }
+      angle /= ampSum;
+      return angle * 2.6 * Math.PI; // radians, curling
+    }
+
+    /* ---------- main loop ---------- */
+    function frame(){
+      if(running){
+        // trail fade: paint a translucent paper layer over the previous frame
+        ctx.globalAlpha = cfg.fade;
+        ctx.fillStyle = '#efe8da';
+        ctx.fillRect(0,0,W,H);
+        ctx.globalAlpha = 1;
+
+        time += 0.006;
+
+        // mouse velocity for a gentle swirl
+        mouse.vx = mouse.x - mouse.px; mouse.vy = mouse.y - mouse.py;
+        mouse.px = mouse.x; mouse.py = mouse.y;
+
+        var mr2 = cfg.mouseRadius * cfg.mouseRadius;
+        ctx.lineCap = 'round';
+
+        for(var i=0;i<particles.length;i++){
+          var p = particles[i];
+          var a = fieldAngle(p.x, p.y);
+
+          var nx = p.x + Math.cos(a) * cfg.step;
+          var ny = p.y + Math.sin(a) * cfg.step;
+
+          // cursor influence: part the ink with a swirl + repel
+          if(mouse.active){
+            var dx = p.x - mouse.x, dy = p.y - mouse.y;
+            var d2 = dx*dx + dy*dy;
+            if(d2 < mr2 && d2 > 1){
+              var d = Math.sqrt(d2);
+              var f = (1 - d / cfg.mouseRadius);
+              // tangential swirl from cursor motion + radial push
+              var ang = Math.atan2(dy, dx) + Math.PI*0.5;
+              var push = f * cfg.mouseStrength;
+              nx += Math.cos(ang) * push * 2.2 + (dx/d) * push * 1.4;
+              ny += Math.sin(ang) * push * 2.2 + (dy/d) * push * 1.4;
+            }
+          }
+
+          // draw the stroke from previous to new position
+          var depth = ((p.y / H) * 0.5 + 0.25); // subtle vertical ink variation
+          ctx.strokeStyle = 'rgba(27,25,19,' + (0.05 + depth*0.06) + ')';
+          ctx.lineWidth = 0.7 + depth*0.7;
+          ctx.beginPath();
+          ctx.moveTo(p.px, p.py);
+          ctx.lineTo(nx, ny);
+          ctx.stroke();
+
+          p.px = p.x; p.py = p.y;
+          p.x = nx; p.y = ny;
+          p.life--;
+
+          if(p.life <= 0 || p.x < -8 || p.x > W+8 || p.y < -8 || p.y > H+8){
+            respawn(p);
+          }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+
+    /* ---------- interactions ---------- */
+    window.addEventListener('mousemove', function(e){
+      mouse.x = e.clientX; mouse.y = e.clientY; mouse.active = true;
+    });
+    window.addEventListener('mouseout', function(){ mouse.active = false; });
+    window.addEventListener('touchmove', function(e){
+      if(e.touches[0]){ mouse.x=e.touches[0].clientX; mouse.y=e.touches[0].clientY; mouse.active=true; }
+    }, {passive:true});
+
+    function reseed(s){
+      seed = (s === undefined) ? Math.floor(Math.random()*9999) : s;
+      noise = new Perlin(seed);
+      time = 0;
+      paintBackground();
+      seedParticles();
+      var lbl = document.getElementById('seedLabel');
+      lbl.textContent = ('0000' + seed).slice(-4);
+    }
+
+    document.getElementById('reseed').addEventListener('click', function(){ reseed(); });
+    document.getElementById('pause').addEventListener('click', function(){
+      running = !running;
+      this.textContent = running ? 'Pause' : 'Play';
+    });
+    canvas.addEventListener('click', function(){ reseed(); });
+
+    var rTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(rTimer);
+      rTimer = setTimeout(function(){ resize(); seedParticles(); }, 150);
+    });
+
+    /* ---------- boot ---------- */
+    resize();
+    reseed(20240);
+    frame();
+  })();
+  </script>
+</body>
+</html>

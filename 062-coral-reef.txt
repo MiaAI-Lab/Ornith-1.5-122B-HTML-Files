@@ -1,0 +1,20 @@
+TITLE
+REEF No. 062 — "Coral Garden" (A living reef with a boid school of fusiliers, sunshafts and rising bubbles)
+
+RECREATION PROMPT
+Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL. Files to create: 062-coral-reef.html + 062-coral-reef.txt — A vibrant coral reef ecosystem with schooling fish and bubbles. Palette: tropical teal, coral pink/orange, sunlit cyan. Signature: canvas fish with simple schooling/boid motion, drifting bubbles, swaying coral fronds, god-ray light shafts.
+
+DESIGN DESCRIPTION
+The viewer looks down into a tropical reef where a gradient of sunlit cyan fades into a deep teal and near-black blue. God rays — soft additive light shafts on a separate screen-blended layer — drift and pulse from the surface, while a shimmering caustic line ripples along the top. On the seabed, branching corals in coral-pink, amber and warm orange sway from their bases with a per-plant sine phase, their polyp tips catching the light, alongside rounded brain and plate corals. Through the mid-water a school of fusiliers moves as a living current: each fish runs a lightweight boid algorithm (separation, alignment, cohesion) so the school turns, tightens and spreads convincingly, its little body drawn with a wagging tail, dorsal fin and eye. Rising bubbles wobble upward, drifting plankton specks add depth, and the whole scene is framed by an editorial overlay with an italic serif title, tabular depth/temperature readouts and a hairline vignette.
+
+MAJOR VISUAL TECHNIQUES
+- Classic Reynolds boids (separation / alignment / cohesion) over an O(n²) neighbour scan, with speed restored to a swaying target each frame and screen-edge steering.
+- Fish drawn procedurally per-frame: gradient body, sinusoidal wagging tail, dorsal fin, pupil + catchlight, oriented by velocity angle.
+- God rays on a dedicated canvas with mix-blend-mode: screen — additive trapezoid beams with gradient falloff and slow phase drift.
+- Swaying branching coral: multiple arms each bent by a per-plant sine, drawn as stroked paths with polyp dots and a base bulb.
+- Layered water gradient, animated caustic surface line, drifting plankton points and wobbling bubbles with specular highlights.
+- Two-canvas compositing (rays under scene) and a CSS vignette + editorial overlay (italic serif title, tabular-nums legend).
+- Click-to-scatter "scare" impulse that pushes the whole school away from the pointer, decaying over time.
+
+INTENDED INTERACTION MODEL
+Passive: the reef breathes on its own — sunshafts drift, coral sways, bubbles rise and the school migrates and turns. Move the pointer to stir the current: nearby fish are pushed away and the school parts around the cursor, with a soft ripple shown at the pointer. Click (or tap) to trigger a scare pulse that scatters the whole school, which then re-coheres into formation. Touch input and reduced-motion (slowed, still-animated) are supported.

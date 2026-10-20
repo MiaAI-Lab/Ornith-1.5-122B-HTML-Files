@@ -1,0 +1,22 @@
+EXACT PROMPT:
+Build a standalone, fully offline HTML5 page. One self-contained .html file: all CSS in a single <style> block, all JS in a single <script> block, inline everything. Zero external dependencies (no CDN, no external fonts — system stacks only, no external images/SVG files/libraries). Must work by double-clicking with no network requests. Responsive 320px to 4K. Valid HTML5.
+
+Scene: A Byzantine/Greek mosaic tile pattern with an animated reveal. Palette: gold, lapis, terracotta, jade. Signature effects: a CSS grid of tiles with a staggered color animation (each stone swings into place), visible grout lines, and a shimmer sweep that walks across the field catching the gold.
+
+TITLE:
+Tesserae — A Byzantine Mosaic Reveal
+
+DESIGN DESCRIPTION:
+Three hundred hand-cut stones assemble on a CSS grid inside a gilded, shadowed frame against a warm dark radial backdrop. Each tile (tessera) is drawn with inset box-shadows to give it a bevelled, hand-cut look and sits on deep grout. The palette — gold, lapis, jade and terracotta — is arranged as concentric rings around a radiant gold centre with a gold border, so the assembled image reads as a classic mosaic medallion. On load a ripple of reveal animations fires outward from the centre: every stone scales and rotates in from grout-grey into its final colour on its own staggered delay. After the reveal, each tile gently pulses in brightness and flashes a diagonal highlight, while a broad band of light sweeps across the whole field on a loop, catching the gold. Fine film grain overlays the surface for texture.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS grid of square tiles (aspect-ratio:1/1) with a grout background and gap acting as mortar lines.
+- Per-tile bevel via layered inset box-shadows (light top-left, dark bottom-right) for a hand-cut stone feel.
+- Staggered reveal animation driven by CSS custom properties (--rd, --rdly) computed from radial distance — a centre-out ripple.
+- Continuous brightness "twinkle" + diagonal shine (::after) animation per tile, gold-tuned.
+- A looping linear-gradient shimmer band that sweeps across the field (mix-blend-mode:screen).
+- Distance-based colour mapping (rings) + per-tile shade jitter for organic variation.
+- Film-grain overlay (radial-gradient texture) and Georgia serif masthead; responsive recompute of grid density on resize.
+
+INTENDED INTERACTION MODEL:
+Passive reveal on load, then a slow auto re-reveal every 9 seconds from a random centre. Tapping/clicking any stone relights the entire mosaic — the reveal ripple re-fires outward from the tapped stone. Hover brightens an individual stone. prefers-reduced-motion disables the reveal/twinkle animations and shows the finished mosaic statically. Grid density recomputes (debounced) on resize so it stays crisp from 320px to 4K.

@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Golden Hour — Autumn Forest</title>
+<style>
+  :root{
+    --sky-top:#3a160f;
+    --sky-mid:#8a3015;
+    --sky-low:#d96b1f;
+    --haze:#f4b65c;
+    --sun:#ffe7a6;
+    --trunk:#1c0d06;
+    --cream:#fbe9c8;
+    --cream-dim:rgba(251,233,200,.6);
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --serif:Georgia,"Times New Roman",serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;overflow:hidden}
+  body{
+    background:
+      linear-gradient(180deg,
+        #3a160f 0%,
+        #5e2410 26%,
+        #8a3015 46%,
+        #c1531a 64%,
+        #e58a2b 80%,
+        #f6c15f 100%);
+    font-family:var(--serif);
+    color:var(--cream);
+    cursor:none;
+  }
+  canvas#scene{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* warm atmospheric haze wash */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:
+      radial-gradient(120% 80% at 70% 66%, rgba(255,220,140,.28) 0%, rgba(255,190,90,.10) 34%, transparent 66%),
+      linear-gradient(180deg, rgba(60,20,10,.18) 0%, transparent 40%, rgba(255,180,80,.10) 100%);
+    mix-blend-mode:screen;
+  }
+  /* grain + vignette */
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:3;
+    box-shadow:inset 0 0 240px 40px rgba(30,8,2,.6);
+    background:radial-gradient(125% 100% at 68% 60%, transparent 52%, rgba(40,14,4,.35) 100%);
+  }
+
+  .frame{position:fixed;inset:0;z-index:5;pointer-events:none}
+
+  .title{
+    position:absolute;left:clamp(22px,4.5vw,60px);bottom:clamp(24px,4.5vw,56px);
+    text-shadow:0 2px 24px rgba(40,12,2,.6);
+  }
+  .title .kicker{
+    font-family:var(--sans);font-size:10.5px;letter-spacing:.44em;
+    text-transform:uppercase;color:var(--cream-dim);
+    display:flex;align-items:center;gap:12px;margin-bottom:12px;
+  }
+  .title .kicker::before{content:"";width:34px;height:1px;background:rgba(251,233,200,.4)}
+  .title h1{
+    font-size:clamp(34px,7vw,96px);font-weight:400;line-height:.94;letter-spacing:.01em;
+    font-style:italic;
+    background:linear-gradient(180deg,#fff4d8 0%, #ffd98a 60%, #f0a94a 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 3px 26px rgba(60,20,4,.5));
+  }
+  .title p{
+    margin-top:14px;font-family:var(--sans);font-size:11px;letter-spacing:.22em;
+    color:var(--cream-dim);text-transform:uppercase;max-width:440px;line-height:1.9;
+  }
+
+  .meta{
+    position:absolute;right:clamp(22px,4.5vw,60px);top:clamp(22px,4.5vw,54px);
+    text-align:right;font-family:var(--sans);font-size:10.5px;letter-spacing:.26em;
+    text-transform:uppercase;color:var(--cream-dim);line-height:2.1;
+    text-shadow:0 1px 12px rgba(40,12,2,.5);
+  }
+  .meta .val{color:var(--cream)}
+
+  .gust{
+    position:absolute;right:clamp(22px,4.5vw,60px);bottom:clamp(24px,4.5vw,56px);
+    text-align:right;font-family:var(--sans);font-size:10.5px;letter-spacing:.18em;
+    color:var(--cream-dim);text-transform:uppercase;line-height:1.9;
+    text-shadow:0 1px 12px rgba(40,12,2,.5);
+  }
+  .gust b{color:var(--sun);font-weight:400;font-style:italic}
+
+  .cursor{
+    position:fixed;width:10px;height:10px;border-radius:50%;
+    border:1px solid rgba(255,240,200,.7);pointer-events:none;z-index:9;
+    transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(255,200,110,.5);
+    mix-blend-mode:screen;transition:opacity .4s;
+  }
+  @media(hover:none){ .cursor{display:none} }
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="cursor" id="cursor"></div>
+
+  <div class="frame">
+    <div class="meta">
+      <div>LOW SUN · 16:52</div>
+      <div>WIND <span class="val" id="windVal">calm</span></div>
+      <div>LEAVES <span class="val" id="leafVal">—</span></div>
+    </div>
+
+    <div class="title">
+      <div class="kicker">Chapter One · The Turn of the Season</div>
+      <h1>The Golden<br>Hour</h1>
+      <p>Amber, crimson and gold drift through a low autumn sun as the forest settles into winter.</p>
+    </div>
+
+    <div class="gust">
+      Move to bend the wind<br>
+      <b>Click</b> — send a gust through the canopy
+    </div>
+  </div>
+  <script>
+  (function(){
+    "use strict";
+
+    var canvas = document.getElementById('scene');
+    var ctx = canvas.getContext('2d', { alpha:true });
+    var cursor = document.getElementById('cursor');
+    var windVal = document.getElementById('windVal');
+    var leafVal = document.getElementById('leafVal');
+    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var W, H;
+    var SUN = { fx:0.70, fy:0.60, r:0 };
+    var t = 0;
+    var reduced = window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    var mouse = { x:0.5, y:0.5, active:false };
+
+    var LEAF_COLORS = [
+      'hsl(6,78%,44%)','hsl(16,82%,48%)','hsl(28,86%,52%)',
+      'hsl(40,90%,55%)','hsl(48,92%,58%)','hsl(352,66%,40%)'
+    ];
+
+    var farBumps = [], midBumps = [];
+    var farLeaves = [], nearLeaves = [];
+    var birds = [];
+    var trees = [];
+
+    function resize(){
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width  = Math.floor(W * DPR);
+      canvas.height = Math.floor(H * DPR);
+      canvas.style.width  = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      SUN.r = Math.min(W, H) * 0.11;
+      buildForest();
+      buildTrees();
+      buildLeaves();
+      buildBirds();
+      leafVal.textContent = (farLeaves.length + nearLeaves.length);
+    }
+
+    /* ---------- forest ridges (canopy blobs + base fill) ---------- */
+    function buildForest(){
+      farBumps = []; midBumps = [];
+      var i, x, r;
+      for(i = 0; i < 30; i++){
+        x = (i / 29) * (W + 80) - 40;
+        r = 16 + Math.random() * 30;
+        farBumps.push({ x:x, r:r, by:H * (0.71 + Math.random()*0.02) });
+      }
+      for(i = 0; i < 20; i++){
+        x = (i / 19) * (W + 140) - 70;
+        r = 26 + Math.random() * 52;
+        midBumps.push({ x:x, r:r, by:H * (0.77 + Math.random()*0.02) });
+      }
+    }
+    function drawRidge(bumps, baseY, fill, haze, alpha){
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = fill;
+      // base fill to bottom
+      ctx.fillRect(0, baseY - 4, W, H - baseY + 40);
+      // canopy bumps
+      for(var i = 0; i < bumps.length; i++){
+        var b = bumps[i];
+        ctx.beginPath();
+        ctx.arc(b.x, b.by, b.r, Math.PI, 0, false);
+        ctx.fill();
+      }
+      // soft haze veil over the ridge
+      if(haze){
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = haze;
+        ctx.fillStyle = 'rgba(240,180,90,1)';
+        ctx.fillRect(0, baseY - 60, W, 60);
+      }
+      ctx.restore();
+    }
+
+    /* ---------- bare framing trees ---------- */
+    function buildTrees(){
+      trees = [];
+      var leftLen = H * 0.34, rightLen = H * 0.30;
+      trees.push({ x:W*0.14, y:H*1.02, len:leftLen, dir:1, seed:1.3, scale:1.0 });
+      trees.push({ x:W*0.87, y:H*1.03, len:rightLen, dir:-1, seed:4.7, scale:0.9 });
+    }
+    function branch(x, y, len, ang, wid, tree){
+      if(len < 4 || wid < 0.5) return;
+      var sway = Math.sin(t * 1.3 + tree.seed + len * 0.02) * 0.05 * (len / tree.len);
+      var x2 = x + Math.cos(ang) * len;
+      var y2 = y + Math.sin(ang) * len;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x2, y2);
+      ctx.lineWidth = wid;
+      ctx.stroke();
+      var back = ang - 0.5 + sway;
+      var fwd  = ang + 0.42 + sway;
+      branch(x2, y2, len * 0.74, back, wid * 0.68, tree);
+      branch(x2, y2, len * 0.74, fwd,  wid * 0.68, tree);
+      if(len > tree.len * 0.4 && Math.sin(tree.seed + len) > 0.2){
+        branch(x2, y2, len * 0.6, ang + sway, wid * 0.6, tree);
+      }
+    }
+    function drawTree(tree){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(22,10,4,0.96)';
+      ctx.lineCap = 'round';
+      ctx.shadowColor = 'rgba(255,180,90,0.18)';
+      ctx.shadowBlur = 8;
+      branch(tree.x, tree.y, tree.len, -Math.PI/2 * tree.dir * 0 + (-Math.PI/2), tree.len * 0.10, tree);
+      ctx.restore();
+    }
+
+    /* ---------- leaves ---------- */
+    function makeLeaf(near){
+      var z = near ? (0.6 + Math.random()*0.4) : (0.15 + Math.random()*0.35);
+      return {
+        x: Math.random() * (W + 120) - 60,
+        y: Math.random() * -H,
+        z: z,
+        size: (near ? 9 : 6) * (0.7 + Math.random()*0.8),
+        rot: Math.random() * 6.28,
+        rv: (Math.random()-0.5) * 2.4,
+        swayP: Math.random() * 6.28,
+        swayF: 0.8 + Math.random() * 1.2,
+        swayA: 14 + Math.random() * 26,
+        col: LEAF_COLORS[(Math.random()*LEAF_COLORS.length)|0],
+        spin: Math.random() < 0.5,
+        fell: false
+      };
+    }
+    function buildLeaves(){
+      farLeaves = []; nearLeaves = [];
+      for(var i = 0; i < 58; i++) farLeaves.push(makeLeaf(false));
+      for(var i = 0; i < 46; i++) nearLeaves.push(makeLeaf(true));
+    }
+    function drawLeaf(L){
+      var L_ = L.size;
+      var w = L_ * 0.5;
+      ctx.save();
+      ctx.translate(L.x, L.y);
+      ctx.rotate(L.rot);
+      ctx.globalAlpha = L.z > 0.5 ? 0.95 : 0.6;
+      // leaf body
+      var g = ctx.createLinearGradient(0, -L_, 0, L_);
+      g.addColorStop(0, L.col);
+      g.addColorStop(1, 'hsl(10,60%,28%)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(0, -L_);
+      ctx.quadraticCurveTo(w, -L_*0.1, 0, L_);
+      ctx.quadraticCurveTo(-w, -L_*0.1, 0, -L_);
+      ctx.closePath();
+      ctx.fill();
+      // midrib
+      ctx.strokeStyle = 'rgba(30,12,4,0.5)';
+      ctx.lineWidth = Math.max(0.5, L_ * 0.06);
+      ctx.beginPath(); ctx.moveTo(0,-L_); ctx.lineTo(0, L_); ctx.stroke();
+      ctx.restore();
+    }
+    function updateLeaf(L, dt, wind){
+      var spd = 0.5 + L.z * 1.1;
+      var fall = (26 + L.z * 40) * spd;
+      L.swayP += L.swayF * dt;
+      var sway = Math.sin(L.swayP) * L.swayA;
+      L.x += (wind * 40 + sway) * dt * spd;
+      L.y += fall * dt;
+      L.rot += L.rv * dt + Math.sin(L.swayP) * 0.4 * dt;
+      if(L.y > H + 40 || L.x < -80 || L.x > W + 80){
+        L.y = -30 - Math.random()*60;
+        L.x = Math.random() * (W + 120) - 60;
+      }
+    }
+
+    /* ---------- birds ---------- */
+    function buildBirds(){
+      birds = [];
+      for(var i = 0; i < 4; i++){
+        birds.push({
+          x: Math.random()*W, y:H*0.2 + Math.random()*H*0.22,
+          s: 6 + Math.random()*6, ph:Math.random()*6.28,
+          sp: 18 + Math.random()*20
+        });
+      }
+    }
+    function drawBirds(){
+      ctx.save();
+      ctx.strokeStyle = 'rgba(40,14,4,0.55)';
+      ctx.lineWidth = 1.4;
+      for(var i = 0; i < birds.length; i++){
+        var b = birds[i];
+        if(!reduced){ b.x += b.sp * 0.016; b.ph += 0.12; if(b.x > W+30) b.x = -30; }
+        var flap = Math.sin(b.ph) * b.s * 0.6;
+        ctx.beginPath();
+        ctx.moveTo(b.x - b.s, b.y + flap);
+        ctx.quadraticCurveTo(b.x, b.y - b.s*0.4, b.x, b.y);
+        ctx.quadraticCurveTo(b.x, b.y - b.s*0.4, b.x + b.s, b.y + flap);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    /* ---------- sun + rays ---------- */
+    function drawSun(){
+      var sx = W * SUN.fx, sy = H * SUN.fy, r = SUN.r;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      // outer glow
+      var g = ctx.createRadialGradient(sx, sy, 0, sx, sy, r * 5.5);
+      g.addColorStop(0, 'rgba(255,238,170,0.9)');
+      g.addColorStop(0.25, 'rgba(255,205,110,0.42)');
+      g.addColorStop(0.6, 'rgba(255,160,70,0.12)');
+      g.addColorStop(1, 'rgba(255,140,50,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(sx, sy, r * 5.5, 0, 6.2832); ctx.fill();
+      // bright core
+      var c = ctx.createRadialGradient(sx, sy, 0, sx, sy, r);
+      c.addColorStop(0, 'rgba(255,252,235,1)');
+      c.addColorStop(0.6, 'rgba(255,236,160,0.95)');
+      c.addColorStop(1, 'rgba(255,205,110,0.5)');
+      ctx.fillStyle = c;
+      ctx.beginPath(); ctx.arc(sx, sy, r, 0, 6.2832); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawRays(){
+      var sx = W * SUN.fx, sy = H * SUN.fy, r = SUN.r;
+      var N = 46;
+      ctx.save();
+      ctx.globalCompositeOperation = 'lighter';
+      for(var i = 0; i < N; i++){
+        var ang = (i / N) * 6.2832 + t * 0.015;
+        // gap pattern so rays peek "through branches"
+        var gap = 0.35 + 0.65 * Math.abs(Math.sin(i * 1.7 + Math.cos(i*0.6)));
+        var len = r * (2.6 + 2.2 * (0.5 + 0.5*Math.sin(i*2.3)));
+        var spread = (6.2832 / N) * (0.5 + 0.5*Math.sin(i*0.9));
+        var a1 = ang - spread, a2 = ang + spread;
+        var x1 = sx + Math.cos(a1)*len, y1 = sy + Math.sin(a1)*len;
+        var x2 = sx + Math.cos(a2)*len, y2 = sy + Math.sin(a2)*len;
+        var shimmer = 0.5 + 0.5*Math.sin(t*1.5 + i*0.7);
+        var grad = ctx.createLinearGradient(sx, sy, (x1+x2)/2, (y1+y2)/2);
+        grad.addColorStop(0, 'rgba(255,235,170,' + (0.16*gap*shimmer) + ')');
+        grad.addColorStop(0.5, 'rgba(255,200,120,' + (0.09*gap*shimmer) + ')');
+        grad.addColorStop(1, 'rgba(255,180,90,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(sx, sy);
+        ctx.lineTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    /* ---------- wind ---------- */
+    var wind = { cur:0.4, target:0.4, gust:0 };
+    function updateWind(dt){
+      wind.target = 0.35 + (mouse.x - 0.5) * 2.4;
+      wind.cur += (wind.target - wind.cur) * 0.03;
+      wind.gust *= 0.955;
+    }
+    function windNow(){ return wind.cur + wind.gust + Math.sin(t*0.4)*0.5; }
+
+    function gust(x){
+      wind.gust = 2.2;
+      // scatter nearby leaves upward/outward
+      var arr = nearLeaves.concat(farLeaves);
+      for(var i = 0; i < arr.length; i++){
+        var dx = arr[i].x - x;
+        if(Math.abs(dx) < W*0.4){
+          arr[i].rv += (Math.random()-0.5)*3;
+          arr[i].swayA += 20;
+        }
+      }
+    }
+
+    /* ---------- main loop ---------- */
+    var last = performance.now();
+    function frame(now){
+      var dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+      if(!reduced){ t += dt * 0.7; updateWind(dt); }
+      ctx.clearRect(0, 0, W, H);
+
+      drawSun();
+      drawRays();
+
+      // far ridge (hazy, warm)
+      drawRidge(farBumps, H*0.71, 'hsl(18,45%,30%)', 0.10, 0.55);
+      // far leaves
+      for(var i = 0; i < farLeaves.length; i++){
+        var L = farLeaves[i];
+        if(!reduced) updateLeaf(L, dt, windNow());
+        drawLeaf(L);
+      }
+      // mid ridge
+      drawRidge(midBumps, H*0.77, 'hsl(16,55%,18%)', 0.0, 0.9);
+      // near leaves
+      for(var i = 0; i < nearLeaves.length; i++){
+        var Nl = nearLeaves[i];
+        if(!reduced) updateLeaf(Nl, dt, windNow());
+        drawLeaf(Nl);
+      }
+      // foreground bare trees
+      drawBirds();
+      drawTree(trees[0]);
+      drawTree(trees[1]);
+
+      // wind readout
+      var wv = Math.abs(windNow());
+      windVal.textContent = wv < 0.5 ? 'calm' : wv < 1.2 ? 'breeze' : 'gust';
+      requestAnimationFrame(frame);
+    }
+
+    /* ---------- interaction ---------- */
+    window.addEventListener('mousemove', function(e){
+      mouse.x = e.clientX / W; mouse.y = e.clientY / H; mouse.active = true;
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top  = e.clientY + 'px';
+      cursor.style.opacity = '1';
+    });
+    window.addEventListener('mouseleave', function(){ cursor.style.opacity = '0'; });
+    window.addEventListener('click', function(e){ gust(e.clientX); });
+    window.addEventListener('touchmove', function(e){
+      if(e.touches[0]){ mouse.x = e.touches[0].clientX / W; }
+    }, { passive:true });
+
+    var rTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(rTimer); rTimer = setTimeout(resize, 150);
+    });
+
+    /* ---------- boot ---------- */
+    resize();
+    frame(performance.now());
+  })();
+  </script>
+</body>
+</html>

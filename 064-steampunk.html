@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ENGINE No.064 — Clockwork</title>
+<style>
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:#1a1109;overflow:hidden;}
+  body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#f3e2c2;overflow:hidden;}
+  .stage{position:fixed;inset:0;}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  .plate{position:absolute;inset:clamp(10px,1.6vw,22px);border-radius:14px;pointer-events:none;
+    background:linear-gradient(145deg,rgba(70,46,22,.55),rgba(30,18,8,.72));
+    box-shadow:0 0 0 2px rgba(120,84,36,.5), inset 0 0 60px rgba(0,0,0,.6), inset 0 0 0 1px rgba(255,210,140,.08);}
+  .rivets{position:absolute;inset:clamp(10px,1.6vw,22px);pointer-events:none;}
+  .rivet{position:absolute;width:12px;height:12px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#ffe9b0,#a9782f 55%,#5c3a14);
+    box-shadow:0 1px 2px rgba(0,0,0,.7);}
+  .tag{position:absolute;left:clamp(18px,3vw,44px);top:clamp(18px,3vw,40px);pointer-events:none;}
+  .kicker{font-size:.72rem;letter-spacing:.42em;text-transform:uppercase;opacity:.7;font-weight:600;}
+  .serif{font-family:Georgia,"Times New Roman",serif;}
+  .title{font-family:Georgia,"Times New Roman",serif;font-weight:400;margin:.14em 0 .06em;font-size:clamp(1.9rem,5vw,3.4rem);line-height:.96;letter-spacing:.005em;text-shadow:0 2px 24px rgba(0,0,0,.7);}
+  .title b{font-style:italic;font-weight:400;color:#ffcf80;}
+  .sub{max-width:32ch;font-size:.88rem;line-height:1.5;opacity:.72;text-shadow:0 1px 12px rgba(0,0,0,.7);}
+  .gaugeLabel{position:absolute;left:50%;bottom:clamp(16px,2.6vw,30px);transform:translateX(-50%);text-align:center;pointer-events:none;}
+  .psi{font-variant-numeric:tabular-nums;font-family:Georgia,serif;font-size:clamp(1.4rem,3.4vw,2.2rem);letter-spacing:.04em;color:#ffd98f;text-shadow:0 0 18px rgba(255,180,80,.5);}
+  .psi small{font-size:.42em;letter-spacing:.3em;opacity:.6;display:block;}
+  @media (max-width:520px){ .sub{display:none;} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="engine"></canvas>
+  <canvas id="steam"></canvas>
+  <div class="plate"></div>
+  <div class="rivets" id="rivets"></div>
+  <div class="tag">
+    <div class="kicker">Aether Works · No. 064</div>
+    <h1 class="title">Clock<b>work</b></h1>
+    <p class="sub">The pressure plant at rest — brass wheels of every tooth-count bite one another at matched ratios, a needle trembles across the gauge and the boiler exhales a slow puff of steam.</p>
+  </div>
+  <div class="gaugeLabel">
+    <div class="psi"><span id="psi">0</span> <small>BOILER PRESSURE</small></div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var W=0,H=0,DPR=1,cx=0,cy=0;
+  var eng=document.getElementById('engine'),ectx=eng.getContext('2d');
+  var st=document.getElementById('steam'),sctx=st.getContext('2d');
+  var reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var gears=[],puffs=[],pipes=[];
+  var t=0, angle=0, needle=0, psi=0, psiTarget=120, lastPuff=0;
+  var mouse={x:0.5,y:0.5,active:false};
+
+  function resize(){
+    W=innerWidth; H=innerHeight; cx=W*0.5; cy=H*0.5;
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    [eng,st].forEach(function(c){ c.width=Math.floor(W*DPR); c.height=Math.floor(H*DPR); c.getContext('2d').setTransform(DPR,0,0,DPR,0,0); });
+    build();
+  }
+
+  function build(){
+    gears=[]; puffs=[];
+    // gauge position (top-right)
+    var gx=Math.min(W*0.8, cx+Math.min(W,H)*0.28);
+    var gy=Math.min(H*0.30, cy-Math.min(W,H)*0.12);
+    var scale=Math.min(W,H)/760;
+    // gear train: meshing chain, tooth count drives ratio
+    var defs=[
+      {tx:cx-150*scale, ty:cy+30*scale, teeth:22, r:120*scale, color:0},
+      {tx:cx-150*scale+120*scale, ty:cy+30*scale-70*scale, teeth:14, r:78*scale, color:1},
+      {tx:cx-150*scale+120*scale-70*scale, ty:cy+30*scale+90*scale, teeth:10, r:54*scale, color:2},
+      {tx:cx+40*scale, ty:cy-40*scale, teeth:18, r:96*scale, color:1},
+      {tx:cx+40*scale-110*scale, ty:cy-40*scale+80*scale, teeth:12, r:62*scale, color:2}
+    ];
+    for(var i=0;i<defs.length;i++){
+      var d=defs[i];
+      gears.push({x:d.tx,y:d.ty,teeth:d.teeth,r:d.r,phase:0,dir:(i%2?1:-1),color:d.color,axle:true});
+    }
+    // pipes (riveted tubes) as background detail
+    pipes=[];
+    for(var p=0;p<4;p++){
+      pipes.push({x:Math.random()*W,y:H*0.5+Math.random()*H*0.4,len:80+Math.random()*140,ang:Math.random()*6.28,r:10+Math.random()*10});
+    }
+    // place rivets around the plate frame
+    var rv=document.getElementById('rivets');
+    rv.innerHTML='';
+    var step=Math.max(48, Math.min(90, W/16));
+    var inset=0;
+    function addRivet(x,y){ var e=document.createElement('div'); e.className='rivet'; e.style.left=(x-6)+'px'; e.style.top=(y-6)+'px'; rv.appendChild(e); }
+    for(var x=step;x<W-step;x+=step){ addRivet(x, inset+6); addRivet(x, H-inset-6); }
+    for(var y=step*2;y<H-step*2;y+=step){ addRivet(inset+6,y); addRivet(W-inset-6,y); }
+    document.getElementById('psi').textContent='0';
+  }
+
+  // draw a gear with proper tooth profile
+  function drawGear(g,rot){
+    ectx.save();
+    ectx.translate(g.x,g.y);
+    var pal=[['#e9c26a','#b8862f','#7a5216'], ['#d98b4e','#a55f2c','#6a3a17'], ['#c9b07a','#9a8248','#5f4c22']][g.color];
+    ectx.rotate(rot);
+    var t=g.teeth, outerR=g.r, rootR=g.r*0.78, tw=Math.PI/t;
+    // tooth profile path
+    ectx.beginPath();
+    for(var i=0;i<t;i++){
+      var a=i*tw;
+      var a1=a+tw*0.15, a2=a+tw*0.35, a3=a+tw*0.65, a4=a+tw*0.85;
+      var method=(i===0)?'moveTo':'lineTo';
+      ectx[method](Math.cos(a)*rootR, Math.sin(a)*rootR);
+      ectx.lineTo(Math.cos(a1)*rootR, Math.sin(a1)*rootR);
+      ectx.lineTo(Math.cos(a2)*outerR, Math.sin(a2)*outerR);
+      ectx.lineTo(Math.cos(a3)*outerR, Math.sin(a3)*outerR);
+      ectx.lineTo(Math.cos(a4)*rootR, Math.sin(a4)*rootR);
+    }
+    ectx.closePath();
+    var grad=ectx.createRadialGradient(-g.r*0.3,-g.r*0.3,0,0,0,outerR);
+    grad.addColorStop(0,pal[0]); grad.addColorStop(0.6,pal[1]); grad.addColorStop(1,pal[2]);
+    ectx.fillStyle=grad;
+    ectx.shadowColor='rgba(0,0,0,.6)'; ectx.shadowBlur=14; ectx.shadowOffsetY=4;
+    ectx.fill();
+    ectx.shadowColor='rgba(255,220,140,.25)'; ectx.shadowBlur=8;
+    ectx.strokeStyle='rgba(255,230,160,.35)'; ectx.lineWidth=1.2; ectx.stroke();
+    ectx.restore();
+    // inner details (spokes + hub) drawn without rotation for cutouts
+    ectx.save();
+    ectx.translate(g.x,g.y);
+    // cutout spokes
+    ectx.globalCompositeOperation='source-atop';
+    ectx.restore();
+    // hub
+    ectx.save();
+    ectx.translate(g.x,g.y);
+    var hub=g.r*0.28;
+    var hg=ectx.createRadialGradient(-hub*0.3,-hub*0.3,0,0,0,hub);
+    hg.addColorStop(0,'#c9a24e'); hg.addColorStop(1,'#5c3d14');
+    ectx.fillStyle=hg;
+    ectx.beginPath(); ectx.arc(0,0,hub,0,6.283); ectx.fill();
+    // axle hole
+    ectx.fillStyle='#1a1108';
+    ectx.beginPath(); ectx.arc(0,0,hub*0.35,0,6.283); ectx.fill();
+    ectx.fillStyle='rgba(255,220,140,.5)';
+    ectx.beginPath(); ectx.arc(0,0,hub*0.14,0,6.283); ectx.fill();
+    ectx.restore();
+    // decorative spokes over the wheel face
+    ectx.save();
+    ectx.translate(g.x,g.y); ectx.rotate(rot);
+    ectx.strokeStyle='rgba(40,24,10,.5)'; ectx.lineWidth=Math.max(3,g.r*0.06);
+    for(var s=0;s<Math.min(6,Math.max(3,Math.floor(t/3)));s++){
+      var sa=s*(6.283/Math.min(6,Math.max(3,Math.floor(t/3))));
+      ectx.beginPath();
+      ectx.moveTo(Math.cos(sa)*hub*1.2, Math.sin(sa)*hub*1.2);
+      ectx.lineTo(Math.cos(sa)*rootR*0.92, Math.sin(sa)*rootR*0.92);
+      ectx.stroke();
+    }
+    ectx.restore();
+  }
+
+  function drawPipes(){
+    ectx.save();
+    for(var i=0;i<pipes.length;i++){
+      var p=pipes[i];
+      ectx.save();
+      ectx.translate(p.x,p.y); ectx.rotate(p.ang);
+      var pg=ectx.createLinearGradient(0,-p.r,0,p.r);
+      pg.addColorStop(0,'#7a5220'); pg.addColorStop(0.5,'#c9994e'); pg.addColorStop(1,'#5a3a14');
+      ectx.fillStyle=pg;
+      ectx.fillRect(-p.len/2,-p.r,p.len,p.r*2);
+      ectx.strokeStyle='rgba(255,220,140,.15)'; ectx.lineWidth=1;
+      ectx.strokeRect(-p.len/2,-p.r,p.len,p.r*2);
+      ectx.restore();
+    }
+    ectx.restore();
+  }
+
+  function drawGauge(gx,gy,r){
+    ectx.save();
+    ectx.translate(gx,gy);
+    // plate
+    ectx.beginPath(); ectx.arc(0,0,r,0,6.283);
+    var bg=ectx.createRadialGradient(-r*0.3,-r*0.3,0,0,0,r);
+    bg.addColorStop(0,'#3a2a14'); bg.addColorStop(1,'#1c1208');
+    ectx.fillStyle=bg; ectx.shadowColor='rgba(0,0,0,.7)'; ectx.shadowBlur=18; ectx.fill();
+    ectx.lineWidth=r*0.06; ectx.strokeStyle='#c9994e'; ectx.stroke();
+    ectx.lineWidth=r*0.02; ectx.strokeStyle='rgba(255,220,140,.4)'; ectx.stroke();
+    // face
+    ectx.beginPath(); ectx.arc(0,0,r*0.86,0,6.283);
+    var fg=ectx.createRadialGradient(0,0,0,0,0,r*0.86);
+    fg.addColorStop(0,'#f3e6c8'); fg.addColorStop(1,'#d8c39a');
+    ectx.fillStyle=fg; ectx.shadowColor='transparent'; ectx.fill();
+    // tick marks + colored arc zones
+    var a0=Math.PI*0.75, a1=Math.PI*2.25;
+    for(var i=0;i<=10;i++){
+      var a=a0+(a1-a0)*(i/10);
+      var inner=(i%5===0)?r*0.62:r*0.7;
+      ectx.strokeStyle=(i>=8)?'#b33':(i>=6?'#a8702a':'#3a2a14');
+      ectx.lineWidth=(i%5===0)?3:1.5;
+      ectx.beginPath();
+      ectx.moveTo(Math.cos(a)*inner, Math.sin(a)*inner);
+      ectx.lineTo(Math.cos(a)*r*0.82, Math.sin(a)*r*0.82);
+      ectx.stroke();
+    }
+    // colored danger arc
+    ectx.lineWidth=r*0.05;
+    ectx.strokeStyle='rgba(200,50,40,.55)';
+    ectx.beginPath(); ectx.arc(0,0,r*0.74, a0+(a1-a0)*0.7, a1); ectx.stroke();
+    // numbers
+    ectx.fillStyle='#3a2a14'; ectx.font='bold '+Math.round(r*0.13)+'px system-ui, sans-serif';
+    ectx.textAlign='center'; ectx.textBaseline='middle';
+    for(var n=0;n<=10;n+=5){ var a=a0+(a1-a0)*(n/10); ectx.fillText(n, Math.cos(a)*r*0.5, Math.sin(a)*r*0.5); }
+    // needle
+    var na=a0+(a1-a0)*Math.min(1,psiTarget/100);
+    ectx.save();
+    ectx.rotate(na);
+    ectx.beginPath();
+    ectx.moveTo(0,r*0.05);
+    ectx.lineTo(-r*0.04,-r*0.72);
+    ectx.lineTo(0,-r*0.8);
+    ectx.lineTo(r*0.04,-r*0.72);
+    ectx.closePath();
+    ectx.fillStyle='#8a1f14'; ectx.fill();
+    ectx.restore();
+    // hub cap
+    ectx.beginPath(); ectx.arc(0,0,r*0.09,0,6.283);
+    var cg=ectx.createRadialGradient(-2,-2,0,0,0,r*0.09);
+    cg.addColorStop(0,'#e9c26a'); cg.addColorStop(1,'#6a4516');
+    ectx.fillStyle=cg; ectx.fill();
+    ectx.fillStyle='#1a1108'; ectx.beginPath(); ectx.arc(0,0,r*0.03,0,6.283); ectx.fill();
+    ectx.restore();
+  }
+
+  function spawnPuff(x,y){
+    var n=6+Math.floor(Math.random()*6);
+    for(var i=0;i<n;i++) puffs.push({x:x+(Math.random()-0.5)*20,y:y,vx:(Math.random()-0.5)*20,vy:-(30+Math.random()*50),r:6+Math.random()*12,a:0.4+Math.random()*0.3,life:2+Math.random()*1.5});
+  }
+
+  function drawSteam(dt){
+    sctx.clearRect(0,0,W,H);
+    sctx.save();
+    for(var i=puffs.length-1;i>=0;i--){
+      var p=puffs[i];
+      p.x+=p.vx*dt; p.y+=p.vy*dt; p.vy*=0.99; p.r+=dt*10; p.life-=dt;
+      if(p.life<=0){ puffs.splice(i,1); continue; }
+      var al=p.a*Math.min(1,p.life*0.8);
+      var g=sctx.createRadialGradient(p.x,p.y,0,p.x,p.y,p.r);
+      g.addColorStop(0,'rgba(245,235,210,'+al+')');
+      g.addColorStop(1,'rgba(220,200,160,0)');
+      sctx.fillStyle=g;
+      sctx.beginPath(); sctx.arc(p.x,p.y,p.r,0,6.283); sctx.fill();
+    }
+    sctx.restore();
+  }
+
+  var last=performance.now();
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(reduce) dt*=0.25;
+    t+=dt;
+    var base=reduce?0.15:0.55;
+    angle+=base*dt;
+    // pressure: slow oscillation toward target with jitter
+    psiTarget=90+45*Math.sin(t*0.25);
+    psi+=(psiTarget-psi)*Math.min(1,dt*2);
+    // draw engine
+    ectx.clearRect(0,0,W,H);
+    // warm ambient glow behind the train
+    var scale=Math.min(W,H)/760;
+    var gx=Math.min(W*0.8, cx+Math.min(W,H)*0.28);
+    var gy=Math.min(H*0.30, cy-Math.min(W,H)*0.12);
+    ectx.save();
+    var amb=ectx.createRadialGradient(gx,gy,0,gx,gy,Math.min(W,H)*0.7);
+    amb.addColorStop(0,'rgba(120,80,30,0.12)'); amb.addColorStop(1,'rgba(0,0,0,0)');
+    ectx.fillStyle=amb; ectx.fillRect(0,0,W,H);
+    ectx.restore();
+    drawPipes();
+    // gears: meshing ratio — angular speed inversely proportional to teeth, alternating direction
+    for(var i=0;i<gears.length;i++){
+      var g=gears[i];
+      var speed=base*g.dir*(gears[0].teeth/g.teeth);
+      drawGear(g, angle*speed);
+    }
+    drawGauge(gx,gy,Math.min(W,H)*0.13);
+    drawSteam(dt);
+    // periodic steam puffs from a vent near the gauge
+    lastPuff+=dt;
+    if(lastPuff>1.6){ lastPuff=0; spawnPuff(gx-Math.min(W,H)*0.13, gy-Math.min(W,H)*0.13); }
+    document.getElementById('psi').textContent=Math.round(psi);
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('mousemove',function(e){ mouse.x=e.clientX/W; mouse.y=e.clientY/H; mouse.active=true; });
+  window.addEventListener('touchmove',function(e){ if(e.touches[0]){ mouse.x=e.touches[0].clientX/W; mouse.y=e.touches[0].clientY/H; mouse.active=true; } },{passive:true});
+  window.addEventListener('click',function(){ spawnPuff(cx+ (Math.random()-0.5)*W*0.3, cy); });
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

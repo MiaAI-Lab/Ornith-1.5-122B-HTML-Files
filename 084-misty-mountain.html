@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Misty Mountains — Layered Ridges</title>
+<style>
+  html,body{margin:0;height:100%;background:#d3dae1;overflow:hidden;}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .scene{
+    position:fixed; inset:0; overflow:hidden;
+    background:
+      linear-gradient(180deg, #e9eef4 0%, #dce4ec 40%, #e7e2d8 74%, #d7d1c6 100%);
+  }
+
+  /* gentle luminous sun glow */
+  .sun{
+    position:absolute; left:63%; top:24%; width:46vmin; height:46vmin; margin:-23vmin 0 0 -23vmin;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,247,228,.95) 0%, rgba(255,244,220,.45) 32%, rgba(255,244,220,0) 66%);
+    animation:sunPulse 14s ease-in-out infinite;
+    will-change:opacity,transform;
+  }
+  .sun-core{
+    position:absolute; inset:34%; border-radius:50%;
+    background:radial-gradient(circle, rgba(255,251,238,1), rgba(255,246,224,.2) 70%);
+    filter:blur(2px);
+  }
+  @keyframes sunPulse{
+    0%,100%{ opacity:.8; transform:scale(1); }
+    50%{ opacity:1; transform:scale(1.06); }
+  }
+
+  /* drifting fog bands */
+  .fog{
+    position:absolute; left:-12%; right:-12%; height:22vh;
+    background:linear-gradient(180deg, rgba(233,238,244,0) 0%, rgba(233,238,244,.55) 50%, rgba(233,238,244,0) 100%);
+    filter:blur(20px);
+    will-change:transform;
+  }
+  .fog1{ top:30%;  animation:drift1 46s ease-in-out infinite; }
+  .fog2{ top:52%;  height:26vh; animation:drift2 60s ease-in-out infinite; opacity:.85; }
+  .fog3{ top:70%;  height:20vh; animation:drift3 52s ease-in-out infinite; }
+
+  @keyframes drift1{ 0%,100%{ transform:translateX(-3%); } 50%{ transform:translateX(4%); } }
+  @keyframes drift2{ 0%,100%{ transform:translateX(4%); } 50%{ transform:translateX(-5%); } }
+  @keyframes drift3{ 0%,100%{ transform:translateX(-5%); } 50%{ transform:translateX(3%); } }
+
+  /* stacked mountain ridges */
+  .mountains{ position:absolute; left:0; right:0; bottom:0; height:64vh; }
+  .layer{ position:absolute; left:0; top:0; width:100%; height:100%; display:block; }
+  .layer path{ width:100%; height:100%; }
+
+  .l1{ bottom:34%; animation:par1 58s ease-in-out infinite; }
+  .l2{ bottom:24%; animation:par2 44s ease-in-out infinite; }
+  .l3{ bottom:12%; animation:par3 34s ease-in-out infinite; }
+  .l4{ bottom:0;   animation:par4 26s ease-in-out infinite; }
+
+  .l1 path{ fill:#c9d2dc; }
+  .l2 path{ fill:#aab7c4; }
+  .l3 path{ fill:#8a99a8; }
+  .l4 path{ fill:#64737f; }
+
+  @keyframes par1{ 0%,100%{ transform:translateX(-1.2%); } 50%{ transform:translateX(1.6%); } }
+  @keyframes par2{ 0%,100%{ transform:translateX(1.6%); } 50%{ transform:translateX(-2.2%); } }
+  @keyframes par3{ 0%,100%{ transform:translateX(-2.2%); } 50%{ transform:translateX(2.8%); } }
+  @keyframes par4{ 0%,100%{ transform:translateX(2.6%); } 50%{ transform:translateX(-3.4%); } }
+
+  /* a small flock, drifting and bobbing */
+  .birds{ position:absolute; left:0; top:16%; width:100%; height:30%;
+          animation:birdDrift 70s ease-in-out infinite; will-change:transform; }
+  .bird{ fill:none; stroke:#6b7681; stroke-width:2.4; stroke-linecap:round; }
+  .b1{ animation:bob 5s ease-in-out infinite; }
+  .b2{ animation:bob 5s ease-in-out infinite 0.8s; }
+  .b3{ animation:bob 6s ease-in-out infinite 1.4s; }
+  .b4{ animation:bob 5.5s ease-in-out infinite 0.4s; }
+  @keyframes bob{ 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-5px); } }
+  @keyframes birdDrift{ 0%,100%{ transform:translateX(2%); } 50%{ transform:translateX(-4%); } }
+
+  .caption{
+    position:absolute; left:6vw; bottom:6vh; z-index:3;
+    font-size:.66rem; letter-spacing:.34em; text-transform:uppercase; color:#5c6670;
+    text-shadow:0 1px 0 rgba(255,255,255,.4);
+  }
+  .caption span{ display:block; margin-top:.6rem; font-size:1.35rem; letter-spacing:.14em;
+                 text-transform:none; color:#48525b; }
+
+  @media (prefers-reduced-motion: reduce){
+    .sun,.fog1,.fog2,.fog3,.l1,.l2,.l3,.l4,.birds,.b1,.b2,.b3,.b4{ animation:none; }
+    .l1{ transform:translateX(-0.6%); } .l2{ transform:translateX(0.8%); }
+    .l3{ transform:translateX(-1.1%); } .l4{ transform:translateX(1.4%); }
+  }
+  @media (max-width:600px){
+    .caption{ left:5vw; bottom:4vh; }
+    .sun{ left:74%; }
+  }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="sun"><span class="sun-core"></span></div>
+
+    <div class="fog fog1"></div>
+
+    <div class="mountains">
+      <svg class="layer l1" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,210 L120,180 L240,205 L360,165 L520,195 L680,150 L820,185 L980,160 L1140,195 L1300,170 L1440,200 L1440,400 L0,400 Z"/>
+      </svg>
+      <div class="fog fog2"></div>
+      <svg class="layer l2" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,255 L140,225 L300,250 L460,215 L620,245 L780,210 L960,240 L1120,220 L1300,250 L1440,232 L1440,400 L0,400 Z"/>
+      </svg>
+      <div class="fog fog3"></div>
+      <svg class="layer l3" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,300 L160,275 L320,300 L500,268 L680,298 L860,265 L1040,295 L1220,278 L1440,305 L1440,400 L0,400 Z"/>
+      </svg>
+      <svg class="layer l4" viewBox="0 0 1440 400" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0,350 L120,320 L280,345 L440,300 L600,340 L760,305 L940,345 L1120,315 L1300,350 L1440,330 L1440,400 L0,400 Z"/>
+      </svg>
+    </div>
+
+    <svg class="birds" viewBox="0 0 320 120" preserveAspectRatio="none" aria-hidden="true">
+      <g class="b1"><path class="bird" d="M60,40 q9,-9 18,0 q9,-9 18,0"/></g>
+      <g class="b2"><path class="bird" d="M120,62 q7,-7 14,0 q7,-7 14,0"/></g>
+      <g class="b3"><path class="bird" d="M190,34 q8,-8 16,0 q8,-8 16,0"/></g>
+      <g class="b4"><path class="bird" d="M240,74 q6,-6 12,0 q6,-6 12,0"/></g>
+    </svg>
+
+    <div class="caption">No. 084<span>Misty Mountains</span></div>
+  </div>
+</body>
+</html>

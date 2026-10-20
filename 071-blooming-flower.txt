@@ -1,0 +1,53 @@
+========================================================================
+PROMPT (exact, as issued):
+------------------------------------------------------------------------
+Build a standalone, self-contained HTML page: a flower blooming — the
+stem grows, buds form, and petals unfurl in stages. Palette: spring
+pastels (soft pink, rose, leaf green). Signature: SVG/CSS stem growth,
+petals rotating and scaling open in layered stages, gentle sway, soft
+ambient particles.
+Constraints: one self-contained .html, ALL CSS in one <style> and ALL JS
+in one <script> (inline everything), ZERO external dependencies (no
+CDN, no external fonts — system stacks only, no external images/SVG
+files/libraries), works fully offline by double-clicking with no network
+requests, responsive 320px->4K, valid HTML5, Awwwards-caliber original
+art direction.
+
+------------------------------------------------------------------------
+TITLE:
+------------------------------------------------------------------------
+UNFURL · Slowly, It Blooms
+
+------------------------------------------------------------------------
+DESIGN DESCRIPTION:
+------------------------------------------------------------------------
+Against a soft spring-pastel glow, a single flower performs its whole
+life in miniature: the stem rises from the ground, leaves unfold along
+its length, a tight bud swells, and finally the petals open in layered
+stages — outer, middle, inner — each rotating and scaling wide before a
+golden centre settles into place. Once open, the bloom breathes with a
+gentle sway while pollen drifts through the warm light.
+
+------------------------------------------------------------------------
+MAJOR VISUAL TECHNIQUES:
+------------------------------------------------------------------------
+- SVG stem drawn with a stroke-dasharray/dashoffset "growing" animation
+  that traces the stem upward, plus a soft highlight stroke.
+- Leaves and bud that scale+rotate in from nothing with staggered CSS
+  keyframes timed to the stem's growth.
+- Petals built as five radial ellipses per layer across three nested
+  layers, each layer blooming (scale + rotate open) later than the last
+  for a true staged unfurl.
+- Radial gradients on petals and centre for soft, painterly depth.
+- A continuous gentle sway on the whole plant, then a slow "breathing"
+  scale once fully open.
+- Canvas pollen motes with additive blending drifting upward for ambient
+  warmth.
+
+------------------------------------------------------------------------
+INTENDED INTERACTION MODEL:
+------------------------------------------------------------------------
+A one-time cinematic growth sequence that plays from stem to full bloom
+on load and then settles into a slow ambient sway — best experienced by
+watching it unfold. There are no buttons; the narrative is the timing.
+The whole sequence re-runs on reload, so the "plant" can bloom again.

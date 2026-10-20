@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page: a 90s vaporwave sunset with a perspective grid floor, palm silhouettes and a chrome sun. Palette: magenta, cyan, purple, hot pink. Signature: a CSS perspective grid floor, a gradient sun cut by horizontal slits, palm SVG silhouettes, and a scanline overlay. One self-contained .html file, all CSS in a single <style> block and all JS in a single <script> block (or none), zero external dependencies (no CDN, fonts, images or libraries), responsive 320px→4K, valid HTML5, and a genuinely premium Awwwards-caliber look with real motion.
+
+TITLE:
+AFTER hours — Lo-Fi Vaporwave Sunset
+
+DESIGN DESCRIPTION:
+A single fixed viewport recreates a nostalgic synthwave dusk. A vertical sky gradient runs from deep indigo at the zenith through magenta and hot pink down to a warm amber at the horizon, where a chrome sun sits — a radial disc banded yellow→orange→hot-pink→purple with a soft double glow that pulses slowly, its lower half sliced by the classic horizontal slits (masked repeating lines that drift downward). Below the horizon a cyan-and-pink perspective grid floor is tilted into depth with rotateX and scrolled toward the viewer on a seamless loop, while a striped sun-reflection column shimmers on the "water." Hand-drawn SVG palm silhouettes frame both lower corners plus one small distant palm, twinkling stars flicker in the upper sky, and a drifting scanline overlay with an inset CRT vignette ties the retro aesthetic together. A monospace wordmark with layered pink/purple/cyan drop shadows flickers like a faulty neon sign.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS perspective grid floor: a wide plane rotated with rotateX(74deg) and animated via seamless repeating-linear-gradient lines (vertical cyan + horizontal pink).
+- Chrome gradient sun with masked repeating-linear-gradient "slits" on the lower half and a pulsing dual box-shadow glow.
+- Hand-authored inline SVG palm-tree silhouettes (trunk + radiating frond paths) at three scales for foreground/midground depth.
+- Layered atmospheric sky gradient + masked, striped sun-reflection column with a shimmer animation.
+- CRT scanline overlay (repeating-linear-gradient, mix-blend-mode:overlay, slow drift) plus an inset vignette via box-shadow.
+- Twinkling starfield built from multiple radial-gradient dots; flickering monospace title with multi-color text-shadow.
+- Fully responsive sizing with clamp()/vw units; no external assets, no network requests.
+
+INTENDED INTERACTION MODEL:
+Purely ambient and cinematic — the page is a moving loop, not a control surface. The grid scrolls forever, the sun breathes, scanlines drift and the title flickers on their own timers, so the viewer simply watches a perpetual synthwave dusk. There is no required interaction (no JS required); it is designed as a living wallpaper / idle visual.

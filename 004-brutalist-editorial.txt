@@ -1,0 +1,27 @@
+PROMPT:
+Build a standalone, fully offline HTML page: a raw brutalist magazine spread using monospace + heavy serif, offset black borders and high contrast. Palette: paper white, ink black, one acid accent (red or yellow). Signature: CSS grid editorial layout, hard offset shadows, rotated/tilted elements. One self-contained .html file, all CSS in a single <style>, all JS in a single <script>, zero external dependencies (system fonts only, no CDN, no external images), responsive 320px→4K, valid HTML5.
+
+TITLE:
+OFFCUT — Issue 07: The Design Issue
+
+DESIGN DESCRIPTION:
+A raw, print-inspired editorial spread. A black monospace top bar (issue/volume/subscribe) sits above a masthead with a huge Georgia serif title "OFFCUT" (italic accent word in acid red) beside a boxed issue tag. A full-width acid-red scrolling marquee of monospace slogans runs beneath it. The main feature is a two-column CSS grid: a long-form lead article with a red drop cap, mono byline, tag chips and a hard-shadowed "Read the Essay" button, beside a "Most Read" numbered list with decimal-leading-zero counters. Below, a "More from the issue" grid of three cards, each with a CSS halftone/striped/dotted image block, a hard offset black shadow and a tilted rotated label. A black pull-quote band carries a manifesto line, then a subscribe card with an acid-red offset shadow, and a three-column footer with a mono colophon. Everything is paper-white + ink-black with a single acid-red accent and a faint dotted page grain.
+
+MAJOR VISUAL TECHNIQUES:
+- Editorial CSS grid: .feature (1.7fr / 1fr) and .grid (3 columns) with explicit borders between cells; section headlines use serif with an italic accent.
+- Hard offset shadows: box-shadow with zero blur (e.g. 9px 9px 0 var(--ink)) on cards and buttons; hover translates the element up-left to grow the shadow, :active presses it in — the classic brutalist "sticker" lift.
+- Heavy type system: Georgia serif for headlines/body + monospace stack for labels/bylines/tags; a floated drop cap (::first-letter) in accent red; text-clip not used — color pops via the single accent.
+- CSS-only "photography": three .halftone blocks built from radial-gradient dot patterns and repeating-linear/radial gradients (dots, 45° stripes, concentric rings) with rotated (transform:rotate(6deg)) accent labels and mono captions — no images.
+- Scrolling marquee: an inline-flex .track duplicated 2× and animated translateX(-50%) for a seamless infinite ticker; aria-hidden.
+- Mono counters: ordered "Most Read" list via counter-reset/counter-increment(m, decimal-leading-zero) with accent-colored numbers and hover color swap.
+- Vertical rotated label utility (.rot, writing-mode + rotate) available for sidebar spines; small rotated flip tags on cards.
+- Faint dotted grain on the page body (radial-gradient background-size:3px).
+- prefers-reduced-motion disables the marquee and all hover transitions; responsive collapses feature/grid/footer to one column under 880px and shrinks the drop cap under 480px.
+
+INTENDED INTERACTION MODEL:
+- Passive/ambient: the monospace marquee scrolls forever (CSS keyframes); everything else is static until engaged.
+- Hover: "Read the Essay"/subscribe buttons lift (translate -3px/-3px), deepen their offset shadow and fill acid-red; cards rise and cast a larger hard shadow; "Most Read" items swap their title color to red; footer links underline in red.
+- Active/press: buttons translate in and shrink their shadow to simulate being pushed into the page.
+- Click: top-bar and footer links are anchor/navigational triggers (#subscribe, #read, section anchors) — presentational in this demo.
+- Scroll: "More from the issue", the pull quote and the subscribe card fade+rise once via an IntersectionObserver at threshold .12; reduced-motion or no-IO reveals everything immediately.
+- Accessibility: reduced-motion kills animation; marquee is aria-hidden; single high-contrast accent keeps the palette legible.

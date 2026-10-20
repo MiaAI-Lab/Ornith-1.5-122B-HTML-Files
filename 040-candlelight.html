@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candlelight — A Small Warmth</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;
+    background:#0c0806;
+    font-family:Georgia,"Times New Roman",serif;
+    color:#f4e7cf;-webkit-font-smoothing:antialiased}
+  .stage{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* warm vignette — the room lit only by the candle */
+  .vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse 42% 46% at 50% 60%,
+      rgba(255,180,90,.20) 0%, rgba(120,60,20,.10) 26%,
+      rgba(20,12,8,.55) 55%, rgba(8,5,3,.96) 100%)}
+
+  .poem{position:absolute;left:clamp(20px,5vw,80px);top:clamp(22px,8vh,70px);
+    max-width:min(340px,60vw);pointer-events:none;z-index:3}
+  .poem .eyebrow{font-family:system-ui,"Segoe UI",sans-serif;font-size:10px;letter-spacing:.42em;
+    text-transform:uppercase;color:rgba(255,196,120,.55);margin:0 0 14px}
+  .poem p{margin:0 0 1.1em;font-style:italic;font-size:clamp(15px,1.9vw,21px);line-height:1.75;
+    color:rgba(244,231,207,.86);text-shadow:0 2px 18px rgba(0,0,0,.7)}
+  .poem .sign{font-style:normal;letter-spacing:.16em;font-size:clamp(10px,1.3vw,13px);
+    color:rgba(255,196,120,.6);margin-top:10px}
+
+  /* the candle, centered low */
+  .candle{position:absolute;left:50%;bottom:13vh;transform:translateX(-50%);
+    display:flex;flex-direction:column;align-items:center;z-index:2}
+
+  .flame-wrap{position:relative;width:120px;height:150px;margin-bottom:-6px}
+
+  /* soft glow halo that pulses with the flame */
+  .glow{position:absolute;left:50%;top:34px;transform:translate(-50%,-50%);
+    width:340px;height:340px;border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle, rgba(255,180,80,.55) 0%, rgba(255,140,50,.22) 30%, rgba(255,120,40,0) 62%);
+    animation:pulse 2.6s ease-in-out infinite;filter:blur(2px)}
+  @keyframes pulse{
+    0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.9}
+    25%{transform:translate(-50%,-50%) scale(1.08);opacity:1}
+    50%{transform:translate(-50%,-50%) scale(.95);opacity:.82}
+    75%{transform:translate(-50%,-50%) scale(1.04);opacity:.94}
+  }
+
+  /* CSS flame — teardrop with flicker */
+  .flame{position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    width:44px;height:78px;border-radius:50% 50% 46% 46% / 62% 62% 38% 38%;
+    transform-origin:50% 100%;
+    background:radial-gradient(circle at 50% 78%, #fffbe6 0%, #ffe08a 22%, #ffb22e 48%, #ff7a1a 72%, rgba(255,90,20,.0) 100%);
+    box-shadow:0 0 40px 10px rgba(255,150,50,.55), 0 0 90px 30px rgba(255,110,30,.28);
+    animation:flicker 130ms steps(2) infinite}
+  .flame::before{ /* bright inner core */
+    content:"";position:absolute;left:50%;bottom:6%;transform:translateX(-50%);
+    width:20px;height:46px;border-radius:50% 50% 46% 46% / 62% 62% 38% 38%;
+    background:radial-gradient(circle at 50% 80%, #ffffff 0%, #fff4c2 35%, rgba(255,200,90,0) 72%);
+    animation:flicker2 180ms steps(2) infinite}
+  .flame::after{ /* cool blue base */
+    content:"";position:absolute;left:50%;bottom:-2%;transform:translateX(-50%);
+    width:14px;height:14px;border-radius:50%;
+    background:radial-gradient(circle, rgba(120,170,255,.8), rgba(80,120,255,0));
+    filter:blur(1px)}
+  @keyframes flicker{
+    0%{transform:translateX(-50%) scale(1,1) rotate(-0.6deg)}
+    25%{transform:translateX(-51%) scale(0.97,1.04) rotate(0.8deg)}
+    50%{transform:translateX(-49%) scale(1.03,0.96) rotate(-1deg)}
+    75%{transform:translateX(-50%) scale(0.99,1.06) rotate(0.5deg)}
+    100%{transform:translateX(-50%) scale(1.01,1) rotate(-0.4deg)}
+  }
+  @keyframes flicker2{
+    0%,100%{transform:translateX(-50%) scaleY(1)}
+    40%{transform:translateX(-48%) scaleY(1.08)}
+    70%{transform:translateX(-52%) scaleY(.94)}
+  }
+
+  .wick{width:3px;height:16px;background:linear-gradient(#2a201a,#0d0a08);
+    border-radius:1px;margin-bottom:-2px;position:relative;z-index:1}
+
+  /* candle body */
+  .body{position:relative;width:120px;height:150px;border-radius:8px 8px 12px 12px;
+    background:linear-gradient(90deg,#c9b58f 0%,#efe3c4 30%,#fbf3dc 52%,#e6d5ad 74%,#bfa87f 100%);
+    box-shadow:inset 0 -18px 30px rgba(120,80,40,.35), inset 0 10px 18px rgba(255,255,255,.4),
+      0 18px 40px rgba(0,0,0,.55);overflow:hidden}
+  .body .melt{position:absolute;left:0;right:0;top:0;height:26px;border-radius:0 0 50% 50%/0 0 100% 100%;
+    background:radial-gradient(ellipse at 50% 0,#fff8e4 0%,#f2e3c0 60%,#d9c398 100%);
+    box-shadow:inset 0 -6px 10px rgba(150,110,60,.3)}
+  .body .melt::after{content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);
+    width:34px;height:16px;border-radius:50%;background:rgba(90,55,20,.35);filter:blur(2px)}
+  .body .drip{position:absolute;top:22px;width:12px;height:40px;border-radius:0 0 6px 6px;
+    background:linear-gradient(#f6ecce,#d8c195);opacity:.85}
+  .body .drip.a{left:22px;height:30px}
+  .body .drip.b{left:78px;height:52px;width:10px}
+  .body .drip.c{left:54px;height:20px;width:8px}
+  .body .shade{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(255,200,120,.35),transparent 60%);
+    mix-blend-mode:screen}
+
+  /* brass dish / holder */
+  .dish{width:190px;height:26px;margin-top:-6px;border-radius:0 0 90px 90px;
+    background:linear-gradient(90deg,#7c5a1e,#c9a14a 30%,#f0d888 52%,#b98f38 76%,#5f4414);
+    box-shadow:0 12px 24px rgba(0,0,0,.6), inset 0 6px 10px rgba(255,230,170,.4), inset 0 -8px 12px rgba(60,40,10,.6)}
+  .dish::before{content:"";position:absolute;left:-8px;right:-8px;top:-8px;height:12px;border-radius:50%;
+    background:linear-gradient(90deg,#6d4f1a,#d8b058 50%,#6d4f1a)}
+
+  .credit{position:absolute;right:clamp(18px,4vw,56px);bottom:clamp(16px,4vh,40px);
+    font-family:system-ui,"Segoe UI",sans-serif;font-size:10px;letter-spacing:.26em;
+    text-transform:uppercase;color:rgba(255,196,120,.4);z-index:3}
+
+  @media (prefers-reduced-motion: reduce){
+    .flame{animation:none}
+    .flame::before{animation:none}
+    .glow{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="embers"></canvas>
+  <div class="vignette"></div>
+
+  <div class="poem">
+    <p class="eyebrow">A Small Warmth</p>
+    <p>The night is cold and vast and blue, but here — a single amber coin burns down the dark and turns the quiet gold.</p>
+    <p>Lean in. The hour slows. Let every breath catch the flame, and hold.</p>
+    <p class="sign">— keep your small light lit</p>
+  </div>
+
+  <div class="candle">
+    <div class="flame-wrap">
+      <div class="glow"></div>
+      <div class="flame"></div>
+    </div>
+    <div class="wick"></div>
+    <div class="body">
+      <div class="melt"></div>
+      <div class="drip a"></div>
+      <div class="drip b"></div>
+      <div class="drip c"></div>
+      <div class="shade"></div>
+    </div>
+    <div class="dish"></div>
+  </div>
+
+  <div class="credit">lit · 20 · 10 · 2026</div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var cv = document.getElementById("embers");
+  var ctx = cv.getContext("2d");
+  var flame = document.querySelector(".flame");
+  var W=0,H=0,DPR=1,t=0,last=0;
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1,2);
+    W = Math.round(window.innerWidth*DPR);
+    H = Math.round(window.innerHeight*DPR);
+    cv.width=W; cv.height=H;
+  }
+
+  // ember particles
+  var parts = [];
+  function spawn(){
+    if(!flame){ return; }
+    var r = flame.getBoundingClientRect();
+    var sx = (r.left + r.width*0.5) * DPR;
+    var sy = (r.top + r.height*0.12) * DPR;
+    parts.push({
+      x: sx + (Math.random()-0.5)*10*DPR,
+      y: sy,
+      vx: (Math.random()-0.5)*0.5,
+      vy: -(0.5 + Math.random()*1.1),
+      life: 0,
+      max: 90 + Math.random()*90,
+      size: (0.8 + Math.random()*1.8)*DPR,
+      hue: Math.random()
+    });
+  }
+
+  function step(){
+    ctx.clearRect(0,0,W,H);
+    // keep a gentle stream of embers
+    if(!reduce){
+      for(var s=0;s<2;s++) if(Math.random()<0.6) spawn();
+    }
+    for(var i=parts.length-1;i>=0;i--){
+      var p = parts[i];
+      p.life++;
+      if(p.life>p.max || p.y < -20){ parts.splice(i,1); continue; }
+      // drift with a soft swirl
+      p.vx += Math.sin((t+p.life*0.03))*0.01;
+      p.x += p.vx;
+      p.y += p.vy;
+      p.vy *= 0.995;
+      var lifeFrac = p.life/p.max;
+      var a = Math.sin(lifeFrac*Math.PI); // fade in + out
+      // colour: hot yellow -> deep orange as it cools
+      var rC = 255, gC = Math.round(150 - lifeFrac*90), bC = Math.round(60 - lifeFrac*50);
+      ctx.beginPath();
+      ctx.fillStyle = "rgba("+rC+","+gC+","+bC+","+a.toFixed(3)+")";
+      ctx.shadowBlur = 8*DPR;
+      ctx.shadowColor = "rgba(255,150,50,"+a.toFixed(3)+")";
+      ctx.arc(p.x, p.y, p.size*(1-lifeFrac*0.4), 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  }
+
+  function loop(ts){
+    if(!last) last=ts;
+    var dt=(ts-last)/1000; last=ts;
+    if(!reduce) t+=dt*0.8;
+    step();
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener("resize",function(){ resize(); parts.length=0; });
+  resize();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crystal Peaks — Vintage Mountain Lake Travel Poster</title>
+<style>
+  :root{
+    /* strictly limited retro palette */
+    --cream:#f3e6c4;      /* paper / highlights */
+    --cream-2:#e9d6a8;
+    --sky:#7fb2c9;        /* dusty sky blue */
+    --sky-2:#a9cfd8;
+    --sky-low:#e8c98d;    /* warm horizon glow */
+    --ochre:#d69a2f;      /* sun / accents */
+    --ochre-deep:#c07f1f;
+    --rust:#a8432a;       /* near mountains */
+    --rust-deep:#7f2f1f;
+    --teal:#1f6f6b;       /* mid hills */
+    --teal-deep:#12504c;
+    --teal-ink:#0c3a38;   /* foreground pines */
+    --ink:#2b2016;        /* near-black brown */
+    --door:#6e2f1e;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:"Arial Narrow","Helvetica Neue Condensed",system-ui,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #2a2016 0%, #1a130c 60%, #100b06 100%);
+    color:var(--cream);
+    -webkit-font-smoothing:antialiased;
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(10px,3vw,48px);
+    overflow-x:hidden;
+  }
+
+  /* the framed poster */
+  .stage{
+    width:min(100%, 680px);
+    aspect-ratio:3 / 4;
+    position:relative;
+    border-radius:4px;
+    /* aged paper mat + frame shadow */
+    background:linear-gradient(160deg,#efe0bd,#d9c398);
+    padding:clamp(10px,2.4vw,26px);
+    box-shadow:
+      0 2px 0 #c9b084,
+      0 30px 60px -20px rgba(0,0,0,.7),
+      0 6px 18px rgba(0,0,0,.5),
+      inset 0 0 0 1px rgba(255,255,255,.25);
+    isolation:isolate;
+  }
+  .frame{
+    position:relative;
+    width:100%;height:100%;
+    border:clamp(4px,1vw,10px) solid var(--cream);
+    border-radius:2px;
+    overflow:hidden;
+    box-shadow:
+      inset 0 0 0 2px var(--rust-deep),
+      inset 0 0 0 6px var(--cream),
+      inset 0 0 0 8px rgba(127,47,31,.35);
+  }
+
+  /* ---- the illustration ---- */
+  .art{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* type layered over the art */
+  .type{position:absolute;inset:0;pointer-events:none;
+    display:flex;flex-direction:column;align-items:center;
+    padding:clamp(14px,3.4vw,40px) clamp(12px,3vw,34px);}
+  .kicker{
+    text-align:center;
+    font-weight:700;
+    letter-spacing:.42em;
+    font-size:clamp(7px,1.55vw,13px);
+    color:var(--cream);
+    text-shadow:0 1px 0 rgba(127,47,31,.55);
+    margin-bottom:clamp(6px,2vw,18px);
+    padding-top:clamp(4px,1vw,12px);
+    opacity:.96;
+  }
+  .title-wrap{margin-top:auto;text-align:center;}
+  .title{
+    font-size:clamp(34px,12vw,108px);
+    line-height:.82;
+    font-weight:700;
+    letter-spacing:.01em;
+    color:var(--cream);
+    text-transform:uppercase;
+    text-shadow:
+      2px 2px 0 var(--rust-deep),
+      4px 4px 0 rgba(18,80,76,.55);
+    font-stretch:condensed;
+  }
+  .subtitle{
+    margin-top:clamp(4px,1vw,10px);
+    display:inline-flex;align-items:center;gap:clamp(6px,1.6vw,16px);
+    font-size:clamp(9px,2.1vw,17px);
+    letter-spacing:.42em;
+    font-weight:700;
+    color:var(--ink);
+    text-transform:uppercase;
+  }
+  .subtitle::before,.subtitle::after{
+    content:"";width:clamp(10px,2.4vw,26px);height:2px;background:var(--rust);
+  }
+
+  /* bottom ribbon badge */
+  .ribbon{
+    align-self:center;
+    margin-bottom:clamp(6px,1.6vw,16px);
+    background:var(--rust);
+    color:var(--cream);
+    font-weight:700;
+    letter-spacing:.28em;
+    font-size:clamp(7px,1.4vw,12px);
+    text-transform:uppercase;
+    padding:clamp(5px,1vw,9px) clamp(12px,2.6vw,22px);
+    border:1.5px solid var(--cream);
+    border-radius:2px;
+    box-shadow:2px 2px 0 rgba(127,47,31,.6);
+    pointer-events:auto;
+  }
+
+  /* film grain + vignette overlays */
+  .grain{position:absolute;inset:0;width:100%;height:100%;
+    pointer-events:none;z-index:5;mix-blend-mode:multiply;opacity:.16;}
+  .vignette{position:absolute;inset:0;pointer-events:none;z-index:6;
+    background:radial-gradient(130% 120% at 50% 42%,
+       rgba(243,230,196,0) 55%, rgba(43,32,22,.28) 82%, rgba(43,32,22,.5) 100%);
+    mix-blend-mode:multiply;}
+  /* aged corner spots */
+  .stain{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:.5;
+    background:
+      radial-gradient(closest-side at 12% 88%, rgba(127,80,30,.35), transparent 70%),
+      radial-gradient(closest-side at 90% 12%, rgba(127,80,30,.28), transparent 70%),
+      radial-gradient(closest-side at 80% 92%, rgba(90,55,20,.30), transparent 70%);
+    mix-blend-mode:multiply;}
+
+  @media (prefers-reduced-motion:reduce){
+    .shimmer rect,.drift{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+  <main class="stage">
+    <div class="frame">
+
+      <!-- ===================== ILLUSTRATION ===================== -->
+      <svg class="art" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Flat vintage travel poster: a mountain lake with a cabin, pine trees and a ringed sun.">
+        <defs>
+          <!-- sky -->
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stop-color="#6ea6c1"/>
+            <stop offset="42%" stop-color="#93c0cf"/>
+            <stop offset="70%" stop-color="#d7b87d"/>
+            <stop offset="100%" stop-color="#e9c98d"/>
+          </linearGradient>
+          <!-- lake -->
+          <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"  stop-color="#2f8c86"/>
+            <stop offset="55%" stop-color="#1f6f6b"/>
+            <stop offset="100%" stop-color="#12504c"/>
+          </linearGradient>
+          <linearGradient id="sunGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#f0c256"/>
+            <stop offset="100%" stop-color="#d18a24"/>
+          </linearGradient>
+          <linearGradient id="cabinWall" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#b75836"/>
+            <stop offset="100%" stop-color="#8f3d26"/>
+          </linearGradient>
+        </defs>
+
+        <!-- SKY -->
+        <rect x="0" y="0" width="600" height="560" fill="url(#sky)"/>
+
+        <!-- SUN disk with concentric rings (signature) -->
+        <g transform="translate(300,250)">
+          <circle r="188" fill="none" stroke="#e7c079" stroke-width="2" opacity=".35"/>
+          <circle r="160" fill="none" stroke="#e3b261" stroke-width="3" opacity=".5"/>
+          <circle r="132" fill="none" stroke="#dca04c" stroke-width="4" opacity=".65"/>
+          <circle r="104" fill="none" stroke="#d69a2f" stroke-width="5" opacity=".8"/>
+          <circle r="76"  fill="url(#sunGrad)"/>
+          <!-- soft glow halo -->
+          <circle r="76" fill="#f4d488" opacity=".18"/>
+        </g>
+
+        <!-- BIRDS -->
+        <g stroke="#7f2f1f" stroke-width="3" fill="none" stroke-linecap="round" opacity=".8">
+          <path d="M120 120 q10 -9 20 0 q10 -9 20 0"/>
+          <path d="M185 95 q8 -7 16 0 q8 -7 16 0"/>
+          <path d="M430 150 q9 -8 18 0 q9 -8 18 0"/>
+        </g>
+
+        <!-- DISTANT mountains (rust, hazy) -->
+        <path d="M0 470 L90 360 L150 420 L230 300 L320 430 L400 330 L470 410 L540 340 L600 400 L600 560 L0 560 Z"
+              fill="#b5613f" opacity=".85"/>
+        <!-- snow caps distant -->
+        <path d="M230 300 L205 340 L225 332 L244 350 L262 330 L250 345 L275 345 Z" fill="#f3e6c4" opacity=".8"/>
+        <path d="M400 330 L380 362 L398 356 L414 372 L430 354 Z" fill="#f3e6c4" opacity=".7"/>
+
+        <!-- MID mountains (rust deep) -->
+        <path d="M0 520 L70 430 L160 500 L250 400 L340 500 L430 410 L520 490 L600 440 L600 560 L0 560 Z"
+              fill="#8f3a24"/>
+        <path d="M250 400 L224 446 L244 438 L264 456 L282 434 L270 452 L296 452 Z" fill="#f3e6c4"/>
+
+        <!-- FOREGROUND hills (teal) -->
+        <path d="M0 560 L120 470 L260 545 L400 470 L520 540 L600 500 L600 560 Z" fill="#1f6f6b"/>
+
+        <!-- LAKE -->
+        <rect x="0" y="558" width="600" height="242" fill="url(#lake)"/>
+
+        <!-- mountain reflection in lake -->
+        <g opacity=".22">
+          <path d="M0 560 L120 650 L260 585 L400 650 L520 580 L600 620 L600 600 L0 600 Z" fill="#e9c98d"/>
+          <path d="M180 560 L300 620 L420 560 Z" fill="#8f3a24"/>
+        </g>
+
+        <!-- shimmer lines on lake -->
+        <g class="shimmer" fill="#f3e6c4">
+          <rect x="120" y="600" width="120" height="3" rx="1.5" opacity=".55"/>
+          <rect x="300" y="626" width="150" height="3" rx="1.5" opacity=".45"/>
+          <rect x="180" y="660" width="90"  height="3" rx="1.5" opacity=".4"/>
+          <rect x="330" y="690" width="120" height="3" rx="1.5" opacity=".35"/>
+          <rect x="90"  y="712" width="160" height="3" rx="1.5" opacity=".3"/>
+        </g>
+
+        <!-- SUN reflection column -->
+        <g fill="#f0c256" opacity=".35">
+          <rect x="270" y="566" width="60" height="4"/>
+          <rect x="278" y="580" width="44" height="4"/>
+          <rect x="284" y="596" width="32" height="4"/>
+        </g>
+
+        <!-- SHORELINE band -->
+        <rect x="0" y="552" width="600" height="12" fill="#c9a25f"/>
+
+        <!-- CABIN (on the shore, left of center) -->
+        <g transform="translate(150,470)">
+          <!-- body -->
+          <rect x="0" y="30" width="120" height="70" fill="url(#cabinWall)"/>
+          <!-- roof -->
+          <path d="M-12 32 L60 -8 L132 32 Z" fill="#5f2a1c"/>
+          <path d="M-12 32 L60 -8 L60 32 Z" fill="#74332180"/>
+          <!-- chimney -->
+          <rect x="88" y="-4" width="14" height="26" fill="#7f2f1f"/>
+          <!-- door -->
+          <rect x="48" y="62" width="26" height="38" fill="#4a1f14"/>
+          <circle cx="68" cy="82" r="2" fill="#e0b050"/>
+          <!-- glowing window -->
+          <rect x="12" y="52" width="24" height="24" fill="#f4cf6a"/>
+          <rect x="12" y="52" width="24" height="24" fill="#fff2c4" opacity=".55"/>
+          <line x1="24" y1="52" x2="24" y2="76" stroke="#7f3a22" stroke-width="2"/>
+          <line x1="12" y1="64" x2="36" y2="64" stroke="#7f3a22" stroke-width="2"/>
+          <rect x="84" y="52" width="24" height="24" fill="#f4cf6a"/>
+          <line x1="96" y1="52" x2="96" y2="76" stroke="#7f3a22" stroke-width="2"/>
+          <line x1="84" y1="64" x2="108" y2="64" stroke="#7f3a22" stroke-width="2"/>
+          <!-- snow on roof -->
+          <path d="M-12 32 L60 -8 L132 32 L128 32 L60 10 L-8 32 Z" fill="#f3e6c4" opacity=".9"/>
+        </g>
+
+        <!-- PINE TREES (layered triangles, right cluster + left edge) -->
+        <!-- helper look via repeated groups -->
+        <g fill="#0c3a38">
+          <!-- right forest cluster -->
+          <g transform="translate(470,470)">
+            <polygon points="0,0 40,0 20,-46"/>
+            <polygon points="40,0 80,0 60,-46"/>
+            <polygon points="20,-30 60,-30 40,-72"/>
+            <polygon points="0,-40 40,-40 20,-86"/>
+            <polygon points="40,-40 80,-40 60,-92"/>
+            <polygon points="20,-64 60,-64 40,-118"/>
+          </g>
+          <g transform="translate(540,486)">
+            <polygon points="0,0 34,0 17,-40"/>
+            <polygon points="17,-26 51,-26 34,-70"/>
+            <polygon points="0,-34 34,-34 17,-80"/>
+          </g>
+        </g>
+        <!-- pine highlights (rust-tinted) -->
+        <g fill="#17584f">
+          <g transform="translate(470,470)">
+            <polygon points="20,-46 40,0 20,0"/>
+            <polygon points="40,-72 60,-30 40,-30"/>
+          </g>
+        </g>
+        <!-- left lone pines -->
+        <g fill="#0c3a38">
+          <g transform="translate(40,486)">
+            <polygon points="0,0 30,0 15,-36"/>
+            <polygon points="15,-24 45,-24 30,-64"/>
+            <polygon points="0,-30 30,-30 15,-74"/>
+            <polygon points="15,-56 45,-56 30,-100"/>
+          </g>
+          <g transform="translate(96,500)">
+            <polygon points="0,0 24,0 12,-30"/>
+            <polygon points="12,-20 36,-20 24,-54"/>
+            <polygon points="0,-24 24,-24 12,-60"/>
+          </g>
+        </g>
+
+        <!-- small dock + rowboat -->
+        <g transform="translate(300,632)">
+          <rect x="0" y="0" width="70" height="7" fill="#6e3d22"/>
+          <rect x="6" y="7" width="6" height="14" fill="#5a3018"/>
+          <rect x="58" y="7" width="6" height="14" fill="#5a3018"/>
+          <path d="M18 20 q17 16 34 0 z" fill="#a8432a"/>
+          <rect x="32" y="14" width="3" height="10" fill="#7f2f1f"/>
+        </g>
+
+        <!-- foreground grass tufts -->
+        <g stroke="#0c3a38" stroke-width="3" fill="none" stroke-linecap="round">
+          <path d="M30 770 q4 -18 -2 -28 M30 770 q0 -20 8 -30 M30 770 q-8 -14 -16 -20"/>
+          <path d="M560 776 q4 -18 -2 -28 M560 776 q0 -20 8 -30"/>
+        </g>
+
+        <!-- decorative inner border line -->
+        <rect x="16" y="16" width="568" height="768" fill="none" stroke="#f3e6c4" stroke-width="2" opacity=".35"/>
+      </svg>
+
+      <!-- ===================== TYPE ===================== -->
+      <div class="type">
+        <div class="kicker">NATIONAL SCENIC RESERVE &nbsp;·&nbsp; EST. 1936</div>
+        <div class="title-wrap">
+          <h1 class="title">Crystal<br>Peaks</h1>
+          <div class="subtitle">Lake &amp; Mountain Wilderness</div>
+        </div>
+        <div class="ribbon">Visit The Great Outdoors</div>
+      </div>
+
+      <!-- ===================== TEXTURE OVERLAYS ===================== -->
+      <svg class="grain" viewBox="0 0 120 120" preserveAspectRatio="none" aria-hidden="true">
+        <filter id="noise">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+          <feColorMatrix type="saturate" values="0"/>
+        </filter>
+        <rect width="100%" height="100%" filter="url(#noise)"/>
+      </svg>
+      <div class="vignette"></div>
+      <div class="stain"></div>
+
+    </div>
+  </main>
+
+  <script>
+    // subtle lake shimmer: drift the highlight bars so the water breathes
+    (function () {
+      var bars = document.querySelectorAll('.shimmer rect');
+      bars.forEach(function (r, i) {
+        var base = parseFloat(r.getAttribute('opacity')) || 0.4;
+        var t = 0;
+        var dir = (i % 2 === 0) ? 1 : -1;
+        setInterval(function () {
+          t += 0.05 * dir;
+          var v = base + Math.sin(t) * 0.16;
+          r.setAttribute('opacity', v.toFixed(2));
+        }, 220 + i * 40);
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern Festival · Rising into the Night</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:ui-sans-serif,-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:
+      radial-gradient(130% 62% at 50% 106%, rgba(255,150,70,.22), transparent 62%),
+      linear-gradient(180deg,#05071c 0%, #0e1140 44%, #1a1550 74%, #2a1c4c 100%);
+    overflow:hidden; position:relative; color:#fff1dc;
+  }
+
+  #scene{position:fixed;inset:0;z-index:2;}
+
+  .moon{position:fixed;top:7%;right:9%;width:130px;height:130px;border-radius:50%;z-index:3;
+    background:radial-gradient(circle at 38% 32%, #fff7e0, #f7dca0 52%, rgba(247,220,160,0) 71%);
+    box-shadow:0 0 90px 44px rgba(255,221,150,.13);filter:blur(.4px);pointer-events:none;
+    will-change:transform;}
+
+  .vignette{position:fixed;inset:0;z-index:4;pointer-events:none;
+    background:radial-gradient(125% 125% at 50% 46%, transparent 52%, rgba(3,4,16,.6) 100%);}
+
+  .overlay{position:fixed;inset:0;z-index:5;pointer-events:none;text-align:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;
+    padding-top:8.5vh;}
+  .title{font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:400;
+    font-size:clamp(2.1rem,7.4vw,5.4rem);letter-spacing:.01em;color:#fff5e4;
+    text-shadow:0 2px 30px rgba(255,150,60,.45), 0 0 70px rgba(255,140,60,.22);}
+  .subtitle{margin-top:.7em;font-size:clamp(.58rem,1.6vw,.86rem);letter-spacing:.5em;
+    text-transform:uppercase;color:rgba(255,231,192,.62);}
+  .line{margin-top:1.4em;width:min(72vw,340px);height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,190,110,.5),transparent);}
+  .verse{margin-top:1.1em;font-family:Georgia,'Times New Roman',serif;font-style:italic;
+    font-size:clamp(.8rem,2vw,1.05rem);letter-spacing:.02em;color:rgba(255,226,190,.55);
+    max-width:44ch;padding:0 6vw;}
+
+  @media (max-width:520px){ .moon{width:84px;height:84px;top:6%;right:7%} .verse{display:none} }
+  @media (prefers-reduced-motion:reduce){}
+</style>
+</head>
+<body>
+  <canvas id="scene"></canvas>
+  <div class="moon" id="moon"></div>
+  <div class="vignette"></div>
+  <div class="overlay">
+    <div class="title">Lantern Festival</div>
+    <div class="subtitle">a thousand lights rising</div>
+    <div class="line"></div>
+    <div class="verse">Release a wish into the indigo — the sky keeps every glow.</div>
+  </div>
+  <script>
+  (function(){
+    "use strict";
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var canvas = document.getElementById('scene');
+    var ctx = canvas.getContext('2d');
+    var moon = document.getElementById('moon');
+    var W=0,H=0,horizon=0,DPR=Math.min(window.devicePixelRatio||1,2);
+    var TAU=Math.PI*2;
+
+    var stars=[], lanterns=[], embers=[];
+    var mx=0.5, my=0.5, tmx=0.5, tmy=0.5;
+
+    function resize(){
+      W=window.innerWidth; H=window.innerHeight; horizon=H*0.82;
+      canvas.width=Math.max(1,Math.round(W*DPR));
+      canvas.height=Math.max(1,Math.round(H*DPR));
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      buildStars(); buildLanterns();
+    }
+
+    function buildStars(){
+      stars=[];
+      var n=Math.round(Math.min(W*H/5200)); n=Math.max(70,Math.min(n,230));
+      for(var i=0;i<n;i++){
+        stars.push({
+          x:Math.random()*W, y:Math.random()*H*0.82,
+          r:Math.random()*1.3+0.3, tw:Math.random()*TAU, sp:0.006+Math.random()*0.022,
+          gold:Math.random()<0.28, bright:Math.random()<0.14, layer:Math.random()<0.5?0:1
+        });
+      }
+    }
+
+    function buildLanterns(){
+      lanterns=[];
+      var n=Math.max(9,Math.min(20,Math.round(W/92)));
+      for(var i=0;i<n;i++) lanterns.push(newLantern(true));
+    }
+    function newLantern(anywhere){
+      var s=14+Math.random()*16;
+      return {
+        x:Math.random(),
+        y: anywhere ? H*0.5+Math.random()*H*0.5 : H+s*4+Math.random()*H*0.4,
+        vy:0.16+Math.random()*0.3,
+        swayA:8+Math.random()*16, swayS:0.0006+Math.random()*0.0012, swayP:Math.random()*TAU,
+        size:s, glow:s*3.3, hue:22+Math.random()*22
+      };
+    }
+
+    function spawnEmber(){
+      if(embers.length>140) return;
+      embers.push({
+        x:Math.random()*W, y:H*0.84+Math.random()*H*0.16,
+        vx:(Math.random()-0.5)*0.3, vy:-(0.25+Math.random()*0.55),
+        life:1, decay:0.004+Math.random()*0.007,
+        size:Math.random()*1.6+0.4, hue:20+Math.random()*24
+      });
+    }
+
+    function drawStars(){
+      for(var i=0;i<stars.length;i++){
+        var s=stars[i];
+        s.tw += s.sp;
+        var a=0.4+0.6*Math.sin(s.tw);
+        var px=(mx-0.5)*(s.layer?13:6), py=(my-0.5)*(s.layer?13:6);
+        var x=s.x+px, y=s.y+py;
+        if(y< -2 || y>H+2) continue;
+        ctx.globalAlpha=a;
+        ctx.fillStyle = s.gold ? '255,226,150' : '232,238,255';
+        ctx.beginPath(); ctx.arc(x,y,s.r,0,TAU); ctx.fill();
+        if(s.bright){
+          ctx.globalAlpha=a*0.5;
+          ctx.strokeStyle = s.gold ? '255,226,150' : '232,238,255';
+          ctx.lineWidth=0.6;
+          ctx.beginPath(); ctx.moveTo(x-s.r*3.4,y); ctx.lineTo(x+s.r*3.4,y);
+          ctx.moveTo(x,y-s.r*3.4); ctx.lineTo(x,y+s.r*3.4); ctx.stroke();
+        }
+      }
+      ctx.globalAlpha=1;
+    }
+
+    function drawGround(){
+      // rolling hills
+      ctx.fillStyle='#08091c';
+      ctx.beginPath(); ctx.moveTo(0,H); ctx.lineTo(0,horizon);
+      ctx.quadraticCurveTo(W*0.15, horizon-H*0.05, W*0.31, horizon);
+      ctx.quadraticCurveTo(W*0.47, horizon-H*0.075, W*0.63, horizon-H*0.02);
+      ctx.quadraticCurveTo(W*0.81, horizon-H*0.06, W, horizon-H*0.03);
+      ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+      // deterministic town rooftop silhouette
+      ctx.fillStyle='#05060f';
+      var base=horizon+2, step=W*0.028;
+      for(var x=0;x<W;x+=step){
+        var h=7+Math.abs(Math.sin(x*0.05))*15+Math.abs(Math.sin(x*0.13+1))*11;
+        ctx.fillRect(x, base-h, step*0.92, h);
+      }
+      // water
+      var wg=ctx.createLinearGradient(0,horizon,0,H);
+      wg.addColorStop(0,'rgba(30,22,58,.9)');
+      wg.addColorStop(1,'rgba(6,7,22,1)');
+      ctx.fillStyle=wg;
+      ctx.fillRect(0,horizon+1,W,H-horizon);
+    }
+
+    function drawReflection(l){
+      var lx=l.x*W + Math.sin(t0+l.swayS*l.size + l.swayP)*l.swayA + (mx-0.5)*20;
+      var reflLen=Math.min(H-horizon-4, l.size*7);
+      var wob0=Math.sin(t0*0.0016 + l.swayP)*6;
+      var rg=ctx.createLinearGradient(0,horizon,0,horizon+reflLen);
+      rg.addColorStop(0,'rgba(255,178,96,.30)');
+      rg.addColorStop(1,'rgba(255,150,70,0)');
+      ctx.fillStyle=rg; ctx.globalAlpha=1;
+      ctx.fillRect(lx+wob0-l.size*0.5, horizon, l.size, reflLen);
+      for(var k=0;k<4;k++){
+        var yy=horizon + reflLen*(k+0.5)/4 + Math.sin(t0*0.004+k)*2;
+        var wob=Math.sin(yy*0.06 + t0*0.003)*4;
+        ctx.globalAlpha=0.18*(1-(yy-horizon)/reflLen);
+        ctx.fillStyle='#ffd089';
+        ctx.fillRect(lx+wob-l.size*0.9, yy, l.size*1.8, 1.5);
+      }
+    }
+
+    function drawLantern(l){
+      var lx=l.x*W + Math.sin(t0*l.swayS + l.swayP)*l.swayA + (mx-0.5)*20;
+      var ly=l.y + Math.cos(t0*l.swayS*0.7 + l.swayP)*4;
+      var s=l.size;
+      ctx.globalCompositeOperation='lighter';
+      var g=ctx.createRadialGradient(lx,ly,0,lx,ly,l.glow);
+      g.addColorStop(0,'rgba(255,192,104,.55)');
+      g.addColorStop(0.5,'rgba(255,150,70,.18)');
+      g.addColorStop(1,'rgba(255,140,60,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(lx,ly,l.glow,0,TAU); ctx.fill();
+      ctx.globalCompositeOperation='source-over';
+      var bg=ctx.createLinearGradient(lx-s,ly-s,lx+s,ly+s);
+      bg.addColorStop(0,'hsl('+l.hue+',95%,70%)');
+      bg.addColorStop(0.5,'hsl('+l.hue+',92%,58%)');
+      bg.addColorStop(1,'hsl('+l.hue+',88%,46%)');
+      ctx.fillStyle=bg;
+      ctx.beginPath(); ctx.ellipse(lx,ly,s*0.72,s,0,0,TAU); ctx.fill();
+      ctx.strokeStyle='hsla('+(l.hue-10)+',60%,30%,.45)'; ctx.lineWidth=0.8;
+      ctx.beginPath(); ctx.ellipse(lx,ly,s*0.72*0.32,s,0,0,TAU); ctx.stroke();
+      ctx.beginPath(); ctx.ellipse(lx,ly,s*0.72*0.66,s,0,0,TAU); ctx.stroke();
+      ctx.fillStyle='hsl('+l.hue+',30%,26%)';
+      ctx.beginPath(); ctx.ellipse(lx,ly-s*0.96,s*0.28,s*0.1,0,0,TAU); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(lx,ly+s*0.98,s*0.24,s*0.09,0,0,TAU); ctx.fill();
+      ctx.beginPath(); ctx.arc(lx,ly-s*1.06,s*0.09,0,TAU); ctx.fill();
+      ctx.strokeStyle='rgba(60,40,30,.5)'; ctx.lineWidth=0.8;
+      ctx.beginPath(); ctx.moveTo(lx,ly-s*1.15); ctx.lineTo(lx,ly-s*2.0); ctx.stroke();
+    }
+
+    function drawEmbers(){
+      if(!reduce && Math.random()<0.5) spawnEmber();
+      ctx.globalCompositeOperation='lighter';
+      for(var i=embers.length-1;i>=0;i--){
+        var e=embers[i];
+        e.x+=e.vx; e.y+=e.vy; e.vy*=0.999; e.life-=e.decay;
+        if(e.life<=0){ embers.splice(i,1); continue; }
+        ctx.globalAlpha=e.life*0.9;
+        ctx.fillStyle='hsl('+e.hue+',95%,65%)';
+        ctx.beginPath(); ctx.arc(e.x,e.y,e.size,0,TAU); ctx.fill();
+      }
+      ctx.globalAlpha=1; ctx.globalCompositeOperation='source-over';
+    }
+
+    var t0=Date.now();
+    function frame(){
+      var t=t0;
+      mx += (tmx-mx)*0.06; my += (tmy-my)*0.06;
+      ctx.clearRect(0,0,W,H);
+      if(!reduce) drawStars();
+      drawGround();
+      if(!reduce){
+        for(var i=0;i<lanterns.length;i++){
+          var l=lanterns[i];
+          drawReflection(l);
+          l.y -= l.vy;
+          if(l.y < -l.size*3 - 40){ l.x=Math.random(); l=newLantern(false); }
+          drawLantern(l);
+        }
+        drawEmbers();
+      }
+      moon.style.transform='translate('+((mx-0.5)*-14).toFixed(1)+'px,'+((my-0.5)*-10).toFixed(1)+'px)';
+      requestAnimationFrame(frame);
+    }
+
+    window.addEventListener('pointermove', function(e){
+      tmx=e.clientX/window.innerWidth; tmy=e.clientY/window.innerHeight;
+    });
+    window.addEventListener('resize', resize);
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', resize);
+    else resize();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

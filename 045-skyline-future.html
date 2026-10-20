@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON MERIDIAN · A Future Skyline at Dusk</title>
+<style>
+  :root{ --ink:#0a0418; }
+  html,body{margin:0;padding:0;height:100%;background:var(--ink);overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  .scene{position:fixed;inset:0;overflow:hidden}
+
+  /* ---- sky ---- */
+  .sky{position:absolute;inset:0;
+    background:
+      radial-gradient(140% 120% at 78% 92%, rgba(255,170,90,.55), rgba(255,120,80,.0) 46%),
+      linear-gradient(180deg,
+        #160a31 0%,
+        #2a1150 24%,
+        #4a1b6e 44%,
+        #7a2f74 60%,
+        #c14e5e 74%,
+        #ef8a4e 86%,
+        #ffb257 100%);}
+  .stars{position:absolute;left:0;right:0;top:0;height:52%;z-index:1;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 18%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 28% 9%, #e9dcff, transparent),
+      radial-gradient(1px 1px at 44% 22%, #fff, transparent),
+      radial-gradient(1.5px 1.5px at 61% 6%, #fff, transparent),
+      radial-gradient(1px 1px at 74% 17%, #ffd9f0, transparent),
+      radial-gradient(1.5px 1.5px at 88% 11%, #fff, transparent),
+      radial-gradient(1px 1px at 8% 38%, #fff, transparent),
+      radial-gradient(1px 1px at 52% 34%, #e9dcff, transparent),
+      radial-gradient(1.5px 1.5px at 36% 41%, #fff, transparent),
+      radial-gradient(1px 1px at 93% 33%, #fff, transparent);}
+  .stars::after{content:"";position:absolute;inset:0;animation:shimmer 6s ease-in-out infinite;opacity:.8}
+  @keyframes shimmer{50%{opacity:.35}}
+
+  /* ---- the dying sun on the horizon ---- */
+  .sun{position:absolute;left:50%;bottom:33%;width:min(68vw,720px);height:min(68vw,720px);
+    transform:translateX(-50%);z-index:2;pointer-events:none;border-radius:50%;
+    background:radial-gradient(circle at 50% 62%,
+      rgba(255,244,214,.95) 0%,
+      rgba(255,196,120,.7) 18%,
+      rgba(255,140,90,.35) 40%,
+      rgba(255,120,90,0) 62%);
+    filter:blur(2px);animation:breathe 9s ease-in-out infinite}
+  @keyframes breathe{50%{opacity:.75;transform:translateX(-50%) scale(1.04)}}
+
+  /* ---- flying vehicle light trails ---- */
+  #traffic{position:absolute;inset:0;z-index:3}
+
+  /* ---- skyline silhouette ---- */
+  .skyline{position:absolute;left:0;right:0;bottom:28%;height:42%;z-index:4;
+    display:flex;align-items:flex-end;justify-content:flex-start;
+    filter:drop-shadow(0 0 18px rgba(120,40,120,.35))}
+  .bldg{position:relative;flex:0 0 auto;bottom:0;
+    background:linear-gradient(180deg,#1a0a30 0%, #120724 70%, #0c0518 100%);
+    border-top-left-radius:1px;border-top-right-radius:1px;
+    box-shadow:inset 0 1px 0 rgba(120,70,150,.25)}
+  .bldg .cap{position:absolute;left:0;right:0;top:-6px;height:6px;
+    background:linear-gradient(180deg,rgba(120,70,150,.5),rgba(120,70,150,0));
+    border-radius:1px}
+  .bldg.spire .cap{height:34px;background:linear-gradient(180deg,rgba(120,70,150,.6),rgba(120,70,150,0));
+    top:-34px}
+  .bldg .antenna{position:absolute;left:50%;bottom:100%;width:1px;height:26px;
+    background:linear-gradient(180deg,#3a1a55,#000);transform:translateX(-50%)}
+  .bldg .beacon{position:absolute;left:50%;top:-3px;width:4px;height:4px;border-radius:50%;
+    background:#ff5a7a;transform:translateX(-50%);box-shadow:0 0 8px 2px rgba(255,90,118,.9);
+    animation:beacon 2.4s ease-in-out infinite}
+  @keyframes beacon{0%,100%{opacity:.2}45%{opacity:1}}
+
+  .win{position:absolute;width:5px;height:7px;
+    box-shadow:0 0 5px rgba(0,0,0,.4)}
+  .win.on{animation:twinkle var(--dur,5s) ease-in-out var(--dly,0s) infinite}
+  .win.cyan{background:#57e6ff;box-shadow:0 0 6px 1px rgba(87,230,255,.7)}
+  .win.magenta{background:#ff57d9;box-shadow:0 0 6px 1px rgba(255,87,217,.7)}
+  .win.amber{background:#ffcf5c;box-shadow:0 0 6px 1px rgba(255,207,92,.65)}
+  .win.lime{background:#b7ff6a;box-shadow:0 0 6px 1px rgba(183,255,106,.55)}
+  @keyframes twinkle{0%,100%{opacity:var(--lo,.35)}50%{opacity:var(--hi,.95)}}
+
+  /* ---- water + reflection ---- */
+  .reflection{position:absolute;left:0;right:0;bottom:28%;height:42%;z-index:5;overflow:hidden;
+    display:flex;align-items:flex-end;justify-content:flex-start;
+    filter:blur(1.4px);opacity:.5;transform:scaleY(-1);transform-origin:bottom}
+  .water{position:absolute;left:0;right:0;bottom:0;height:28%;z-index:6;overflow:hidden;
+    background:linear-gradient(180deg,
+      rgba(255,150,90,.30) 0%,
+      rgba(120,40,90,.35) 18%,
+      rgba(30,12,54,.7) 55%,
+      rgba(8,4,22,.95) 100%);}
+  .water::after{content:"";position:absolute;inset:0;pointer-events:none;
+    background:repeating-linear-gradient(180deg,
+      rgba(255,255,255,.06) 0px,
+      rgba(255,255,255,.06) 1px,
+      rgba(0,0,0,0) 3px,
+      rgba(0,0,0,0) 9px);
+    mix-blend-mode:overlay;animation:ripple 5s linear infinite}
+  @keyframes ripple{to{background-position:0 36px}}
+  .sheen{position:absolute;left:0;right:0;bottom:0;height:28%;z-index:7;pointer-events:none;
+    background:radial-gradient(120% 90% at 50% 0%, rgba(255,180,110,.22), transparent 55%)}
+
+  /* ---- type ---- */
+  .wordmark{position:fixed;left:clamp(20px,4vw,56px);top:clamp(20px,4vh,48px);z-index:8;pointer-events:none}
+  .wordmark .k{font-size:clamp(.6rem,1.5vw,.76rem);letter-spacing:.44em;text-transform:uppercase;color:#ffd9a6;
+    text-shadow:0 0 16px rgba(255,150,90,.5)}
+  .wordmark h1{margin:.34em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.8rem,5.6vw,3.6rem);letter-spacing:.01em;line-height:.98;color:#fff3e6;
+    text-shadow:0 2px 30px rgba(120,30,80,.55)}
+  .wordmark h1 em{font-style:italic;color:#ff9ecb;text-shadow:0 0 24px rgba(255,120,200,.55)}
+  .caption{position:fixed;left:clamp(20px,4vw,56px);bottom:clamp(20px,4vh,40px);z-index:8;max-width:min(520px,78vw);pointer-events:none}
+  .caption p{margin:0;color:#e7c7d6;font-size:clamp(.72rem,1.55vw,.9rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 10px rgba(20,4,30,.8)}
+  .caption .hint{margin-top:.7em;font-size:.7em;letter-spacing:.16em;text-transform:uppercase;color:#ffb98a}
+  .stamp{position:fixed;right:clamp(18px,3.4vw,44px);top:clamp(20px,4vh,46px);z-index:8;text-align:right;pointer-events:none;
+    font-variant-numeric:tabular-nums;color:#ffd9a6}
+  .stamp .lab{font-size:.58rem;letter-spacing:.26em;text-transform:uppercase;color:#c9a2c0}
+  .stamp .val{display:block;font-size:1.35rem;color:#fff3e6;letter-spacing:.06em;margin-top:.18em;
+    text-shadow:0 0 16px rgba(255,150,120,.5)}
+  @media (prefers-reduced-motion: reduce){
+    .stars::after,.sun,.win.on,.bldg .beacon,.water::after{animation:none}
+    .win.on{opacity:.8}
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+  <div class="sky"></div>
+  <div class="stars"></div>
+  <div class="sun"></div>
+  <canvas id="traffic" aria-label="Flying vehicles streaking light trails across a dusk skyline"></canvas>
+
+  <div class="skyline" id="skyline"></div>
+  <div class="reflection" id="reflection"></div>
+
+  <div class="water"></div>
+  <div class="sheen"></div>
+
+  <div class="wordmark">
+    <div class="k">Neo · Meridian &middot; No. 045</div>
+    <h1>The city that<br><em>never</em> goes dark.</h1>
+  </div>
+
+  <div class="stamp">
+    <div class="lab">Sector Clock</div>
+    <span class="val" id="clock">19:48</span>
+    <span class="lab">DUSK</span>
+  </div>
+
+  <div class="caption">
+    <p>Dusk over the vertical city. Neon veins flicker awake in ten thousand windows while
+       autonomous ferries carve luminous seams across the amber sky — each light mirrored in the
+       warm tide below.</p>
+    <div class="hint">Move to parallax the skyline &middot; scroll to shift the hour</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var skyline=document.getElementById("skyline");
+  var reflection=document.getElementById("reflection");
+  var canvas=document.getElementById("traffic");
+  var ctx=canvas.getContext("2d");
+  var clockEl=document.getElementById("clock");
+
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var W=0,H=0,DPR=1;
+  var mxTarget=0,mxCur=0;
+
+  var COLORS=[[120,246,255],[255,120,210],[255,244,224],[255,196,100]];
+  var WIN=["cyan","magenta","amber","lime"];
+  function rgba(c,a){return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")";}
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+
+  function build(){
+    skyline.innerHTML="";
+    var n=Math.max(12,Math.round(W/46));
+    var gap=Math.max(1.5,W*0.005);
+    var bw=(W-gap*(n-1))/n;
+    var bandH=skyline.clientHeight||(H*0.42);
+    for(var i=0;i<n;i++){
+      var isSpire=Math.random()<0.16;
+      var hFrac=0.34+Math.random()*0.66;
+      var h=bandH*hFrac;
+      var b=document.createElement("div");
+      b.className="bldg"+(isSpire?" spire":"");
+      b.style.width=bw+"px";
+      b.style.height=h+"px";
+      if(i>0) b.style.marginLeft=gap+"px";
+      var cap=document.createElement("div"); cap.className="cap"; b.appendChild(cap);
+      if(h>bandH*0.68 && Math.random()<0.6){
+        var ant=document.createElement("div"); ant.className="antenna"; b.appendChild(ant);
+        var be=document.createElement("div"); be.className="beacon";
+        be.style.animationDelay=(Math.random()*2.4)+"s"; b.appendChild(be);
+      }
+      var cols=Math.max(1,Math.round(bw/10));
+      var rows=Math.max(1,Math.round(h/13));
+      var padX=Math.max(2,bw*0.13), padY=Math.max(2,h*0.09);
+      var cellW=(bw-padX*2)/cols, cellH=(h-padY*2)/rows;
+      for(var r=0;r<rows;r++){
+        for(var c=0;c<cols;c++){
+          if(Math.random()<0.34) continue;
+          var w=document.createElement("div");
+          w.className="win on "+WIN[(Math.random()*WIN.length)|0];
+          w.style.left=(padX+c*cellW+(cellW-5)/2)+"px";
+          w.style.top=(padY+r*cellH+(cellH-7)/2)+"px";
+          w.style.setProperty("--dur",(3+Math.random()*5).toFixed(2)+"s");
+          w.style.setProperty("--dly",(Math.random()*5).toFixed(2)+"s");
+          w.style.setProperty("--lo",(0.2+Math.random()*0.3).toFixed(2));
+          w.style.setProperty("--hi",(0.8+Math.random()*0.18).toFixed(2));
+          b.appendChild(w);
+        }
+      }
+      skyline.appendChild(b);
+    }
+    // reflection = mirrored clone (static windows for perf)
+    reflection.innerHTML=skyline.innerHTML;
+    var ws=reflection.querySelectorAll?reflection.querySelectorAll(".win.on"):[];
+    for(var k=0;k<ws.length;k++){ ws[k].className=ws[k].className.replace("on",""); ws[k].style.animation="none"; }
+  }
+
+  window.addEventListener("resize",function(){ resize(); build(); });
+
+  /* ---- flying vehicle lights ---- */
+  var vehicles=[];
+  function spawn(){
+    var dir=Math.random()<0.5?1:-1;
+    var speed=(40+Math.random()*140)*dir;
+    var y=Math.random()*H*0.66+H*0.04;
+    vehicles.push({
+      x: dir>0? -50 : W+50, y:y, vy:(Math.random()-0.5)*0.25,
+      speed:speed, len:60+Math.random()*150,
+      col:COLORS[(Math.random()*COLORS.length)|0],
+      size:1.3+Math.random()*1.7
+    });
+  }
+
+  function drawVehicle(v){
+    var dir=v.speed>0?1:-1;
+    var tailX=v.x-dir*v.len;
+    var g=ctx.createLinearGradient(v.x,v.y,tailX,v.y);
+    var c=v.col;
+    g.addColorStop(0,rgba(c,0.9));
+    g.addColorStop(0.45,rgba(c,0.32));
+    g.addColorStop(1,rgba(c,0));
+    ctx.strokeStyle=g; ctx.lineWidth=v.size; ctx.lineCap="round";
+    ctx.beginPath(); ctx.moveTo(v.x,v.y); ctx.lineTo(tailX,v.y); ctx.stroke();
+    // head bloom
+    var hg=ctx.createRadialGradient(v.x,v.y,0,v.x,v.y,v.size*4.2);
+    hg.addColorStop(0,"rgba(255,255,255,0.95)");
+    hg.addColorStop(0.32,rgba(c,0.85));
+    hg.addColorStop(1,rgba(c,0));
+    ctx.fillStyle=hg;
+    ctx.beginPath(); ctx.arc(v.x,v.y,v.size*4.2,0,6.2832); ctx.fill();
+  }
+
+  /* ---- clock ---- */
+  var minutes=19*60+48;
+  function fmt(m){ m=((Math.floor(m))%1440+1440)%1440; var h=Math.floor(m/60),mm=m%60;
+    return (h<10?"0":"")+h+":"+(mm<10?"0":"")+mm; }
+
+  var last=0,t=0;
+  function frame(ts){
+    if(!last) last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.2; t+=dt;
+
+    mxCur += (mxTarget-mxCur)*0.08;
+    var px=mxCur*14;
+    skyline.style.transform="translateX("+px+"px)";
+    reflection.style.transform="translateX("+px+"px) scaleY(-1)";
+
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+
+    if(Math.random()<(reduce?0.02:0.065)) spawn();
+    for(var i=vehicles.length-1;i>=0;i--){
+      var v=vehicles[i];
+      var k=reduce?0.3:1;
+      v.x += v.speed*k*dt;
+      v.y += v.vy;
+      drawVehicle(v);
+      if((v.speed>0 && v.x>W+220) || (v.speed<0 && v.x<-220)) vehicles.splice(i,1);
+    }
+    ctx.globalCompositeOperation="source-over";
+
+    minutes += dt*(reduce?2:6);
+    clockEl.textContent=fmt(minutes);
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener("pointermove",function(e){
+    if(W<=0) return;
+    mxTarget=(e.clientX/W)*2-1;
+    if(mxTarget>1)mxTarget=1; if(mxTarget<-1)mxTarget=-1;
+  },{passive:true});
+  window.addEventListener("wheel",function(e){
+    minutes += e.deltaY*0.15;
+  },{passive:true});
+
+  resize(); build();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

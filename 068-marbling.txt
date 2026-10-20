@@ -1,0 +1,20 @@
+PROMPT:
+068-marbling.html — Paper marbling (Ebru) with fluid color swirls forming on the surface. Palette: vivid Ebru colors (crimson, gold, teal, cobalt) on cream. Signature: canvas fluid swirl simulation / animated gradient mesh that blooms into marbled patterns, 'lift sheet' reveal.
+
+TITLE:
+Ebru — Paper Marbling Reveal
+
+DESIGN DESCRIPTION:
+A study of the Ebru art of marbling: vivid crimson, gold, teal and cobalt pigment floats on a viscous cream "size," combed into concentric veins and swirling blooms that slowly drift and morph on canvas. The pattern is hidden beneath a sheet of cream paper; on lifting the sheet, the marbled skin blooms into view as the pigment veins grow from latent to fully formed, then continues to evolve gently — the single gesture that catches the fluid pattern forever. A subtle paper-fibre texture, multiply-blended pigment overlap and a soft size-sheen complete the tactile feel.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas "fluid" marbling: layered sine-wave combed veins + drifting radial pigment washes that morph over time.
+- A bloom factor that grows the veins/washes from 0 → 1 on reveal (the pattern "blooms into" existence).
+- Multiply blend for the pigment so overlapping colors deepen like real pigment on size.
+- Fine comb texture (many thin wavy lines) over broad veins for authentic Ebru comb marks.
+- A CSS paper "lift sheet" with fibre speckle, fold shadow and a 3D-ish lift-up reveal transition.
+- Gradient cream bath + radial size-sheen highlight for a wet, tactile surface.
+- Regenerates a fresh random pattern on "Re-submerge"; system fonts only, fully inline.
+
+INTENDED INTERACTION MODEL:
+The marbled pattern forms beneath a paper sheet. Click "Lift the sheet" (or tap the sheet) to peel the paper away and reveal the marbling as it blooms into place. "Re-submerge" lays a fresh sheet down, generates a new random pattern, and lifts again after the paper settles. Motion is ambient and gentle; prefers-reduced-motion minimizes the drift.

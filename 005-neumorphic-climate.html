@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aether · Climate Console</title>
+<style>
+  :root{
+    --bg:#e4e9f2;
+    --bg-2:#dfe4ee;
+    --accent:#3ba7a4;
+    --accent-deep:#2c817f;
+    --accent-soft:rgba(59,167,164,.18);
+    --ink:#4a5872;
+    --ink-soft:#8a94a8;
+    --warn:#e8856a;
+    --shadow-dark:#bcc3d4;
+    --shadow-light:#ffffff;
+    --radius:26px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    background:
+      radial-gradient(1200px 800px at 15% 10%, #eef2f8 0%, transparent 55%),
+      radial-gradient(1000px 900px at 90% 90%, #d7deec 0%, transparent 60%),
+      var(--bg);
+    color:var(--ink);
+    min-height:100%;
+    padding:clamp(16px,4vw,56px);
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+    gap:clamp(18px,3vw,32px);
+  }
+
+  /* ---------- neumorphic surfaces ---------- */
+  .raised{
+    background:linear-gradient(145deg,#eef3fa,#d3dae7);
+    border-radius:var(--radius);
+    box-shadow:9px 9px 20px var(--shadow-dark), -9px -9px 20px var(--shadow-light);
+  }
+  .inset{
+    background:linear-gradient(145deg,#d3dae7,#eef3fa);
+    box-shadow:inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+  }
+
+  /* ---------- top bar ---------- */
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    gap:18px;flex-wrap:wrap;
+    padding:clamp(16px,2.4vw,26px) clamp(20px,3vw,34px);
+  }
+  .brand{display:flex;align-items:center;gap:16px}
+  .logo{
+    width:52px;height:52px;border-radius:16px;flex:0 0 auto;
+    background:conic-gradient(from 210deg,var(--accent),var(--accent-deep),#5fd4d0,var(--accent));
+    box-shadow:5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light), inset 0 0 0 3px rgba(255,255,255,.35);
+    position:relative;overflow:hidden;
+  }
+  .logo::after{
+    content:"";position:absolute;inset:12px;border-radius:50%;
+    background:var(--bg);
+    box-shadow:inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+  }
+  .logo::before{
+    content:"";position:absolute;inset:0;z-index:2;
+    background:radial-gradient(circle at 30% 25%,rgba(255,255,255,.6),transparent 45%);
+  }
+  h1{font-size:clamp(1.15rem,2.2vw,1.6rem);font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+  .brand p{font-size:.8rem;color:var(--ink-soft);margin-top:2px;letter-spacing:.04em}
+  .clock{
+    font-variant-numeric:tabular-nums;font-weight:600;font-size:clamp(.95rem,1.8vw,1.25rem);
+    color:var(--accent-deep);padding:10px 20px;border-radius:16px;
+    display:flex;align-items:center;gap:12px;
+  }
+  .clock .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--accent-soft);animation:pulse 2.4s ease-in-out infinite}
+  @keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.6);opacity:.55}}
+
+  /* ---------- layout ---------- */
+  .grid{
+    display:grid;gap:clamp(18px,2.6vw,28px);
+    grid-template-columns:repeat(12,1fr);
+    grid-auto-rows:minmax(10px,auto);
+  }
+  .card{padding:clamp(20px,2.6vw,30px);display:flex;flex-direction:column;gap:16px}
+  .span-3{grid-column:span 3}
+  .span-4{grid-column:span 4}
+  .span-5{grid-column:span 5}
+  .span-6{grid-column:span 6}
+  .span-7{grid-column:span 7}
+  .span-8{grid-column:span 8}
+  .span-12{grid-column:span 12}
+  @media(max-width:900px){
+    .span-3,.span-4,.span-5{grid-column:span 6}
+    .span-6,.span-7,.span-8{grid-column:span 12}
+  }
+  @media(max-width:560px){
+    .span-3,.span-4,.span-5,.span-6,.span-7,.span-8{grid-column:span 12}
+  }
+
+  .card h2{font-size:.72rem;text-transform:uppercase;letter-spacing:.18em;color:var(--ink-soft);font-weight:700}
+  .card .val{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--ink)}
+  .card .val small{font-size:.9rem;font-weight:600;color:var(--ink-soft);letter-spacing:0}
+  .delta{font-size:.8rem;font-weight:700;display:inline-flex;align-items:center;gap:5px}
+  .delta.up{color:var(--warn)} .delta.down{color:var(--accent-deep)}
+
+  /* ---------- stat card ---------- */
+  .stat .spark{height:56px;width:100%;margin-top:4px}
+
+  /* ---------- gauge cluster ---------- */
+  .gauges{display:flex;gap:clamp(14px,2vw,26px);justify-content:space-around;flex-wrap:wrap}
+  .gauge{position:relative;width:min(46%,200px);aspect-ratio:1}
+  .gauge svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .gauge .track{fill:none;stroke:var(--shadow-dark);stroke-opacity:.55;stroke-width:12}
+  .gauge .prog{fill:none;stroke:var(--accent);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)}
+  .gauge .center{
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .gauge .center b{font-size:clamp(1.3rem,3vw,2rem);font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+  .gauge .center span{font-size:.66rem;text-transform:uppercase;letter-spacing:.16em;color:var(--ink-soft)}
+
+  /* needle gauge */
+  .needle-wrap{position:relative;width:min(46%,210px);aspect-ratio:1;border-radius:50%;
+    background:linear-gradient(145deg,#d3dae7,#eef3fa);
+    box-shadow:inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light);
+    display:flex;align-items:center;justify-content:center}
+  .needle{
+    position:absolute;width:8px;height:42%;left:calc(50% - 4px);top:8%;
+    background:linear-gradient(var(--warn),#c85a44);border-radius:6px;transform-origin:bottom center;
+    transform:rotate(-120deg);transition:transform 1.6s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 0 8px rgba(200,90,68,.5);
+  }
+  .needle-wrap .hub{width:22px;height:22px;border-radius:50%;background:var(--bg);position:absolute;
+    box-shadow:2px 2px 5px var(--shadow-dark), -2px -2px 5px var(--shadow-light), inset 1px 1px 3px var(--shadow-light)}
+  .ticks{position:absolute;inset:0}
+  .ticks i{position:absolute;left:50%;top:50%;width:2px;height:8px;background:var(--ink-soft);transform-origin:center;
+    transform:translate(-50%,-50%) rotate(var(--a)) scaleY(.7);border-radius:2px}
+
+  /* ---------- progress rings row ---------- */
+  .rings{display:flex;gap:clamp(18px,3vw,40px);justify-content:space-around;flex-wrap:wrap;align-items:center}
+  .ring{position:relative;width:min(26%,150px);aspect-ratio:1}
+  .ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+  .ring .rprog{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)}
+  .ring .rcap{fill:none;stroke:var(--shadow-dark);stroke-opacity:.4;stroke-width:10}
+  .ring .lbl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+  .ring .lbl b{font-size:1.4rem;font-weight:800;color:var(--ink)}
+  .ring .lbl span{font-size:.6rem;text-transform:uppercase;letter-spacing:.14em;color:var(--ink-soft)}
+
+  /* ---------- trend chart ---------- */
+  .chart-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+  .legend{display:flex;gap:16px;font-size:.74rem;color:var(--ink-soft)}
+  .legend b{display:inline-flex;align-items:center;gap:6px;font-weight:700;color:var(--ink)}
+  .legend b::before{content:"";width:12px;height:12px;border-radius:4px;display:inline-block}
+  .legend .l1::before{background:var(--accent)} .legend .l2::before{background:var(--warn)}
+  canvas.line{width:100%;height:clamp(140px,24vw,240px);display:block;margin-top:6px}
+
+  /* ---------- slider control ---------- */
+  .control .track-ctrl{position:relative;padding:26px 8px 8px}
+  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:16px;background:transparent;cursor:pointer}
+  input[type=range]::-webkit-slider-runnable-track{height:16px;border-radius:10px;
+    background:linear-gradient(90deg,var(--accent) var(--fill,55%),var(--shadow-dark) var(--fill,55%));
+    box-shadow:inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light)}
+  input[type=range]::-moz-range-track{height:16px;border-radius:10px;
+    background:var(--shadow-dark);box-shadow:inset 2px 2px 5px var(--shadow-dark), inset -2px -2px 5px var(--shadow-light)}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:28px;height:28px;margin-top:-6px;border-radius:50%;
+    background:linear-gradient(145deg,#f3f7fd,#cfd7e5);box-shadow:3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light);border:2px solid #fff}
+  input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;border:2px solid #fff;
+    background:linear-gradient(145deg,#f3f7fd,#cfd7e5);box-shadow:3px 3px 7px var(--shadow-dark), -3px -3px 7px var(--shadow-light)}
+  .ctrl-row{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .ctrl-row .num{font-size:1.6rem;font-weight:800;color:var(--accent-deep);font-variant-numeric:tabular-nums}
+  .seg{display:flex;gap:6px;padding:6px;border-radius:14px}
+  .seg button{border:0;background:transparent;font:inherit;color:var(--ink-soft);font-weight:700;font-size:.78rem;
+    padding:8px 14px;border-radius:10px;cursor:pointer;transition:.2s}
+  .seg button.on{color:var(--accent-deep);box-shadow:inset 3px 3px 7px var(--shadow-dark), inset -3px -3px 7px var(--shadow-light)}
+
+  footer{font-size:.72rem;color:var(--ink-soft);text-align:center;letter-spacing:.04em;padding-top:4px}
+  footer b{color:var(--accent-deep)}
+</style>
+</head>
+<body>
+  <header class="raised">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Aether Climate Console</h1>
+        <p>ATMO · real-time environmental telemetry</p>
+      </div>
+    </div>
+    <div class="clock raised"><span class="dot"></span><span id="clock">--:--:--</span></div>
+  </header>
+
+  <div class="grid">    <!-- stat cards -->
+    <section class="card raised stat span-3">
+      <h2>Mean Temp</h2>
+      <div class="val">14.8<small>°C</small></div>
+      <div class="delta up">▲ 0.6° vs. baseline</div>
+      <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--accent)" stop-opacity=".35"/>
+            <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path id="sparkArea" fill="url(#sparkFill)"/>
+        <path id="sparkLine" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </section>
+
+    <section class="card raised stat span-3">
+      <h2>Humidity</h2>
+      <div class="val">61<small>%</small></div>
+      <div class="delta down">▼ 3% comfortable</div>
+      <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true">
+        <path id="sparkArea2" fill="url(#sparkFill)"/>
+        <path id="sparkLine2" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </section>
+
+    <section class="card raised stat span-3">
+      <h2>Air Quality</h2>
+      <div class="val">42 <small>AQI</small></div>
+      <div class="delta down">▼ 8 · Good</div>
+      <svg class="spark" viewBox="0 0 200 56" preserveAspectRatio="none" aria-hidden="true">
+        <path id="sparkArea3" fill="url(#sparkFill)"/>
+        <path id="sparkLine3" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </section>
+
+    <!-- needle + ring gauge cluster -->
+    <section class="card raised span-5">
+      <h2>Pressure &amp; Wind Load</h2>
+      <div class="gauges">
+        <div class="needle-wrap">
+          <div class="ticks" id="ticksA"></div>
+          <div class="needle" id="needleA"></div>
+          <div class="hub"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:18px;flex:1;justify-content:center;min-width:140px">
+          <div class="ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="rcap" cx="60" cy="60" r="50"/>
+              <circle class="rprog" id="ringCO2" cx="60" cy="60" r="50" stroke="var(--accent)"
+                stroke-dasharray="314" stroke-dashoffset="314"/>
+            </svg>
+            <div class="lbl"><b id="co2Num">0</b><span>CO₂ ppm</span></div>
+          </div>
+          <div class="ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="rcap" cx="60" cy="60" r="50"/>
+              <circle class="rprog" id="ringUV" cx="60" cy="60" r="50" stroke="var(--warn)"
+                stroke-dasharray="314" stroke-dashoffset="314"/>
+            </svg>
+            <div class="lbl"><b id="uvNum">0</b><span>UV index</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- conic progress rings -->
+    <section class="card raised span-7">
+      <h2>Renewable Mix &amp; Targets</h2>
+      <div class="rings">
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="rcap" cx="60" cy="60" r="50"/>
+            <circle class="rprog" cx="60" cy="60" r="50" stroke="var(--accent)"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="lbl"><b id="r1">0%</b><span>Solar</span></div>
+        </div>
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="rcap" cx="60" cy="60" r="50"/>
+            <circle class="rprog" cx="60" cy="60" r="50" stroke="var(--accent-deep)"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="lbl"><b id="r2">0%</b><span>Wind</span></div>
+        </div>
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="rcap" cx="60" cy="60" r="50"/>
+            <circle class="rprog" cx="60" cy="60" r="50" stroke="#5fd4d0"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="lbl"><b id="r3">0%</b><span>Hydro</span></div>
+        </div>
+        <div class="ring">
+          <svg viewBox="0 0 120 120">
+            <circle class="rcap" cx="60" cy="60" r="50"/>
+            <circle class="rprog" cx="60" cy="60" r="50" stroke="var(--warn)"
+              stroke-dasharray="314" stroke-dashoffset="314"/>
+          </svg>
+          <div class="lbl"><b id="r4">0%</b><span>Grid load</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- trend chart -->
+    <section class="card raised span-8">
+      <div class="chart-head">
+        <div>
+          <h2>24h Thermal Trend</h2>
+          <div class="val" style="font-size:clamp(1.4rem,3vw,2rem)">15.2<small>°C avg</small></div>
+        </div>
+        <div class="legend">
+          <b class="l1">Temperature</b>
+          <b class="l2">Heat index</b>
+        </div>
+      </div>
+      <canvas class="line" id="trend"></canvas>
+    </section>
+
+    <!-- control panel -->
+    <section class="card raised control span-4">
+      <h2>Thermostat</h2>
+      <div class="inset track-ctrl" style="border-radius:18px">
+        <input type="range" id="temp" min="10" max="30" value="21" step="0.5" aria-label="Target temperature">
+      </div>
+      <div class="ctrl-row">
+        <div class="num"><span id="tempVal">21.0</span>°C</div>
+        <div class="seg raised" role="group" aria-label="Mode">
+          <button class="on" data-mode="auto">AUTO</button>
+          <button data-mode="eco">ECO</button>
+          <button data-mode="boost">BOOST</button>
+        </div>
+      </div>
+      <div class="inset" style="border-radius:16px;padding:16px;display:flex;justify-content:space-around;text-align:center">
+        <div><div style="font-size:1.3rem;font-weight:800;color:var(--accent-deep)" id="fanVal">42</div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft)">Fan %</div></div>
+        <div><div style="font-size:1.3rem;font-weight:800;color:var(--accent-deep)">21°</div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft)">Room</div></div>
+        <div><div style="font-size:1.3rem;font-weight:800;color:var(--accent-deep)">ON</div><div style="font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft)">Status</div></div>
+      </div>
+    </section>
+  </div>
+
+  <footer>Generated locally · <b>Aether Climate Console</b> · no network required</footer>
+
+  <script>
+  (function(){
+    "use strict";
+
+    /* ---------- live clock ---------- */
+    var clockEl = document.getElementById("clock");
+    function tick(){
+      var d = new Date();
+      var p = function(n){ return (n<10?"0":"")+n; };
+      clockEl.textContent = p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds());
+    }
+    tick(); setInterval(tick,1000);
+
+    /* ---------- sparkline builder ---------- */
+    function randSeries(n, base, amp){
+      var out=[], v=base;
+      for(var i=0;i<n;i++){ v += (Math.random()-0.45)*amp; v=Math.max(base-amp*1.4,Math.min(base+amp*1.4,v)); out.push(v); }
+      return out;
+    }
+    function spark(idLine,idArea,data,w,h){
+      var pad=3, max=Math.max.apply(null,data), min=Math.min.apply(null,data), rng=(max-min)||1;
+      var pts=data.map(function(v,i){
+        var x=pad+(i/(data.length-1))*(w-2*pad);
+        var y=h-pad-((v-min)/rng)*(h-2*pad);
+        return [x,y];
+      });
+      var d="M"+pts[0][0].toFixed(1)+","+pts[0][1].toFixed(1);
+      for(var i=1;i<pts.length;i++) d+=" L"+pts[i][0].toFixed(1)+","+pts[i][1].toFixed(1);
+      document.getElementById(idLine).setAttribute("d",d);
+      document.getElementById(idArea).setAttribute("d",d+" L"+pts[pts.length-1][0].toFixed(1)+","+h+" L"+pts[0][0].toFixed(1)+","+h+" Z");
+    }
+    spark("sparkLine","sparkArea",randSeries(28,15,1.6),200,56);
+    spark("sparkLine2","sparkArea2",randSeries(28,60,3),200,56);
+    spark("sparkLine3","sparkArea3",randSeries(28,45,5),200,56);
+
+    /* ---------- needle gauge ---------- */
+    var needleA=document.getElementById("needleA"), ticksA=document.getElementById("ticksA");
+    for(var t=0;t<11;t++){
+      var i=document.createElement("i");
+      i.style.setProperty("--a",(t*24-120)+"deg");
+      ticksA.appendChild(i);
+    }
+    function setNeedle(el,frac){ el.style.transform="rotate("+(-120+frac*240)+"deg)"; }
+
+    /* ---------- ring setter ---------- */
+    var C=314; // 2*pi*50
+    function setRing(circleEl,numEl,frac,decimals){
+      circleEl.style.strokeDashoffset = C*(1-frac);
+      var target=Math.round(frac*100);
+      var cur=0, start=null, dur=1400;
+      function step(ts){
+        if(!start)start=ts;
+        var p=Math.min((ts-start)/dur,1);
+        var e=1-Math.pow(1-p,3);
+        numEl.textContent=Math.round(target*e)+(decimals?"":"%");
+        if(p<1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
+    /* ---------- animate values on load ---------- */
+    window.addEventListener("load",function(){
+      setTimeout(function(){
+        setNeedle(needleA,0.62);
+        setRing(document.getElementById("ringCO2"),document.getElementById("co2Num"),0.42,false);
+        document.getElementById("co2Num").textContent="420"; // ppm override for realism
+        setRing(document.getElementById("ringUV"),document.getElementById("uvNum"),0.30,false);
+        document.getElementById("uvNum").textContent="3";
+        setRing(document.querySelectorAll(".ring .rprog")[0],document.getElementById("r1"),0.58,false);
+        setRing(document.querySelectorAll(".ring .rprog")[1],document.getElementById("r2"),0.37,false);
+        setRing(document.querySelectorAll(".ring .rprog")[2],document.getElementById("r3"),0.24,false);
+        setRing(document.querySelectorAll(".ring .rprog")[3],document.getElementById("r4"),0.66,false);
+      },250);
+    });
+
+    /* ---------- thermostat slider ---------- */
+    var temp=document.getElementById("temp"), tempVal=document.getElementById("tempVal"), fanVal=document.getElementById("fanVal");
+    function updSlider(){
+      var pct=(temp.value-temp.min)/(temp.max-temp.min)*100;
+      temp.style.setProperty("--fill",pct+"%");
+      tempVal.textContent=(parseFloat(temp.value)).toFixed(1);
+      fanVal.textContent=Math.round(20+ (temp.value-10)*3);
+    }
+    temp.addEventListener("input",updSlider); updSlider();
+
+    /* ---------- segmented mode ---------- */
+    var segs=document.querySelectorAll(".seg button");
+    segs.forEach(function(b){
+      b.addEventListener("click",function(){
+        segs.forEach(function(x){x.classList.remove("on");});
+        b.classList.add("on");
+      });
+    });
+
+    /* ---------- trend canvas chart ---------- */
+    var cv=document.getElementById("trend"), ctx=cv.getContext("2d");
+    function resize(){ var r=cv.getBoundingClientRect(); cv.width=r.width*devicePixelRatio; cv.height=r.height*devicePixelRatio; ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0); }
+    var tempSeries=randSeries(48,15,1.2), heatSeries=tempSeries.map(function(v,i){return v+Math.sin(i/4)*0.8;});
+    function drawChart(){
+      resize();
+      var w=cv.width/devicePixelRatio, h=cv.height/devicePixelRatio, pad=8;
+      ctx.clearRect(0,0,w,h);
+      function plot(series,color,alpha){
+        var mx=Math.max.apply(null,series), mn=Math.min.apply(null,series), rng=(mx-mn)||1;
+        var pts=series.map(function(v,i){
+          var x=pad+(i/(series.length-1))*(w-2*pad);
+          var y=pad+((mx-v)/rng)*(h-2*pad);
+          return [x,y];
+        });
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0],pts[0][1]);
+        for(var i=1;i<pts.length;i++){
+          var xm=(pts[i-1][0]+pts[i][0])/2, ym=(pts[i-1][1]+pts[i][1])/2;
+          ctx.quadraticCurveTo(pts[i-1][0],pts[i-1][1],xm,ym);
+        }
+        ctx.strokeStyle=color; ctx.lineWidth=2.6; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.stroke();
+        if(alpha){
+          ctx.lineTo(pts[pts.length-1][0],h-pad); ctx.lineTo(pts[0][0],h-pad); ctx.closePath();
+          var g=ctx.createLinearGradient(0,0,0,h);
+          g.addColorStop(0,color.replace("A)","0.28")); g.addColorStop(1,color.replace("A)","0"));
+          ctx.fillStyle=g; ctx.fill();
+        }
+      }
+      plot(heatSeries,"rgba(232,133,106,A)",0.5);
+      plot(tempSeries,"rgba(59,167,164,A)",0.6);
+    }
+    drawChart();
+    window.addEventListener("resize",drawChart);
+
+    /* ---------- gentle live drift ---------- */
+    setInterval(function(){
+      tempSeries.push(tempSeries[tempSeries.length-1]+(Math.random()-0.5)*0.8);
+      tempSeries.shift();
+      heatSeries=tempSeries.map(function(v,i){return v+Math.sin(i/4)*0.8;});
+      drawChart();
+    },4000);
+  })();
+  </script>
+</body>
+</html>

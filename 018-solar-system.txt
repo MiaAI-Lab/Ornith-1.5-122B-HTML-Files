@@ -1,0 +1,72 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: an orrery of the solar system with
+orbiting planets and hover info tooltips. Palette: deep space, glowing sun.
+Signature: concentric orbit animations with transform-origin, hover tooltips,
+starfield background. Hard constraints: one self-contained .html, all CSS in one
+<style>, all JS in one <script>, zero external dependencies (system fonts only,
+no CDN, no external images/SVG files), responsive 320px→4K, valid HTML5, must run
+by double-click with no network requests. WOW bar: Awwwards/SiteInspire-caliber,
+distinctive art direction, real motion, one signature effect. A matching .txt
+with the same base name must accompany it.
+
+
+TITLE
+-----
+Systema Solis — a brass-and-nebula orrery where every world keeps its own time.
+
+
+DESIGN DESCRIPTION
+------------------
+Against a deep-space gradient veiled in violet, cobalt and rose nebulae, a full
+starfield twinkles and drifts with gentle parallax behind a circular, ringed
+"stage". At its heart burns a pulsing sun — a layered radial-gradient sphere with
+a screen-blended, slowly rotating conic corona and an breathing outer glow. Eight
+worlds orbit on concentric rings: Mercury, Venus, Earth (with its own moon), Mars,
+band-banded Jupiter, ringed Saturn, faintly-ringed Uranus and deep-blue Neptune —
+each a shaded, volumetric marble sized and coloured for clarity rather than to
+scale, with alternating prograde/retrograde motion and Keplerian-ish period ratios
+so the inner planets race while the outer giants turn imperceptibly. Hovering any
+planet freezes the mechanism and raises a glass "ledger" tooltip beside it,
+positioned in screen space so it stays upright no matter the orbit angle, listing
+diameter, distance from the Sun, day length, moon count and temperature. A slim
+glass control bar lets you pause the whole system, scale time from a crawl to a
+whirl, and toggle the orbit lines and the world labels.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- A devicePixelRatio-aware <canvas> starfield with per-star twinkle phases, warm/
+  cool star tints, and mouse-driven parallax drift for depth.
+- JS-driven orbital motion: each planet's angle = start + dir·(elapsed/period)·2π,
+  positioned with trig over the stage center, so radii scale live with the stage
+  via a fraction of its half-extent — fully responsive, no clipping.
+- Volumetric planet shading using a highlight radial gradient plus a CSS ::after
+  terminator (light→dark) overlay; gas-giant banding via repeating-linear-gradient.
+- Saturn/Uranus rings as screen-blended conic-gradient ellipses tilted on the
+  planet; Earth carries a fast-orbiting grey moon computed from its parent's position.
+- A layered glowing sun: radial-gradient body, rotating conic corona (::before),
+  breathing halo (::after) and dual box-shadow bloom.
+- A single shared glass tooltip positioned from getBoundingClientRect so it stays
+  screen-upright; hovering a planet freezes the orrery so the card is readable.
+- Glassmorphic control bar (play/pause, speed slider, orbit + label toggles) with
+  fluid clamp() sizing and a compact layout under 520px.
+- prefers-reduced-motion: static starfield, frozen orbits, still sun.
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Ambient motion: all eight planets (and Earth's moon) orbit continuously at
+  period-weighted speeds, the sun pulses and its corona rotates, and stars twinkle
+  + drift, so the system is alive the moment the page opens.
+- Hover/tap a planet → the entire orrery freezes, a ledger tooltip appears next to
+  the world (viewport-clamped), and it tracks the planet's position; moving off the
+  planet resumes the mechanism.
+- Move the mouse to shift the starfield in parallax, giving the cosmos subtle depth.
+- Controls: Play/Pause halts orbits and the sun; the Speed slider (0.1×–4×) scales
+  time live; the Orbits and Labels checkboxes toggle the guide rings and world names.
+- Responsive: the stage is a square sized to min(90vw, 86vh, 840px) and every orbit
+  radius is a fraction of it, so the orrery holds its proportions from 320px to 4K;
+  controls and tooltip reflow on small screens.
+- Reduced-motion users get a still, inspection-ready orrery with no auto-rotation
+  or star drift.

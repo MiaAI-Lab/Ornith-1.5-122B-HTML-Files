@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ECLIPSE — Slide Into Totality</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; height:100%;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(90% 70% at 50% 38%, #101a3a 0%, #070b1e 42%, #02030b 78%, #000 100%);
+    color:#e8ecff; -webkit-font-smoothing:antialiased;
+  }
+  #field{position:fixed; inset:0; z-index:1; pointer-events:none}
+  .star{position:absolute; border-radius:50%; background:#fff;
+    box-shadow:0 0 3px 0 rgba(255,255,255,.7);
+    animation:twinkle var(--dur,4s) ease-in-out var(--delay,-2s) infinite;
+    opacity:.15}
+  @keyframes twinkle{0%,100%{opacity:var(--lo,.12); transform:scale(.7)}50%{opacity:var(--hi,.85); transform:scale(1.15)}}
+
+  .eclipse{position:fixed; left:50%; top:46%; transform:translate(-50%,-50%); z-index:2;
+    width:0; height:0; overflow:visible}
+
+  .corona{position:absolute; left:0; top:0; width:0; height:0; border-radius:50%;
+    transform:translate(-50%,-50%); mix-blend-mode:screen; pointer-events:none}
+  .c-outer{background:radial-gradient(circle, rgba(190,215,255,0) 0%, rgba(190,215,255,0) 40%, rgba(210,225,255,.10) 52%, rgba(230,238,255,.20) 60%, rgba(255,255,255,0) 72%);
+    filter:blur(2px)}
+  .c-mid{background:radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,0) 46%, rgba(255,255,255,.22) 56%, rgba(220,232,255,.30) 64%, rgba(255,255,255,0) 76%)}
+  .c-inner{background:radial-gradient(circle, rgba(255,255,255,0) 0%, rgba(255,255,255,.35) 62%, rgba(255,255,255,.55) 70%, rgba(255,255,255,0) 84%)}
+
+  .chromosphere{position:absolute; left:0; top:0; border-radius:50%; transform:translate(-50%,-50%);
+    pointer-events:none; mix-blend-mode:screen;
+    background:conic-gradient(from 200deg, rgba(255,80,150,0) 0deg, rgba(255,120,180,.0) 120deg, rgba(255,150,200,.85) 250deg, rgba(255,90,160,.9) 300deg, rgba(255,80,150,0) 360deg);
+    -webkit-mask:radial-gradient(circle, transparent calc(var(--rs,40px) - 3px), #000 calc(var(--rs,40px) - 1px), #000 calc(var(--rs,40px) + 3px), transparent calc(var(--rs,40px) + 6px));
+            mask:radial-gradient(circle, transparent calc(var(--rs,40px) - 3px), #000 calc(var(--rs,40px) - 1px), #000 calc(var(--rs,40px) + 3px), transparent calc(var(--rs,40px) + 6px))}
+
+  .sun-core{position:absolute; left:0; top:0; border-radius:50%; transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 42% 40%, #ffffff 0%, #fffbe6 26%, #ffe08a 55%, #ffb23f 82%, #ff7d1f 100%);
+    box-shadow:0 0 60px 18px rgba(255,205,110,.75), 0 0 160px 60px rgba(255,170,70,.45), inset 0 0 24px rgba(255,120,40,.5)}
+
+  .diamond{position:absolute; left:0; top:0; border-radius:50%; transform:translate(-50%,-50%);
+    background:radial-gradient(circle, #ffffff 0%, #fff8e0 35%, rgba(255,240,200,.5) 60%, rgba(255,240,200,0) 100%);
+    mix-blend-mode:screen; pointer-events:none;
+    box-shadow:0 0 30px 10px rgba(255,245,210,.9)}
+
+  .moon{position:absolute; left:0; top:0; border-radius:50%; transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 46% 42%, #0a0b10 0%, #05060a 60%, #000 100%);
+    box-shadow:inset 0 0 2px 1px rgba(60,70,95,.5), 0 0 1px rgba(0,0,0,.9)}
+
+  .wordmark{position:fixed; top:clamp(18px,4vw,48px); left:clamp(18px,4vw,48px); z-index:5; pointer-events:none}
+  .wordmark .kicker{font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.46em;
+    text-transform:uppercase; color:#a9c6ff; opacity:.7; margin-bottom:14px}
+  .wordmark h1{margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:400;
+    font-size:clamp(30px,6.4vw,74px); line-height:.94; color:#f2f5ff;
+    text-shadow:0 2px 24px rgba(0,0,0,.7)}
+  .wordmark h1 em{font-style:italic; color:#9ec2ff}
+  .wordmark .sub{margin-top:14px; max-width:40ch; font-size:13px; line-height:1.5; color:rgba(210,222,250,.7)}
+
+  .controls{position:fixed; left:clamp(18px,4vw,48px); bottom:clamp(20px,4vw,52px); z-index:5;
+    display:flex; flex-direction:column; gap:12px; width:min(420px,74vw)}
+  .controls .row{display:flex; align-items:center; gap:14px}
+  .controls label{font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.32em;
+    text-transform:uppercase; color:#9db6e6; white-space:nowrap}
+  .controls .pct{font-variant-numeric:tabular-nums; color:#dbe6ff; letter-spacing:.06em; margin-left:auto; font-size:12px}
+  input[type=range]{-webkit-appearance:none; appearance:none; flex:1; height:3px; border-radius:3px;
+    background:linear-gradient(90deg,#3a5488,#8fb0e6); outline:none; cursor:pointer}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; appearance:none; width:18px; height:18px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff,#c9d8f5); box-shadow:0 0 12px rgba(150,190,255,.9); cursor:pointer}
+  input[type=range]::-moz-range-thumb{width:18px; height:18px; border:none; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,#fff,#c9d8f5); box-shadow:0 0 12px rgba(150,190,255,.9); cursor:pointer}
+  .play{flex:none; font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.22em; text-transform:uppercase;
+    color:#cfe0ff; background:rgba(20,32,64,.6); border:1px solid rgba(140,175,235,.4); border-radius:999px;
+    padding:9px 16px; cursor:pointer; transition:background .2s, box-shadow .2s}
+  .play:hover{background:rgba(40,60,110,.7); box-shadow:0 0 16px rgba(120,160,235,.4)}
+  .play.on{color:#1a2a55; background:radial-gradient(circle at 40% 30%,#cfe0ff,#8fb0e6); border-color:transparent}
+
+  .credit{position:fixed; right:clamp(16px,3.4vw,40px); bottom:clamp(20px,4vw,52px); z-index:5;
+    font:500 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.3em; text-transform:uppercase; color:rgba(180,200,235,.4); text-align:right}
+
+  @media (prefers-reduced-motion: reduce){ .star{animation:none !important} }
+  @media (max-width:560px){ .wordmark .sub,.credit{display:none} }
+</style>
+</head>
+<body>
+<div id="field"></div>
+
+<div class="eclipse" id="eclipse">
+  <div class="corona c-outer" id="coronaOuter"></div>
+  <div class="corona c-mid" id="coronaMid"></div>
+  <div class="corona c-inner" id="coronaInner"></div>
+  <div class="chromosphere" id="chromo"></div>
+  <div class="sun-core" id="sun"></div>
+  <div class="diamond" id="diamond"></div>
+  <div class="moon" id="moon"></div>
+</div>
+
+<div class="wordmark">
+  <div class="kicker">Totality · No. 088</div>
+  <h1>The moon<br><em>steals the sun.</em></h1>
+  <div class="sub">Drag the coverage slider to drive the moon across the solar disk. As the photosphere is swallowed, the silver corona blooms, a ring of chromosphere flares and the starfield burns through the sudden night.</div>
+</div>
+
+<div class="controls">
+  <div class="row">
+    <label>Coverage</label>
+    <input type="range" id="cov" min="0" max="1000" value="0" aria-label="Eclipse coverage">
+    <span class="pct" id="covPct">0%</span>
+  </div>
+  <button class="play" id="play" type="button">▶ Auto transit</button>
+</div>
+
+<div class="credit">Totality<br>Series 088</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var field=document.getElementById('field');
+  var sun=document.getElementById('sun'), moon=document.getElementById('moon');
+  var coronaOuter=document.getElementById('coronaOuter'),
+      coronaMid=document.getElementById('coronaMid'),
+      coronaInner=document.getElementById('coronaInner');
+  var chromo=document.getElementById('chromo'), diamond=document.getElementById('diamond');
+  var cov=document.getElementById('cov'), covPct=document.getElementById('covPct'),
+      play=document.getElementById('play');
+
+  var W=0,H=0, Rs=48, Rm=55, baseOffset=1;
+  var playing=false, aT=0, aDir=1, last=performance.now();
+
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function smooth(e0,e1,x){ var t=clamp((x-e0)/(e1-e0),0,1); return t*t*(3-2*t); }
+  function circOverlap(r1,r2,d){
+    if(d>=r1+r2) return 0;
+    if(d<=Math.abs(r1-r2)){ var m=Math.min(r1,r2); return Math.PI*m*m; }
+    var a1=r1*r1*Math.acos(clamp((d*d+r1*r1-r2*r2)/(2*d*r1),-1,1));
+    var a2=r2*r2*Math.acos(clamp((d*d+r2*r2-r1*r1)/(2*d*r2),-1,1));
+    var a3=0.5*Math.sqrt(clamp((r1+r2-d)*(d+r2-r1)*(d-r2+r1)*(r1+r2-d),0,1e9));
+    return a1+a2-a3;
+  }
+
+  function buildStars(){
+    field.innerHTML='';
+    var n=Math.min(170, Math.round(W*H/16000));
+    for(var i=0;i<n;i++){
+      var s=document.createElement('div'); s.className='star';
+      var sz=0.6+Math.random()*2.2;
+      s.style.left=(Math.random()*100)+'%';
+      s.style.top=(Math.random()*100)+'%';
+      s.style.width=sz+'px'; s.style.height=sz+'px';
+      s.style.setProperty('--dur',(2.6+Math.random()*5).toFixed(2)+'s');
+      s.style.setProperty('--delay',(-Math.random()*5).toFixed(2)+'s');
+      s.style.setProperty('--lo',(0.06+Math.random()*0.1).toFixed(2));
+      s.style.setProperty('--hi',(0.6+Math.random()*0.4).toFixed(2));
+      if(sz>2){ s.style.boxShadow='0 0 5px 1px rgba(200,220,255,.8)'; }
+      field.appendChild(s);
+    }
+  }
+
+  function size(){
+    W=window.innerWidth; H=window.innerHeight;
+    Rs=Math.max(30, Math.min(150, Math.min(W,H)*0.15));
+    Rm=Rs*1.16;
+    baseOffset=Rs+Rm+Rs*0.95;
+    sun.style.width=sun.style.height=(2*Rs)+'px';
+    moon.style.width=moon.style.height=(2*Rm)+'px';
+    coronaInner.style.width=coronaInner.style.height=(2*Rs*2.35)+'px';
+    coronaMid.style.width=coronaMid.style.height=(2*Rs*3.7)+'px';
+    coronaOuter.style.width=coronaOuter.style.height=(2*Rs*5.4)+'px';
+    chromo.style.width=chromo.style.height=(2*Rs)+'px';
+    document.documentElement.style.setProperty('--rs',Rs+'px');
+    buildStars();
+    update();
+  }
+
+  function update(){
+    var c=clamp((+cov.value)/1000,0,1);
+    var off=baseOffset*(1-c);
+    var arc=Math.sin(c*Math.PI)*Rs*0.06;      // gentle arc of the transit
+    var mx=off, my=-arc;                       // moon approaches from the right
+    moon.style.transform='translate(calc(-50% + '+mx.toFixed(1)+'px), calc(-50% + '+my.toFixed(1)+'px))';
+
+    var d=Math.hypot(mx,my);
+    var coverage=clamp(circOverlap(Rs,Rm,d)/(Math.PI*Rs*Rs),0,1);
+
+    covPct.textContent=Math.round(coverage*100)+'%';
+
+    // sun photosphere fades as it is swallowed
+    sun.style.opacity=(1-coverage).toFixed(3);
+
+    // corona blooms only as totality nears
+    var co=smooth(0.42,0.98,coverage);
+    coronaOuter.style.opacity=(0.06+co*0.9).toFixed(3);
+    coronaMid.style.opacity=(co*0.92).toFixed(3);
+    coronaInner.style.opacity=(co*0.96).toFixed(3);
+    var cs=1+co*0.28;
+    coronaOuter.style.transform=coronaMid.style.transform=coronaInner.style.transform=
+      'translate(-50%,-50%) scale('+cs.toFixed(3)+')';
+
+    // chromosphere flares during the partial->total transition
+    var ch = coverage>0.82 ? Math.sin(clamp((coverage-0.82)/0.16,0,1)*Math.PI) : 0;
+    chromo.style.opacity=ch.toFixed(3);
+    chromo.style.transform='translate(-50%,-50%) scale('+(1+ch*0.02).toFixed(3)+')';
+
+    // diamond-ring just before / after totality on the last uncovered limb
+    var dp = (coverage>=0.88 && coverage<=0.996) ? Math.sin(clamp((coverage-0.88)/0.115,0,1)*Math.PI) : 0;
+    diamond.style.opacity=dp.toFixed(3);
+    diamond.style.transform='translate(calc(-50% + '+(-Rs*0.94).toFixed(1)+'px), calc(-50% + '+my.toFixed(1)+'px)) scale('+dp.toFixed(3)+')';
+
+    // starfield burns through the sudden night
+    field.style.opacity=smooth(0.78,0.98,coverage).toFixed(3);
+  }
+
+  cov.addEventListener('input',function(){ if(playing){ stopPlay(); } update(); });
+
+  function stopPlay(){
+    playing=false; play.classList.remove('on'); play.textContent='▶ Auto transit';
+  }
+  function startPlay(){
+    playing=true; play.classList.add('on'); play.textContent='❚❚ Pause';
+    last=performance.now();
+  }
+  play.addEventListener('click',function(){ playing?stopPlay():startPlay(); });
+
+  function loop(now){
+    if(playing){
+      var dt=(now-last)/1000; last=now;
+      aT += dt*0.072 * aDir;
+      if(aT>=1){ aT=1; aDir=-1; }
+      else if(aT<=0){ aT=0; aDir=1; }
+      cov.value=Math.round(aT*1000);
+      update();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  window.addEventListener('resize',size);
+  size();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

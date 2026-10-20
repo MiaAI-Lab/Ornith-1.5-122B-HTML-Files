@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grand Soirée — Art Deco Poster</title>
+<style>
+  :root{
+    --ink:#0a0a0b;
+    --panel:#0e1110;
+    --emerald:#0d3b32;
+    --emerald2:#0a2a24;
+    --gold:#e9c46a;
+    --gold-hi:#ffe9a8;
+    --gold-lo:#9c7a34;
+    --gold-deep:#6b5320;
+    --cream:#f4ead2;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Playfair Display',Didot,'Bodoni MT',Garamond,'Times New Roman',Georgia,serif;
+    background:
+      radial-gradient(120% 90% at 50% 0%, #141817 0%, #0a0b0b 55%, #050505 100%);
+    color:var(--cream);
+    min-height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:clamp(14px,4vw,56px);
+    overflow-x:hidden;
+  }
+
+  /* ---- poster ---- */
+  .poster{
+    position:relative;
+    width:min(560px,94vw);
+    aspect-ratio:3/4.35;
+    background:
+      radial-gradient(140% 120% at 50% 8%, #12332b 0%, var(--emerald2) 42%, #071512 100%);
+    border-radius:4px;
+    padding:clamp(18px,4.4vw,40px);
+    box-shadow:
+      0 2px 0 0 var(--gold-deep),
+      0 0 0 2px var(--gold-deep),
+      0 0 0 6px var(--ink),
+      0 0 0 7px var(--gold-lo),
+      0 0 0 10px var(--ink),
+      0 30px 80px -20px rgba(0,0,0,.85),
+      0 0 120px -30px rgba(233,196,106,.25);
+    overflow:hidden;
+    isolation:isolate;
+    perspective:1200px;
+  }
+
+  /* gold frame rule lines */
+  .frame{
+    position:absolute;inset:clamp(12px,3vw,26px);
+    border:1px solid rgba(233,196,106,.55);
+    border-radius:2px;
+    pointer-events:none;
+    z-index:6;
+  }
+  .frame::before{
+    content:"";position:absolute;inset:8px;
+    border:1px solid rgba(233,196,106,.28);
+  }
+
+  /* stepped ziggurat corners */
+  .corner{position:absolute;width:clamp(34px,8vw,64px);height:clamp(34px,8vw,64px);z-index:7;pointer-events:none}
+  .corner span{position:absolute;background:var(--gold);box-shadow:0 0 6px rgba(255,233,168,.25)}
+  .corner .c1{left:0;top:0;right:0;height:5px}
+  .corner .c2{left:0;top:0;bottom:0;width:5px}
+  .corner .c3{left:12px;top:12px;right:0;height:3px;opacity:.8}
+  .corner .c4{left:12px;top:12px;bottom:0;width:3px;opacity:.8}
+  .corner .c5{left:24px;top:24px;right:0;height:2px;opacity:.6}
+  .corner .c6{left:24px;top:24px;bottom:0;width:2px;opacity:.6}
+  .corner.tl{top:clamp(12px,3vw,26px);left:clamp(12px,3vw,26px)}
+  .corner.tr{top:clamp(12px,3vw,26px);right:clamp(12px,3vw,26px);transform:scaleX(-1)}
+  .corner.bl{bottom:clamp(12px,3vw,26px);left:clamp(12px,3vw,26px);transform:scaleY(-1)}
+  .corner.br{bottom:clamp(12px,3vw,26px);right:clamp(12px,3vw,26px);transform:scale(-1,-1)}
+
+  /* ---- top sunburst ---- */
+  .sun{position:absolute;top:-2%;left:50%;transform:translateX(-50%);width:min(700px,130%);z-index:1;filter:drop-shadow(0 0 12px rgba(233,196,106,.15))}
+  .sun .ray{transform-origin:300px 300px;animation:sunspin 90s linear infinite}
+  @keyframes sunspin{to{transform:rotate(360deg)}}
+
+  /* ---- content ---- */
+  .content{
+    position:relative;z-index:5;
+    height:100%;
+    display:flex;flex-direction:column;align-items:center;
+    text-align:center;
+    padding:clamp(14px,4vw,34px) clamp(8px,3vw,20px);
+  }
+
+  .eyebrow{
+    font-size:clamp(.58rem,1.7vw,.82rem);
+    letter-spacing:.62em;text-indent:.62em;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-top:clamp(6px,2vw,14px);
+    display:flex;align-items:center;gap:clamp(8px,2vw,16px);
+  }
+  .eyebrow::before,.eyebrow::after{content:"";width:clamp(16px,6vw,46px);height:1px;background:linear-gradient(90deg,transparent,var(--gold-lo))}
+  .eyebrow::after{background:linear-gradient(90deg,var(--gold-lo),transparent)}
+
+  .title{
+    margin-top:auto;
+    font-weight:900;
+    line-height:.86;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    background:linear-gradient(180deg,var(--gold-hi) 0%, var(--gold) 34%, var(--gold-lo) 62%, var(--gold-deep) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 1px 0 rgba(0,0,0,.5));
+  }
+  .title .l1{display:block;font-size:clamp(1.7rem,8vw,3.4rem);letter-spacing:.24em;text-indent:.24em}
+  .title .l2{display:block;font-size:clamp(3rem,17vw,7.4rem);letter-spacing:.04em;text-indent:.04em}
+  .title .l3{display:block;font-size:clamp(1.7rem,8vw,3.4rem);letter-spacing:.24em;text-indent:.24em}
+
+  .flank{width:min(360px,80%);margin-top:clamp(10px,3vw,22px);display:flex;align-items:center;justify-content:center;gap:clamp(8px,2vw,16px)}
+  .flank svg{width:100%;height:auto;overflow:visible}
+  .flank .diamond{flex:0 0 auto;width:clamp(9px,2.4vw,15px);height:clamp(9px,2.4vw,15px);background:var(--gold);transform:rotate(45deg);box-shadow:0 0 8px rgba(255,233,168,.35)}
+
+  .sub{
+    margin-top:clamp(12px,3vw,22px);
+    font-size:clamp(.62rem,1.9vw,.9rem);
+    letter-spacing:.42em;text-indent:.42em;
+    text-transform:uppercase;
+    color:var(--cream);opacity:.9;
+  }
+  .rule-gold{
+    width:clamp(60px,22vw,150px);height:2px;margin-top:clamp(10px,2.6vw,18px);
+    background:linear-gradient(90deg,transparent,var(--gold-lo),var(--gold-hi),var(--gold-lo),transparent);
+    position:relative;
+  }
+  .rule-gold::before{content:"";position:absolute;left:50%;top:-3px;transform:translateX(-50%) rotate(45deg);width:7px;height:7px;background:var(--gold);box-shadow:0 0 8px rgba(255,233,168,.4)}
+
+  .details{
+    margin-top:clamp(12px,3vw,20px);
+    display:flex;flex-direction:column;gap:.5em;
+    font-size:clamp(.56rem,1.6vw,.78rem);
+    letter-spacing:.34em;text-indent:.34em;
+    text-transform:uppercase;color:var(--gold-hi);opacity:.92;
+  }
+  .details .muted{color:var(--cream);opacity:.7;letter-spacing:.24em}
+  .bottom-emblem{margin-top:auto;display:flex;align-items:center;gap:clamp(8px,2vw,16px);opacity:.95}
+  .bottom-emblem svg{width:clamp(40px,12vw,70px);height:auto}
+
+  /* shimmer sweep */
+  .shimmer{position:absolute;inset:0;z-index:8;pointer-events:none;background:linear-gradient(115deg,transparent 38%,rgba(255,245,210,.10) 46%,rgba(255,245,210,.28) 50%,rgba(255,245,210,.10) 54%,transparent 62%);background-size:250% 100%;animation:sweep 7s ease-in-out infinite;mix-blend-mode:screen}
+  @keyframes sweep{0%,100%{background-position:180% 0}50%{background-position:-30% 0}}
+
+  @media (prefers-reduced-motion:reduce){
+    .sun .ray{animation:none}
+    .shimmer{animation:none;background-position:0 0}
+  }
+</style>
+</head>
+<body>  <div class="poster" id="poster">
+    <!-- slow sunburst rays -->
+    <svg class="sun" viewBox="0 0 600 600" aria-hidden="true">
+      <defs>
+        <linearGradient id="rayG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffe9a8" stop-opacity=".9"/>
+          <stop offset="1" stop-color="#9c7a34" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="coreG" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#ffe9a8"/>
+          <stop offset="1" stop-color="#e9c46a" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+      <g class="ray">
+        <!-- 48 rays generated by JS below; static fallback here -->
+        <g id="rays"></g>
+      </g>
+      <circle cx="300" cy="300" r="70" fill="url(#coreG)" opacity=".5"/>
+    </svg>
+
+    <div class="frame"></div>
+
+    <div class="corner tl"><span class="c1"></span><span class="c2"></span><span class="c3"></span><span class="c4"></span><span class="c5"></span><span class="c6"></span></div>
+    <div class="corner tr"><span class="c1"></span><span class="c2"></span><span class="c3"></span><span class="c4"></span><span class="c5"></span><span class="c6"></span></div>
+    <div class="corner bl"><span class="c1"></span><span class="c2"></span><span class="c3"></span><span class="c4"></span><span class="c5"></span><span class="c6"></span></div>
+    <div class="corner br"><span class="c1"></span><span class="c2"></span><span class="c3"></span><span class="c4"></span><span class="c5"></span><span class="c6"></span></div>
+
+    <div class="content">
+      <div class="eyebrow">MCMXXV · Le Cercle d'Or</div>
+
+      <h1 class="title">
+        <span class="l1">Grand</span>
+        <span class="l2">Soirée</span>
+        <span class="l3">du Siècle</span>
+      </h1>
+
+      <div class="flank">
+        <svg viewBox="0 0 200 20" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="0,10 70,10" fill="none" stroke="#9c7a34" stroke-width="1"/>
+          <polyline points="70,10 92,4 100,10 108,16 130,10" fill="none" stroke="#e9c46a" stroke-width="1.4"/>
+          <polyline points="100,10 108,10 130,10" fill="none" stroke="#ffe9a8" stroke-width="1"/>
+          <polyline points="200,10 130,10" fill="none" stroke="#9c7a34" stroke-width="1"/>
+          <polyline points="130,10 108,4 100,10 92,16 70,10" fill="none" stroke="#e9c46a" stroke-width="1.4"/>
+        </svg>
+      </div>
+
+      <div class="sub">Bal Costumé &amp; Grand Orchestre</div>
+
+      <div class="rule-gold"></div>
+
+      <div class="details">
+        <span>Palais des Fêtes · Salle Dorée</span>
+        <span class="muted">Huit Heures du Soir</span>
+        <span>Entrée par Invitation</span>
+      </div>
+
+      <div class="bottom-emblem">
+        <svg viewBox="0 0 60 60" aria-hidden="true">
+          <g fill="none" stroke="#e9c46a" stroke-width="1.4">
+            <circle cx="30" cy="30" r="22"/>
+            <circle cx="30" cy="30" r="15"/>
+          </g>
+          <g fill="#e9c46a">
+            <rect x="29" y="6" width="2" height="10"/>
+            <rect x="29" y="44" width="2" height="10"/>
+            <rect x="6" y="29" width="10" height="2"/>
+            <rect x="44" y="29" width="10" height="2"/>
+          </g>
+          <text x="30" y="35" text-anchor="middle" font-family="Georgia,serif" font-size="12" letter-spacing="1" fill="#ffe9a8">19</text>
+          <text x="30" y="46" text-anchor="middle" font-family="Georgia,serif" font-size="10" letter-spacing="1" fill="#e9c46a">25</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="shimmer"></div>
+  </div>
+
+  <script>
+  (function(){
+    // build 48 sunburst rays
+    var g=document.getElementById('rays');
+    if(g){
+      var N=48, frag='';
+      for(var i=0;i<N;i++){
+        var a=(360/N)*i;
+        var long=(i%2===0);
+        frag+='<path d="M300 300 L'+(300+Math.sin(a*Math.PI/180)*(long?285:210)).toFixed(1)+' '+(300-Math.cos(a*Math.PI/180)*(long?285:210)).toFixed(1)+'" stroke="url(#rayG)" stroke-width="'+(long?3:1.4)+'" opacity="'+(long?.55:.3)+'"/>';
+      }
+      g.innerHTML=frag;
+    }
+
+    // subtle parallax tilt on pointer
+    var poster=document.getElementById('poster');
+    var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches;
+    if(reduce) return;
+    var raf=0;
+    poster.addEventListener('pointermove',function(e){
+      if(raf) return;
+      raf=requestAnimationFrame(function(){
+        raf=0;
+        var r=poster.getBoundingClientRect();
+        var px=(e.clientX-r.left)/r.width-.5;
+        var py=(e.clientY-r.top)/r.height-.5;
+        poster.style.transform='rotateX('+(-py*4).toFixed(2)+'deg) rotateY('+(px*5).toFixed(2)+'deg)';
+      });
+    });
+    poster.addEventListener('pointerleave',function(){
+      poster.style.transform='';
+    });
+  })();
+  </script>
+</body>
+</html>

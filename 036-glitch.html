@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GL1TCH // 036</title>
+<style>
+  :root{
+    --cyan:#00f0ff;
+    --mag:#ff00b8;
+    --ink:#eef2ff;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+    --grotesque:"Arial Black","Segoe UI Black","Helvetica Neue",system-ui,sans-serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{background:#000;color:var(--ink);font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center}
+
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:
+    radial-gradient(120% 90% at 50% 40%,#080814,#000 70%)}
+
+  .art{position:relative;display:flex;flex-direction:column;align-items:stretch;
+    transition:transform .04s steps(2),filter .04s steps(2);width:min(94vw,600px)}
+
+  /* top HUD bar */
+  .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;
+    font-family:var(--mono);font-size:.72rem;letter-spacing:.24em;color:var(--cyan);
+    text-shadow:0 0 8px rgba(0,240,255,.55);margin-bottom:12px;padding:0 2px}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mag);margin-right:7px;
+    box-shadow:0 0 10px var(--mag);animation:blink 1.4s steps(1) infinite}
+
+  /* portrait frame */
+  .frame{position:relative;width:100%;aspect-ratio:4/5;background:#04040a;overflow:hidden;
+    border:1px solid rgba(0,240,255,.28);box-shadow:0 0 0 1px rgba(255,0,184,.18),0 0 70px rgba(0,240,255,.08),inset 0 0 60px rgba(0,0,0,.6)}
+  .port{position:absolute;inset:0}
+  .port svg{width:100%;height:100%;display:block}
+  .port.base{color:var(--ink)}
+  .port.c{color:var(--cyan);mix-blend-mode:screen;transform:translate(-3px,2px)}
+  .port.m{color:var(--mag);mix-blend-mode:screen;transform:translate(3px,-2px)}
+  .slice{position:absolute;left:0;right:0;top:0;bottom:0;overflow:hidden;pointer-events:none}
+
+  /* HUD corner brackets */
+  .hud{position:absolute;inset:12px;pointer-events:none}
+  .hud i{position:absolute;width:24px;height:24px;border:2px solid var(--cyan);opacity:.75;
+    box-shadow:0 0 8px rgba(0,240,255,.5)}
+  .hud .tl{top:0;left:0;border-right:0;border-bottom:0}
+  .hud .tr{top:0;right:0;border-left:0;border-bottom:0}
+  .hud .bl{bottom:0;left:0;border-right:0;border-top:0}
+  .hud .br{bottom:0;right:0;border-left:0;border-top:0}
+  .barcode{position:absolute;left:0;right:0;bottom:0;height:28px;opacity:.8;mix-blend-mode:screen;
+    background:repeating-linear-gradient(90deg,var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 7px,transparent 7px 9px,var(--ink) 9px 10px,transparent 10px 16px)}
+  .frame::after{content:"";position:absolute;left:0;right:0;height:90px;z-index:6;pointer-events:none;
+    background:linear-gradient(180deg,transparent,rgba(0,240,255,.08),transparent);animation:sweep 6.5s linear infinite}
+
+  /* caption + title */
+  .caption{background:#000;padding:20px clamp(14px,4vw,34px) 6px}
+  .tag{font-family:var(--mono);font-size:.7rem;letter-spacing:.26em;color:var(--mag);
+    text-shadow:0 0 8px rgba(255,0,184,.55);display:flex;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .title{position:relative;display:inline-block;font-family:var(--grotesque);font-weight:900;
+    line-height:.82;font-size:clamp(3rem,19vw,12.5rem);letter-spacing:-.03em}
+  .title .g{position:absolute;left:0;top:0;pointer-events:none;mix-blend-mode:screen}
+  .title .base{color:#fff;opacity:.5}
+  .title .c{color:var(--cyan);opacity:.92;transform:translate(-6px,3px)}
+  .title .m{color:var(--mag);opacity:.92;transform:translate(6px,-3px)}
+  .sub{font-family:var(--mono);font-size:clamp(.75rem,2.5vw,1rem);letter-spacing:.22em;color:var(--ink);
+    text-transform:uppercase;margin-top:12px}
+  .sub .cur{display:inline-block;width:.55em;height:1.05em;background:var(--mag);margin-left:.12em;
+    vertical-align:-0.18em;box-shadow:0 0 12px var(--mag);animation:blink 1s steps(1) infinite}
+
+  /* global overlays */
+  .scanlines{position:fixed;inset:0;z-index:50;pointer-events:none;
+    background:repeating-linear-gradient(180deg,rgba(0,0,0,.3) 0 1px,transparent 1px 3px);mix-blend-mode:multiply}
+  .scanlines::after{content:"";position:absolute;left:0;right:0;height:120px;
+    background:linear-gradient(180deg,transparent,rgba(0,240,255,.07),transparent);animation:sweep 7s linear infinite}
+  .vignette{position:fixed;inset:0;z-index:49;pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 45%,transparent 52%,rgba(0,0,0,.62) 100%)}
+
+  @keyframes blink{50%{opacity:0}}
+  @keyframes sweep{0%{top:-120px}100%{top:100%}}
+
+  @media (prefers-reduced-motion: reduce){
+    .frame::after,.scanlines::after,.dot,.sub .cur{animation:none}
+    .art{transition:none}
+  }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="face" viewBox="0 0 400 500" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- head outline -->
+    <path d="M122,156 Q120,74 200,72 Q282,74 280,156 L292,306 Q292,404 200,424 Q108,404 108,306 Z"/>
+    <!-- neck -->
+    <path d="M168,416 L168,464 M232,416 L232,464"/>
+    <path d="M168,464 Q200,482 232,464"/>
+    <!-- hair mass -->
+    <path d="M114,172 Q120,58 200,56 Q282,58 288,172" stroke-width="3.2"/>
+    <path d="M114,172 L100,258 M288,172 L302,258" stroke-width="3.2"/>
+    <path d="M150,96 Q200,70 250,96"/>
+    <!-- brows -->
+    <path d="M142,222 L196,218 M204,218 L258,222"/>
+    <!-- eyes -->
+    <g fill="currentColor" stroke="none">
+      <rect x="146" y="236" width="46" height="20" rx="4"/>
+      <rect x="208" y="236" width="46" height="20" rx="4"/>
+    </g>
+    <!-- nose -->
+    <path d="M200,256 L200,332 L182,338 M200,332 L218,338"/>
+    <!-- mouth -->
+    <path d="M158,366 Q200,392 242,366"/>
+    <path d="M172,368 Q200,380 228,368" opacity=".55"/>
+    <!-- datamosh scan cuts -->
+    <path d="M108,300 L158,300 M246,300 L292,300"/>
+    <path d="M108,272 L138,272 M262,272 L292,272"/>
+    <path d="M120,344 L168,344 M236,344 L288,344" opacity=".7"/>
+    <!-- cheek contour -->
+    <path d="M136,300 Q150,356 176,388 M264,300 Q250,356 224,388" opacity=".6"/>
+    <!-- crosshair marker -->
+    <path d="M200,120 L200,150 M186,135 L214,135" opacity=".8"/>
+  </symbol>
+</svg>
+
+<div class="stage">
+  <div class="art" id="art">
+    <div class="topbar">
+      <span><span class="dot"></span>REC · 036</span>
+      <span>CH-NOISE / RGB</span>
+    </div>
+    <div class="frame">
+      <div class="port base"><svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet"><use href="#face" xlink:href="#face"/></svg></div>
+      <div class="port c"><svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet"><use href="#face" xlink:href="#face"/></svg></div>
+      <div class="port m"><svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet"><use href="#face" xlink:href="#face"/></svg></div>
+      <div class="hud"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+      <div class="barcode"></div>
+    </div>
+    <div class="caption">
+      <div class="tag"><span id="tagL">FRAME · 0x036</span><span id="tagR">SIGNAL −92%</span></div>
+      <div class="title">
+        <span class="g base">GL1TCH</span>
+        <span class="g c">GL1TCH</span>
+        <span class="g m">GL1TCH</span>
+      </div>
+      <div class="sub"><span id="sub">DATAMOSHED PORTRAIT</span><span class="cur"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="scanlines" aria-hidden="true"></div>
+<div class="vignette" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var art = document.getElementById("art");
+  if(!art) return;
+  var frame = art.querySelector(".frame");
+  var titleC = document.querySelector(".title .c");
+  var titleM = document.querySelector(".title .m");
+  var tagL = document.getElementById("tagL");
+  if(!frame) return;
+
+  // datamosh slices — horizontal bands, each a shifted copy of the portrait
+  var N = 8, slices = [];
+  for(var i = 0; i < N; i++){
+    var s = document.createElement("div");
+    s.className = "slice";
+    var top = (i * 100 / N), bot = 100 - ((i + 1) * 100 / N);
+    s.style.clipPath = "inset(" + top + "% 0 " + bot + "% 0)";
+    s.style.webkitClipPath = s.style.clipPath;
+    var port = document.createElement("div");
+    port.className = "port base";
+    port.innerHTML = '<svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMid meet"><use href="#face" xlink:href="#face"/></svg>';
+    s.appendChild(port);
+    frame.appendChild(s);
+    slices.push(port);
+  }
+
+  function rand(a, b){ return a + Math.random() * (b - a); }
+
+  if(!reduce){
+    setInterval(function(){
+      for(var i = 0; i < slices.length; i++){
+        if(Math.random() < 0.55){
+          slices[i].style.transform = "translateX(" + rand(-16, 16).toFixed(1) + "px)";
+        } else {
+          slices[i].style.transform = "";
+        }
+      }
+      if(Math.random() < 0.4){
+        titleC.style.transform = "translate(" + rand(-14,14).toFixed(0) + "px," + rand(-6,6).toFixed(0) + "px)";
+        titleM.style.transform = "translate(" + rand(-14,14).toFixed(0) + "px," + rand(-6,6).toFixed(0) + "px)";
+        setTimeout(function(){
+          titleC.style.transform = "translate(-6px,3px)";
+          titleM.style.transform = "translate(6px,-3px)";
+        }, 90);
+      }
+    }, 130);
+
+    // full-frame jump + flash
+    setInterval(function(){
+      if(Math.random() < 0.5){
+        art.style.transform = "translateX(" + rand(-5,5).toFixed(1) + "px)";
+        art.style.filter = "brightness(1.5) contrast(1.2)";
+        setTimeout(function(){ art.style.transform = ""; art.style.filter = ""; }, 70);
+      }
+    }, 420);
+
+    // hex jitter
+    setInterval(function(){
+      if(Math.random() < 0.5){
+        tagL.textContent = "FRAME · 0x" + Math.floor(rand(0,255)).toString(16).padStart(2,"0").toUpperCase();
+      } else {
+        tagL.textContent = "FRAME · 0x036";
+      }
+    }, 900);
+  }
+})();
+</script>
+</body>
+</html>

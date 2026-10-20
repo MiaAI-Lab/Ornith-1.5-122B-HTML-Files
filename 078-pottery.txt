@@ -1,0 +1,31 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 078-pottery.html + 078-pottery.txt — A terracotta pottery wheel forming a spinning vase from clay. Palette: clay brown, warm studio amber, soft shadow. Signature: canvas/CSS spinning pot built from a lathe profile, motion-blur wheel, clay texture, hands that shape the vessel.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+TERRA — Thrown on the Turning Wheel
+
+DESIGN DESCRIPTION:
+In a warm, amber-lit studio a slow pottery wheel hums beneath a mound of wet terracotta clay. A vase is thrown from a mathematically generated lathe profile — a smooth catmull-rom silhouette that flares from a narrow foot through a full belly to a breathing rim — and rendered band by horizontal band so each row is shaded across its width by a cylindrical light model, giving the vessel real volume, a darkened core shadow on the far edge and a bright thrown-spiral specular that sweeps down the wall as it turns. The wheel head is a perspective ellipse carrying motion-blurred spokes drawn as angular streaks, a soft cast shadow and a damp clay sling on its rim. Two clay-caked hands reach in from either side, thumbs and fingers pressing the waist in a slow pinching rhythm while a wet glint of light catches the spinning surface. A serif wordmark, a short maker's note and two live gauges — SPIN and FORM — frame the piece as a working thrower's bench.
+
+MAJOR VISUAL TECHNIQUES:
+- Lathe rendering by stacked horizontal bands: each row's radius comes from a smooth catmull-rom interpolation of a seven-point vase profile, filled with a per-row horizontal linear gradient.
+- Cylindrical shading computed in the gradient stops from a surface-normal dot product against a warm key light (light-from-left), with ambient floor, a deep core shadow on the far edge and a bright near-white specular lobe.
+- Rotation made visible through a thrown-spiral specular groove whose highlight angle varies with height and wheel rotation, plus a single bright wet glint that sweeps across the front as the pot turns.
+- Motion-blurred wheel via spokes redrawn at small angular offsets with falling alpha to streak into a spinning disc, over a radial-gradient clay head with a raised lit rim.
+- Latitude "throwing lines" (thin dark ellipse arcs) and a dark hollow mouth with a lit rim ellipse to sell the vessel's form and the wheel's perspective.
+- Stylized hands built from gradient-filled palm, forearm, fingers and thumb paths with a soft clay smear where they meet the clay, animated by a slow pinch rhythm.
+- DPR-aware canvas (capped at 2×), delta-time loop, live SPIN/FORM gauges and prefers-reduced-motion that slows the turn.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven, no buttons. Drag sideways across the clay to set the wheel spinning — horizontal drag velocity adds to the rotation, which then eases back toward a gentle idle spin; a plain click gives the wheel a quick burst. Drag up or down to reshape the vessel: dragging downward pulls the belly full and round, upward draws it tall and thin, with the waist responding to the hands' pinch. Two gauges on the right read out the current SPIN and FORM. The hands, the sweeping specular and the blurred wheel keep the piece alive at every moment, and prefers-reduced-motion keeps it present but turns it slower.

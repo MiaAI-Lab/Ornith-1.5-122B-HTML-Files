@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POP ROOM · The Bubble Wrap You Can Actually Pop</title>
+<style>
+  :root{
+    --grey-1:#eef1f4;
+    --grey-2:#e2e7ed;
+    --ink:#2b3542;
+    --ink-soft:#6a7686;
+    --blue:#a9d4f0;
+    --blue-deep:#6fb6e4;
+    --pink:#f7b8cd;
+    --pink-deep:#f288a8;
+    --mint:#bfe3d6;
+    --lilac:#d6c9ee;
+    --cream:#fbfcfd;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% -10%, #ffffff 0%, var(--cream) 40%, var(--grey-2) 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+    background-image:radial-gradient(55% 45% at 85% 8%, rgba(111,182,228,.18),transparent 60%),
+      radial-gradient(50% 45% at 10% 92%, rgba(242,136,168,.14),transparent 60%);
+    mix-blend-mode:multiply;
+  }
+
+  .sheet{
+    position:relative;
+    max-width:1180px;
+    margin:0 auto;
+    padding:clamp(22px,5vw,64px) clamp(18px,5vw,56px) clamp(40px,7vw,90px);
+    display:grid;
+    gap:clamp(20px,3.5vw,40px);
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{
+    display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;
+  }
+  .kicker{
+    font-family:var(--sans);font-size:12px;letter-spacing:.4em;text-transform:uppercase;
+    color:var(--pink-deep);font-weight:600;margin:0 0 12px;
+  }
+  h1{
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(38px,7vw,84px);line-height:.95;letter-spacing:-.01em;margin:0;
+  }
+  h1 em{font-style:italic;color:var(--blue-deep)}
+  .tag{
+    font-family:var(--sans);font-size:14px;line-height:1.55;color:var(--ink-soft);
+    max-width:34ch;margin:14px 0 0;
+  }
+
+  .stats{
+    display:flex;gap:clamp(16px,3vw,34px);align-items:flex-end;
+    font-family:var(--mono);
+  }
+  .stat{display:block;text-align:right}
+  .stat .n{font-size:clamp(28px,4vw,46px);line-height:1;color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
+  .stat .n.p{color:var(--pink-deep)}
+  .stat .n.b{color:var(--blue-deep)}
+
+  /* ---------- The wrap ---------- */
+  .stage{
+    position:relative;
+    background:linear-gradient(160deg,#f4f7fa,#e7ecf2);
+    border:1px solid rgba(43,53,66,.12);
+    border-radius:14px;
+    padding:clamp(14px,2.5vw,26px);
+    box-shadow:0 40px 80px -50px rgba(43,53,66,.55), 0 1px 0 rgba(255,255,255,.8) inset;
+    overflow:hidden;
+  }
+  .stage::after{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(60% 40% at 50% 0%, rgba(255,255,255,.6),transparent 70%);
+  }
+  .grid{
+    position:relative;
+    display:grid;
+    grid-template-columns:repeat(var(--cols,10),1fr);
+    gap:clamp(6px,1.1vw,12px);
+    aspect-ratio:1.55/1;
+    touch-action:manipulation;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  @media (max-width:560px){ .grid{aspect-ratio:1/1;} }
+
+  .bubble{
+    position:relative;
+    border-radius:50%;
+    cursor:pointer;
+    transform:translateZ(0);
+    transition:transform .12s var(--ease), box-shadow .2s ease, filter .2s ease;
+    will-change:transform;
+    background:
+      radial-gradient(62% 58% at 34% 28%, rgba(255,255,255,.95), rgba(255,255,255,0) 55%),
+      radial-gradient(120% 120% at 30% 20%, var(--c1), var(--c2) 62%, var(--c3) 100%);
+    box-shadow:
+      0 6px 12px -4px rgba(43,53,66,.4),
+      0 1px 0 rgba(255,255,255,.9) inset,
+      0 -8px 14px -6px rgba(43,53,66,.18) inset;
+  }
+  .bubble::before{
+    content:"";position:absolute;left:16%;top:14%;width:34%;height:24%;
+    background:radial-gradient(ellipse at center, rgba(255,255,255,.95), rgba(255,255,255,0));
+    border-radius:50%;filter:blur(0.5px);
+  }
+  .bubble::after{
+    content:"";position:absolute;right:16%;bottom:16%;width:16%;height:12%;
+    background:radial-gradient(ellipse at center, rgba(255,255,255,.7), rgba(255,255,255,0));
+    border-radius:50%;
+  }
+  .bubble:hover{ transform:translateY(-2px) scale(1.03); filter:brightness(1.04); }
+  .bubble.squish{ transform:scaleY(.62) scaleX(.86); box-shadow:0 2px 6px -3px rgba(43,53,66,.5), 0 1px 0 rgba(255,255,255,.7) inset; }
+
+  .bubble.popped{
+    animation:pop .34s var(--ease) forwards;
+    pointer-events:none;
+  }
+  @keyframes pop{
+    0%{ transform:scale(1); }
+    35%{ transform:scale(.5); filter:brightness(1.3); }
+    100%{ transform:scale(0); opacity:0; filter:brightness(1.6); }
+  }
+  .bubble.gone{ visibility:hidden; }
+
+  /* refill banner */
+  .banner{
+    position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);
+    font-family:var(--sans);font-size:13px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--ink);background:rgba(255,255,255,.85);
+    padding:14px 26px;border-radius:999px;border:1px solid rgba(43,53,66,.14);
+    box-shadow:0 16px 40px -18px rgba(43,53,66,.6);
+    opacity:0;pointer-events:none;transition:.4s var(--ease);white-space:nowrap;
+  }
+  .banner.show{ opacity:1; transform:translate(-50%,-50%) scale(1); }
+
+  .pop{
+    position:absolute;pointer-events:none;font-family:var(--sans);
+    font-weight:700;font-size:14px;color:var(--pink-deep);
+    animation:floatUp .7s ease-out forwards;
+  }
+  @keyframes floatUp{ from{opacity:1;transform:translateY(0);} to{opacity:0;transform:translateY(-34px);} }
+
+  .spark{
+    position:absolute;pointer-events:none;border-radius:50%;
+    animation:spark .55s ease-out forwards;
+  }
+  @keyframes spark{
+    from{opacity:.9;transform:translate(0,0) scale(1);}
+    to{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.2);}
+  }
+
+  /* ---------- Controls / caption ---------- */
+  .foot{
+    display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;
+    font-family:var(--sans);
+  }
+  .controls{display:flex;gap:10px;flex-wrap:wrap}
+  .controls button{
+    font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    border:1px solid rgba(43,53,66,.25);background:transparent;color:var(--ink);
+    padding:10px 18px;border-radius:999px;cursor:pointer;transition:.25s var(--ease);
+  }
+  .controls button:hover{background:var(--blue-deep);color:#fff;border-color:var(--blue-deep);transform:translateY(-1px)}
+  .controls button.pink:hover{background:var(--pink-deep);border-color:var(--pink-deep)}
+  .caption{font-family:var(--sans);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .caption b{color:var(--ink);font-weight:600}
+
+  @media (prefers-reduced-motion:reduce){
+    .bubble.popped{animation:none;opacity:0;}
+    .pop,.spark{animation:none;opacity:0;}
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="masthead">
+      <div>
+        <p class="kicker">The Fidget Collection · No. 058</p>
+        <h1>The bubble wrap you <em>can</em> actually pop.</h1>
+        <p class="tag">A full sheet of glossy pastel bubbles — press to squish, release to pop with a little
+          acoustic blip and a burst of light. Pop the whole sheet and it refills itself, endlessly.</p>
+      </div>
+      <div class="stats">
+        <span class="stat"><span class="n b" id="left">0</span><span class="l">Left</span></span>
+        <span class="stat"><span class="n p" id="score">0</span><span class="l">Popped</span></span>
+        <span class="stat"><span class="n" id="combo">—</span><span class="l">Combo</span></span>
+      </div>
+    </header>
+
+    <section class="stage">
+      <div class="grid" id="grid" aria-label="A sheet of bubble wrap"></div>
+      <div class="banner" id="banner">Fresh sheet ✦</div>
+    </section>
+
+    <footer class="foot">
+      <div class="controls">
+        <button id="refill">Refill</button>
+        <button id="sound" class="pink">Sound: On</button>
+        <button id="rain">Rain Mode</button>
+      </div>
+      <div class="caption">Press &amp; hold to squish · <b id="size">—</b> bubbles per sheet</div>
+    </footer>
+  </main>
+  <script>
+  (function(){
+    "use strict";
+    var grid   = document.getElementById('grid');
+    var banner = document.getElementById('banner');
+    var leftEl = document.getElementById('left');
+    var scoreEl= document.getElementById('score');
+    var comboEl= document.getElementById('combo');
+    var sizeEl = document.getElementById('size');
+    var refillBtn = document.getElementById('refill');
+    var soundBtn  = document.getElementById('sound');
+    var rainBtn   = document.getElementById('rain');
+
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var cols = 10, rows = 6;
+    var bubbles = [];
+    var popped = 0, score = 0, combo = 0, comboTimer = null;
+    var soundOn = true, rainMode = false, soundReady = false;
+    var AC = null;
+
+    function pickCols(){
+      var w = grid.clientWidth;
+      if(w < 360) return 7;
+      if(w < 520) return 8;
+      if(w < 760) return 10;
+      if(w < 1040) return 12;
+      return 14;
+    }
+
+    var PALETTES = [
+      ['#a9d4f0','#6fb6e4','#3f8fc4'],
+      ['#f7b8cd','#f288a8','#d85f86'],
+      ['#bfe3d6','#8fd0b4','#57ab8b'],
+      ['#d6c9ee','#b49de0','#8a6fc4'],
+      ['#cfe8f5','#9ccbe8','#6ba6d0'],
+      ['#f6d3a6','#f0b26b','#d88f4a']
+    ];
+
+    function build(){
+      grid.innerHTML = '';
+      bubbles = [];
+      cols = pickCols();
+      grid.style.setProperty('--cols', cols);
+      rows = Math.max(4, Math.round(100 / cols));
+      for(var y=0;y<rows;y++){
+        for(var x=0;x<cols;x++){
+          var b = document.createElement('span');
+          b.className = 'bubble';
+          var pal = PALETTES[(x*7 + y*3) % PALETTES.length];
+          b.style.setProperty('--c1', pal[0]);
+          b.style.setProperty('--c2', pal[1]);
+          b.style.setProperty('--c3', pal[2]);
+          b.style.transitionDelay = '0ms';
+          grid.appendChild(b);
+          attach(b);
+          bubbles.push(b);
+        }
+      }
+      sizeEl.textContent = bubbles.length;
+      updateHUD();
+    }
+
+    function attach(b){
+      b.addEventListener('pointerdown', function(e){
+        b.setPointerCapture(e.pointerId);
+        b.classList.add('squish');
+        b._down = true;
+      });
+      b.addEventListener('pointerup', function(e){
+        if(b._down){ b._down = false; pop(b, e.clientX, e.clientY); }
+        b.classList.remove('squish');
+      });
+      b.addEventListener('pointercancel', function(){ b.classList.remove('squish'); b._down = false; });
+      // touch fallback
+      b.addEventListener('touchstart', function(){ b.classList.add('squish'); }, {passive:true});
+    }
+
+    function pop(b, cx, cy){
+      if(b.classList.contains('popped') || b.classList.contains('gone')) return;
+      b.classList.remove('squish');
+      b.classList.add('popped');
+      popped++;
+      score += 10 + Math.floor(combo/3)*5;
+      combo++;
+      clearTimeout(comboTimer);
+      comboTimer = setTimeout(function(){ combo = 0; updateHUD(); }, 900);
+      updateHUD();
+      burst(b);
+      popScore(b);
+      blip(b);
+      if(navigator.vibrate) navigator.vibrate(8);
+      setTimeout(function(){ b.classList.add('gone'); b.classList.remove('popped'); }, 340);
+      if(rainMode) refill();
+      else if(popped === bubbles.length) autoRefill();
+    }
+
+    function burst(b){
+      if(reduce) return;
+      var stage = grid.parentElement;
+      var colsNow = parseInt(grid.style.getPropertyValue('--cols'),10) || cols;
+      var cell = grid.clientWidth / colsNow;
+      var colors = ['#a9d4f0','#f7b8cd','#bfe3d6','#d6c9ee','#f0b26b'];
+      var ox = grid.offsetLeft, oy = grid.offsetTop;
+      var cx = ox + b.offsetLeft + b.offsetWidth/2;
+      var cy = oy + b.offsetTop + b.offsetHeight/2;
+      for(var i=0;i<6;i++){
+        var s = document.createElement('span');
+        s.className = 'spark';
+        var ang = (Math.PI*2*i)/6 + Math.random()*0.5;
+        var dist = cell*0.6 + Math.random()*cell*0.5;
+        s.style.setProperty('--dx', (Math.cos(ang)*dist).toFixed(1)+'px');
+        s.style.setProperty('--dy', (Math.sin(ang)*dist).toFixed(1)+'px');
+        s.style.left = (cx - 3) + 'px';
+        s.style.top  = (cy - 3) + 'px';
+        s.style.width = s.style.height = (4 + Math.random()*5).toFixed(1)+'px';
+        s.style.background = colors[i % colors.length];
+        stage.appendChild(s);
+        (function(node){ setTimeout(function(){ node.remove(); }, 560); })(s);
+      }
+    }
+
+    function popScore(b){
+      var stage = grid.parentElement;
+      var ox = grid.offsetLeft, oy = grid.offsetTop;
+      var s = document.createElement('span');
+      s.className = 'pop';
+      s.textContent = combo >= 4 ? ('x' + Math.floor(1 + combo/3)) : '+';
+      s.style.left = (ox + b.offsetLeft + b.offsetWidth/2 - 6) + 'px';
+      s.style.top  = (oy + b.offsetTop - 2) + 'px';
+      stage.appendChild(s);
+      setTimeout(function(){ s.remove(); }, 720);
+    }
+
+    function updateHUD(){
+      leftEl.textContent = bubbles.length - popped;
+      scoreEl.textContent = score;
+      comboEl.textContent = combo > 1 ? ('x'+combo) : '—';
+    }
+
+    function blip(b){
+      if(!soundOn) return;
+      try{
+        if(!AC){ AC = new (window.AudioContext || window.webkitAudioContext)(); }
+        if(AC.state === 'suspended') AC.resume();
+        var now = AC.currentTime;
+        var o = AC.createOscillator();
+        var g = AC.createGain();
+        // pitch rises with combo for a satisfying scale
+        var base = 520 + (combo % 12) * 42;
+        var f = base + (Math.random()*90 - 45);
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(f, now);
+        o.frequency.exponentialRampToValueAtTime(f*1.5, now + 0.09);
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.22, now + 0.008);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+        o.connect(g).connect(AC.destination);
+        o.start(now);
+        o.stop(now + 0.18);
+      }catch(err){}
+    }
+
+    function showBanner(txt){
+      banner.textContent = txt;
+      banner.classList.add('show');
+      clearTimeout(banner._t);
+      banner._t = setTimeout(function(){ banner.classList.remove('show'); }, 1100);
+    }
+
+    function refill(){
+      popped = 0; combo = 0;
+      build();
+      showBanner('Fresh sheet ✦');
+    }
+    function autoRefill(){
+      showBanner('All popped — refilling ✦');
+      setTimeout(refill, 900);
+    }
+
+    refillBtn.addEventListener('click', refill);
+    soundBtn.addEventListener('click', function(){
+      soundOn = !soundOn;
+      soundBtn.textContent = 'Sound: ' + (soundOn ? 'On' : 'Off');
+    });
+    rainBtn.addEventListener('click', function(){
+      rainMode = !rainMode;
+      rainBtn.textContent = rainMode ? 'Rain: On' : 'Rain Mode';
+      rainBtn.style.background = rainMode ? 'var(--pink-deep)' : '';
+      rainBtn.style.color = rainMode ? '#fff' : '';
+      rainBtn.style.borderColor = rainMode ? 'var(--pink-deep)' : '';
+      showBanner(rainMode ? 'Rain mode ✦' : 'Rain mode off');
+    });
+
+    var rt;
+    window.addEventListener('resize', function(){
+      clearTimeout(rt);
+      rt = setTimeout(build, 200);
+    });
+
+    // keyboard: pop focused bubble
+    grid.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' || e.key === ' '){
+        var b = e.target;
+        if(b.classList.contains('bubble')){ e.preventDefault(); pop(b, b.getBoundingClientRect().left, b.getBoundingClientRect().top); }
+      }
+    });
+
+    build();
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+RECREATION PROMPT
+=================
+Create a single self-contained HTML file (inline <style>, no external assets,
+no JS) of an upscale gallery landing page for sculptural marble forms. The
+background is a warm stone/beige radial gradient suggesting a studio room, with
+a perspective-tilted floor strip, faint tile lines, and a blurred, slowly
+drifting diagonal light shaft (multiply blend). A header shows a spaced-out
+brand and a large serif headline with an italic gold accent word. Below, a
+three-column grid (two on tablet, one on mobile) of six "pieces": each is a
+marble sculpture rendered purely with CSS (a div whose background is a radial
+gradient from white to marble to vein tones, with inset + drop shadows for
+roundness), given a distinct silhouette via a unique border-radius, sitting on
+a small pedestal with a blurred ground shadow, and captioned with a number,
+italic name, and material/year line. Each form has two animated layers: a slow
+drifting marble-vein texture (::before, conic + repeating gradients, multiply)
+and a specular sheen sweep (::after, screen blend). Two of the pieces are
+"gilded" variants with gold-toned gradients and veining. Pieces rise into place
+on load with staggered delays. Use old-style serif for display type and
+system-sans for labels. Respect prefers-reduced-motion.
+
+TITLE
+=====
+MARMORE · Sculptural Gallery
+
+DESIGN DESCRIPTION
+==================
+A refined, museum-like gallery page presenting six abstract marble sculptures,
+all drawn with pure CSS rather than images. The atmosphere is a softly lit
+studio: a warm beige radial-gradient wall, a perspective-rotated floor plane
+with faint tile seams, and a large blurred beam of light that drifts slowly
+across the scene in multiply blend mode. Each sculpture is a div shaped by a
+distinct border-radius (blob, vase, egg, pillar, dome, torus/sphere) and shaded
+with a radial gradient going from bright white through marble cream to greyish
+vein tones, reinforced by inset highlights and a soft cast shadow so it reads
+as polished stone. Two pseudo-elements animate each form: a slowly translating
+vein texture (conic + repeating-linear gradients, multiply blend) and a
+diagonal specular highlight that sweeps back and forth (screen blend). Two
+pieces are gilded variants in gold "Giallo/Bianco" marble. Every sculpture
+sits on a slim pedestal with a blurred elliptical ground shadow and a small
+curated label (number, italic Italian name like "Onde", "Orea", "Volta", and a
+material/year). The whole page uses restrained serif display type with gold
+accents and spaced sans-serif captions, and the pieces stagger-rise into view
+on load.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- CSS-only "sculpture" forms: radial-gradient marble shading (white → marble →
+  vein → shadow) with layered inset and drop shadows for volume.
+- Distinct silhouettes via six different multi-value border-radius declarations
+  (.f-blob, .f-vase, .f-egg, .f-torus, .f-pillar, .f-dome).
+- Animated marble veining on ::before: conic-gradient + repeating-linear-
+  gradient, mix-blend-mode: multiply, slow veinDrift translate/rotate loop.
+- Animated specular sheen on ::after: diagonal screen-blend gradient sweeping
+  via translateX (sheen keyframes).
+- Studio room built from stacked gradients: wall light, floor fade, perspective
+  floor-line strip (rotateX), and a blurred skewX lightshaft drifting with
+  driftLight + multiply blend.
+- Pedestals with inset highlight, gradient face, and a blurred radial ground
+  shadow (::after).
+- "Gilded" variant class overriding the form gradient and vein layer to
+  gold-toned (Giallo/Bianco) colors.
+- Staggered entrance: pieces rise (rise keyframe, translateY + fade) with
+  incremental nth-child animation-delay.
+- Responsive grid: 3 → 2 (900px) → 1 (560px) columns.
+- Serif/sans typographic pairing with gold accent color (--gold).
+- prefers-reduced-motion disables all animations.
+
+INTENDED INTERACTION MODEL
+==========================
+Non-interactive and ambient: the page is a self-animated gallery loop. Motion
+happens automatically on load (pieces stagger-rise into place) and continues
+gently forever (vein texture drifts, specular sheen sweeps, light shaft drifts,
+pedestal shadows static). There is no pointer, click, or hover interaction
+built in. Under prefers-reduced-motion every animation is turned off, leaving
+the static lit sculptures and room.

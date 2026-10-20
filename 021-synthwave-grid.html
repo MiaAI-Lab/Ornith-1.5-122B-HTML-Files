@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NEON DRIFT · Synthwave Horizon</title>
+<style>
+  :root{
+    --sky-top:#1a0736;
+    --sky-mid:#4a1170;
+    --sky-low:#b01f8f;
+    --sky-horizon:#ff5f6d;
+    --sun-core:#ffd36e;
+    --sun-mid:#ff7a3c;
+    --sun-low:#ff2e63;
+    --grid-cyan:#22e6ff;
+    --grid-magenta:#ff3ea5;
+    --ink:#fdf0ff;
+    --glow:rgba(255,46,99,.55);
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%}
+  body{
+    font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    background:var(--sky-top);
+    color:var(--ink);
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+
+  /* ---------- SCENE ---------- */
+  .scene{
+    position:fixed;
+    inset:0;
+    overflow:hidden;
+    perspective:220px;
+    perspective-origin:50% 41%;
+  }
+
+  /* sky */
+  .sky{
+    position:absolute;
+    inset:0;
+    background:
+      radial-gradient(120% 90% at 50% 100%, rgba(255,95,109,.55) 0%, rgba(176,31,143,.25) 34%, transparent 66%),
+      linear-gradient(180deg, #12042e 0%, #2a0a5e 34%, #5b158a 52%, #b01f8f 66%, #ff5f6d 78%, #ff8a5c 86%, #1a0736 86.2%);
+  }
+  /* horizon glow band */
+  .horizon-glow{
+    position:absolute;
+    left:-10%;
+    right:-10%;
+    top:60%;
+    height:34%;
+    background:radial-gradient(60% 120% at 50% 0%, rgba(255,215,110,.6), transparent 70%);
+    filter:blur(6px);
+    pointer-events:none;
+  }
+
+  /* stars */
+  .stars{position:absolute;inset:0 0 58% 0;pointer-events:none}
+  .stars::before,.stars::after{
+    content:"";position:absolute;inset:-40%;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 20%, #fff 50%, transparent),
+      radial-gradient(1.5px 1.5px at 28% 62%, #fff 50%, transparent),
+      radial-gradient(2px 2px at 44% 12%, #fff 50%, transparent),
+      radial-gradient(1px 1px at 60% 40%, #ffd9f2 50%, transparent),
+      radial-gradient(1.5px 1.5px at 74% 18%, #fff 50%, transparent),
+      radial-gradient(1px 1px at 86% 54%, #fff 50%, transparent),
+      radial-gradient(2px 2px at 8% 70%, #fff 50%, transparent),
+      radial-gradient(1px 1px at 52% 78%, #ffd9f2 50%, transparent);
+    background-size:cover;
+    animation:twinkle 4.5s ease-in-out infinite alternate;
+  }
+  .stars::after{animation-duration:6s;animation-delay:-2s;opacity:.6;transform:translate(30px,-10px)}
+  @keyframes twinkle{from{opacity:.35}to{opacity:1}}
+
+  /* ---------- SUN ---------- */
+  .sun-wrap{
+    position:absolute;
+    left:50%;
+    top:38%;
+    transform:translate(-50%,-50%);
+    width:min(78vw,460px);
+    aspect-ratio:1/1;
+    filter:drop-shadow(0 0 42px var(--glow)) drop-shadow(0 0 90px rgba(255,120,60,.4));
+  }
+  .sun{
+    position:absolute;inset:0;border-radius:50%;
+    background:
+      radial-gradient(60% 60% at 50% 42%, #fff4c9 0%, var(--sun-core) 30%, var(--sun-mid) 62%, var(--sun-low) 100%);
+    overflow:hidden;
+    animation:sunPulse 5s var(--ease) infinite;
+  }
+  @keyframes sunPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.12)}}
+  /* horizontal slats — masked to lower half */
+  .sun-slats{
+    position:absolute;
+    left:0;right:0;
+    bottom:0;height:52%;
+    background:repeating-linear-gradient(
+      180deg,
+      transparent 0 7px,
+      rgba(26,7,54,.95) 7px 12px
+    );
+    /* the dark slats are the gaps; bottom grows them */
+    -webkit-mask:linear-gradient(180deg, transparent, #000 55%);
+            mask:linear-gradient(180deg, transparent, #000 55%);
+  }
+  /* inner glow ring */
+  .sun-ring{
+    position:absolute;inset:-14%;border-radius:50%;
+    background:radial-gradient(50% 50% at 50% 50%, transparent 55%, rgba(255,90,150,.18) 60%, transparent 72%);
+    animation:ringPulse 5s var(--ease) infinite;
+  }
+  @keyframes ringPulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.06);opacity:1}}
+
+  /* ---------- MOUNTAINS ---------- */
+  .mountains{
+    position:absolute;
+    left:50%;
+    bottom:33.4%;
+    transform:translateX(-50%);
+    width:118vw;
+    filter:drop-shadow(0 0 14px rgba(90,20,120,.6));
+    pointer-events:none;
+  }
+
+  /* ---------- GRID ---------- */
+  .floor{
+    position:absolute;
+    left:-50%;
+    right:-50%;
+    top:82%;
+    bottom:-60%;
+    transform:rotateX(72deg);
+    transform-origin:50% 100%;
+    background:
+      linear-gradient(180deg, rgba(10,2,30,0) 0%, rgba(10,2,30,.0) 42%, #12042e 60%, #1a0736 100%),
+      repeating-linear-gradient(0deg,
+        transparent 0 38px,
+        rgba(34,230,255,.55) 38px 40px),
+      repeating-linear-gradient(90deg,
+        transparent 0 38px,
+        rgba(255,62,165,.42) 38px 40px);
+    background-position:0 0, 0 0, 0 0;
+    animation:gridScroll 1.6s linear infinite;
+    -webkit-mask:linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
+            mask:linear-gradient(180deg, transparent 0%, #000 30%, #000 100%);
+  }
+  @keyframes gridScroll{from{background-position:0 0, 0 0, 0 0}to{background-position:0 0, 0 0, 0 40px}}
+  /* glow tint over grid */
+  .grid-glow{
+    position:absolute;left:0;right:0;top:80%;bottom:0;
+    background:radial-gradient(70% 90% at 50% 100%, rgba(34,230,255,.14), transparent 70%);
+    pointer-events:none;mix-blend-mode:screen;
+  }
+
+  /* vignette + scanlines */
+  .vignette{
+    position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 220px 60px rgba(5,0,20,.75);
+  }
+  .scan{
+    position:absolute;inset:0;pointer-events:none;opacity:.35;mix-blend-mode:overlay;
+    background:repeating-linear-gradient(180deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px);
+    animation:scanDrift 8s linear infinite;
+  }
+  @keyframes scanDrift{from{background-position-y:0}to{background-position-y:6px}}
+
+  /* ---------- TYPE ---------- */
+  .overlay{
+    position:fixed;inset:0;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(16px,4vw,44px);
+    z-index:5;
+  }
+  .wordmark{
+    font-weight:800;
+    letter-spacing:.42em;
+    font-size:clamp(20px,5.4vw,64px);
+    text-transform:uppercase;
+    line-height:.9;
+    margin:0;
+    text-shadow:
+      2px 2px 0 var(--grid-magenta),
+      4px 4px 0 var(--grid-cyan),
+      0 0 26px rgba(255,90,150,.55);
+    animation:flicker 6s steps(1) infinite;
+  }
+  .wordmark small{
+    display:block;
+    font-size:clamp(9px,1.4vw,14px);
+    letter-spacing:.62em;
+    color:#ffd9f2;
+    margin-top:14px;
+    text-shadow:0 0 12px rgba(34,230,255,.7);
+  }
+  @keyframes flicker{
+    0%,19%,21%,23%,80%,100%{opacity:1}
+    20%,22%,81%{opacity:.55}
+  }
+  .footer{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    gap:12px;flex-wrap:wrap;
+    font-size:clamp(9px,1.2vw,12px);
+    letter-spacing:.28em;
+    text-transform:uppercase;
+    color:#ffc9e6;
+    text-shadow:0 0 10px rgba(34,230,255,.5);
+  }
+  .footer .tag{color:#8ff7ff}
+  .blink{animation:blink 1.4s steps(2) infinite}
+  @keyframes blink{50%{opacity:.15}}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important}
+  }
+</style>
+</head>
+<body>
+  <div class="scene" aria-hidden="true">
+    <div class="sky"></div>
+    <div class="stars"></div>
+    <div class="horizon-glow"></div>
+
+    <div class="sun-wrap">
+      <div class="sun-ring"></div>
+      <div class="sun">
+        <div class="sun-slats"></div>
+      </div>
+    </div>
+
+    <svg class="mountains" viewBox="0 0 1200 180" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="mtn" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#3a0f66"/>
+          <stop offset="1" stop-color="#15052e"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,180 L0,120 L90,60 L150,100 L230,38 L320,110 L400,55 L480,120 L560,70 L660,130 L740,60 L830,118 L920,52 L1010,120 L1100,72 L1200,130 L1200,180 Z"
+            fill="url(#mtn)" stroke="rgba(34,230,255,.35)" stroke-width="1.2"/>
+    </svg>
+
+    <div class="floor"></div>
+    <div class="grid-glow"></div>
+    <div class="scan"></div>
+    <div class="vignette"></div>
+  </div>
+
+  <div class="overlay">
+    <h1 class="wordmark">Neon&nbsp;Drift<small>Outrun · 1984 · Infinite Road</small></h1>
+    <div class="footer">
+      <span class="tag">◢ RETROWAVE / 088</span>
+      <span>SIGNAL <span class="blink">●</span> STABLE&nbsp;&nbsp;·&nbsp;&nbsp;CH. 04 — <span class="tag">SUNSET</span></span>
+    </div>
+  </div>
+</body>
+</html>

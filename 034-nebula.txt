@@ -1,0 +1,38 @@
+PROMPT:
+Cosmic nebula with swirling gas clouds and a parallax star field.
+Palette: deep space, magenta/teal gas. Signature: layered animated radial gradients for gas,
+parallax stars, slow zoom.
+
+TITLE:
+Nebula — "Carina Drift" (Deep Field Survey, Sector Carina-North)
+
+DESIGN DESCRIPTION:
+An immersive, full-bleed window into deep space. A very dark multi-stop radial wash forms the
+void, over which six large, heavily-blurred, screen-blended radial gradients drift and breathe
+in magenta, teal and violet, layered so their overlaps bloom into secondary hues. A slow
+counter-rotating conic gradient threads a swirl of gas through the cloud, and a luminous
+pulsing core anchors the composition where a newborn star would be. In front, a full-screen
+canvas renders a dense parallax star field — hundreds of softly twinkling stars with coloured
+tints (white, pale blue, gold, rose) and a few bright ones with radial glow — plus occasional
+shooting stars that streak diagonally across. A serif display title "Carina / Drift" (the
+"Drift" in glowing teal italic) and a glassy coordinate readout float over the scene, framed by
+an inset vignette for depth. The whole gas layer performs a continuous slow zoom.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered animated radial gradients (six gas clouds) with mix-blend-mode:screen and heavy
+  blur, drifting on different long, alternating keyframe timings to read as living gas.
+- A counter-rotating conic-gradient "swirl" thread and a pulsing radial-gradient core.
+- A slow, continuous "zoom" via a 34s alternate scale+translate on the whole nebula layer.
+- Canvas parallax star field: per-star depth, twinkle phase, colour tint, and a few glow
+  stars; pointer-driven offset plus a slow auto-drift for depth.
+- Randomly spawned shooting stars drawn as gradient streaks with a bright head, fading on a
+  sine envelope.
+- Deep-space base wash, inset vignette, and a glassy overlay with a serif display title.
+- A live/pause toggle button that pauses the gas animations and dims the field.
+- Full prefers-reduced-motion fallback: animations off, static starfield rendered once.
+
+INTENDED INTERACTION MODEL:
+Ambient and exploratory. The gas slowly zooms and swirls on its own; stars twinkle and drift
+continuously. Moving the pointer (or finger) parallax-drifts the star field and gas at layered
+depths, easing back to centre; a "Live field · streaming" button toggles the animation on/off
+and dims the canvas. All motion is replaced by a single static field for reduced-motion users.

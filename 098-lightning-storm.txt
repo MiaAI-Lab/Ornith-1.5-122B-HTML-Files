@@ -1,0 +1,28 @@
+PROMPT:
+World-class creative technologist & designer. Build this standalone HTML page as a file in the current working directory.
+
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks.
+
+PAGE: 098-lightning-storm.html + 098-lightning-storm.txt
+A lightning storm with branching bolts, screen flash and distant rumble. Palette: dark storm grey, white/violet bolts. Signature: canvas lightning bolt generation with random branching (midpoint displacement), bright flash overlay, subtle screen shake, click to summon a strike.
+
+TITLE:
+Lightning Storm — "Tempest №098"
+
+DESIGN DESCRIPTION:
+A brooding, cinematic night sky built from layered gradients — deep storm grey at the zenith melting into a warmer electric glow along the horizon. Heavy cloud banks drift slowly across the canvas, and behind them the air itself seems charged. The signature bolts are true canvas lightning: each strike is generated with a midpoint-displacement (fractal subdivision) algorithm that splits a single line into a jagged spine, then recursively throws thinner, dimmer branches off the main channel in white-hot and violet hues. When a bolt lands, the whole screen flashes a bright radial overlay that decays in a fraction of a second, the horizon flares, and a subtle screen shake ripples the composition — the visual echo of a distant rumble. Quiet uppercase typography and a thin "tap to summon a strike" tag keep the frame editorial rather than gamey.
+
+MAJOR VISUAL TECHNIQUES:
+- Midpoint-displacement lightning generation: a straight segment is recursively displaced at its midpoint (with a turbulence/jitter term) to produce natural jagged bolts.
+- Recursive branching: the main spine spawns thinner, lower-alpha child bolts at random points, each with its own displacement seed.
+- Multi-pass glow: each bolt is stroked several times with increasing width and decreasing alpha (violet halo → pale core → white-hot center) for a luminous, electric bloom.
+- Full-screen flash overlay: a radial-gradient layer whose opacity spikes and decays per strike, simulating ambient light scatter.
+- Subtle transform-based screen shake triggered on impact for a tactile "rumble" feel.
+- Slowly parallaxed cloud bands via layered radial/linear gradients animated with requestAnimationFrame.
+
+INTENDED INTERACTION MODEL:
+Ambient storm: bolts occasionally strike on their own at random intervals across the sky. The primary interaction is deliberate — click or tap anywhere to summon a lightning strike aimed at that point, complete with its own flash and shake. No menus or modes; the sky is a live, clickable canvas.

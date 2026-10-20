@@ -1,0 +1,20 @@
+PROMPT:
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+Page 3: 087-water-ripple.html + 087-water-ripple.txt — A water surface you can disturb: click/drag creates ripples that diffuse (height-field). Palette: clear blue water, caustic highlights. Signature: canvas height-field ripple diffusion on pointer interaction, caustic color shading, reflective surface.
+
+TITLE: Water Ripple — Disturb the Surface
+
+DESIGN DESCRIPTION:
+A full-bleed expanse of clear blue water rendered as a real-time height-field simulation on a single canvas. The surface is never still: a slow ambient swell rolls across it, and wherever the pointer touches or drags, concentric ripples are injected, propagate outward, reflect softly and diffuse as energy spreads and decays. The shading reads as genuine liquid — deep cerulean troughs, bright cyan crests, and shifting caustic highlights that gather where the simulated waves focus, all blended to feel reflective and wet rather than a flat gradient.
+
+MAJOR VISUAL TECHNIQUES:
+- Classic two-buffer height-field water simulation (current + previous height grids) with diffusion/decay each frame
+- Pointer-driven splash injection (down = single drop, drag = continuous wake) mapped to the grid
+- Caustic color shading: height + velocity used to tint crests bright and draw focusing highlight streaks
+- Ambient base swell so the surface animates without input
+- Subtle surface reflection via gradient + specular term on the height gradient
+- Responsive canvas sizing with devicePixelRatio handling; reduced-motion lowers resolution / slows decay
+
+INTENDED INTERACTION MODEL:
+Direct, tactile manipulation. Click or tap to drop a stone and watch rings expand; press-drag to carve a wake that follows the cursor. Multiple disturbances overlap and interfere naturally. It also runs on its own (ambient swell) for passive viewing, and stops responding to input gracefully when off-canvas. Fully offline, no dependencies; reduced-motion keeps it calm.

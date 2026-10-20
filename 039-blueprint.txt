@@ -1,0 +1,36 @@
+PROMPT
+------
+You are a world-class creative technologist & designer. Build the following standalone HTML page as a file in the current working directory.
+
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif, sans-serif, monospace), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+
+PAGE 039 — Architectural blueprint with animated grid, dimension lines, a technical drawing building itself up. Palette: classic blueprint cyan, white lines. Signature: animated grid, stroke-draw plans, dimension ticks, drafting feel.
+
+WOW QUALITY BAR: Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+
+TITLE
+-----
+Drafting E-01 — A Blueprint That Builds Itself
+
+DESIGN DESCRIPTION
+------------------
+A classic cyan blueprint sheet framed with corner marks and a title block, on which a residential elevation and floor plan draw themselves into existence line by line. Every wall, roof, window and dimension line is an inline SVG stroke that animates via stroke-dashoffset, so the drawing literally "builds up" from nothing — structure first, then openings, then annotations. Behind it, a canvas grid of fine and major lines breathes almost imperceptibly, with a slow travelling highlight like a drafter's eye scanning the sheet. Dimension lines in a warm amber accent carry tick marks and metric measurements, while a compass rose and a callout bubble add authentic drafting detail.
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Inline SVG stroke-draw: paths use pathLength="1" + stroke-dasharray/offset animated to 0 so lines extend into place.
+- Staggered build order via animation-delay — walls, then roof, openings, hatching, then dimension lines and notes.
+- Canvas blueprint grid: minor/major line tiers with a subtle breathing offset and a slow radial "eye" highlight.
+- Classic blueprint palette (cyan #1266b4 ground, white drafting lines) with a warm amber accent for dimensions and callouts.
+- True drafting conventions: dimension ticks, metric labels, a rotated vertical dimension, leader line + callout bubble, compass rose, title block and sheet number.
+- Corner registration marks and a double frame drawn with CSS for the authentic print feel.
+- Reduced-motion fallback: all strokes resolve instantly to their finished state.
+
+INTENDED INTERACTION MODEL
+--------------------------
+Presentational and self-animating — the plan draws itself once on load, like watching a drafter work. There are no controls; the experience is a looping "first-draw" that settles into a quiet, breathing stillness. Pointer/touch is not required; the piece is designed as an ambient, cinematic reveal of a technical drawing coming to life.

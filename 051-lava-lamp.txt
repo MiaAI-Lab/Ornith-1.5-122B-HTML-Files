@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page — realistic lava lamp with rising/falling blobs. Palette: warm red/orange liquid, dark base. Signature: canvas metaballs via gradient/blur, wobble, slow rising and falling blobs. One self-contained .html file, all CSS in a single <style> block, all JS in a single <script> block, no external dependencies (no CDN, fonts, images or libraries), responsive 320px–4K, valid HTML5. WOW quality bar: genuinely stunning, premium, Awwwards/SiteInspire-caliber, distinctive art direction, curated palette, refined typography, real motion, one signature effect.
+
+TITLE:
+"The Warm Drift"
+
+DESIGN DESCRIPTION:
+A premium, close-up view of a brushed-metal lava lamp glowing in a dark room. Inside the elliptical glass globe, molten red-orange liquid pools at the base, heating, swelling and detaching into blobs that rise, cool, wobble and drift back down on a slow, hypnotic convection cycle. The blobs are rendered as true metaballs: soft radial-gradient fields composited additively on a canvas, then thresholded with a blur+contrast "gooey" filter so they merge and separate with a wet, elastic wobble. Warm light spills onto the surface below and pulses with the heat. The metal cap, neck and flared base are drawn entirely with layered CSS gradients for a believable brushed-chrome finish, framed by a glass sheen and a screen-blend ambient glow.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas metaballs: per-blob radial gradients (bright yellow core → orange → deep red, transparent edge) drawn with globalCompositeOperation "lighter".
+- Gooey threshold via a CSS filter (blur + high contrast + saturation) applied to the whole canvas so overlapping fields merge into smooth, elastic shapes.
+- Buoyancy physics: each blob carries a heat value; warm blobs rise, cool at the top, sink when dense, re-heat at the base — producing slow, organic rise/fall cycles.
+- Radius wobble and horizontal sine drift per blob for the classic lava-lamp undulation.
+- Realistic lamp hardware in pure CSS: brushed-metal gradient cap, neck ring, flared base and foot, plus glass sheen, rim light and a screen-blend warm tint overlay.
+- A breathing warm light pool beneath the lamp and a pulsing inner glow tied to the heat.
+- Fully responsive; the globe scales with viewport height while the canvas re-sizes to its box (devicePixelRatio-aware).
+
+INTENDED INTERACTION MODEL:
+Slow and tactile. A "Heat" slider (0.20×–1.80×) controls the convection speed and how fast blobs heat/cool — turn it up for frantic bubbling, down for a near-still, molten pool. A Pause/Resume button freezes the drift. The readout shows the current heat multiplier. Everything respects prefers-reduced-motion by holding a calm, minimal motion.

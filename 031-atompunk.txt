@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 031-atompunk.html + 031-atompunk.txt — Retro-futurist atomic-age poster (1950s space race). Palette: teal, orange, cream, mustard. Signature: flat geometric illustration, ray-gun motifs, concentric orbits, mid-century type.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+ATOMIC AGE — Welcome to the Space Race
+
+DESIGN DESCRIPTION:
+A portrait poster rendered entirely as flat, mid-century vector illustration, framed like a museum print. A warm cream sky opens behind a radial sunburst of mustard and orange rays, scattered twinkling stars and 4-point atomic sparkles. At the heart sits an "atomic planet": a teal sphere with a glowing nucleus of clustered protons and neutrons, ringed by three tilted orbital ellipses whose electrons race around it. A finned rocket climbs on flickering gold flames at a diagonal, while a domed flying saucer drifts with blinking running lights. Bold, tightly-tracked display type reads "ATOMIC AGE" with a soft orange offset shadow, and a deep-teal footer banner carries a serif italic tagline — "Est. MCMLV" — completing the optimistic 1950s space-race fantasy.
+
+MAJOR VISUAL TECHNIQUES:
+- Single inline <svg viewBox="0 0 1000 1400"> poster held in a fixed aspect-ratio frame that scales fluidly from 320px to 4K with no external assets.
+- Flat geometric shapes (polygons, circles, ellipses, gradient-filled paths) in a curated teal / orange / cream / mustard palette with offset "letterpress" drop-shadow type.
+- Orbiting electrons use SMIL <animateMotion> + <mpath> along hidden ellipse paths, while the visible orbit rings spin via CSS, giving true elliptical travel.
+- CSS keyframe motion for the spinning sunburst, floating rocket & saucer, flickering exhaust, blinking saucer lights, pulsing nucleus and randomly-delayed twinkling stars/sparkles.
+- Procedurally generated in JS: the sunburst rays, a field of stars (kept clear of the atom), and 4-point sparkle polygons — so the composition feels hand-populated yet organic.
+- Multi-layer pointer parallax (sunburst, stars, scene) driven by a smooth requestAnimationFrame loop with an idle sine drift when untouched, and a prefers-reduced-motion branch that halts all motion.
+
+INTENDED INTERACTION MODEL:
+Quietly cinematic and pointer / touch driven, with no buttons or controls. Moving the cursor (or dragging on touch) tilts the poster in 3D-ish parallax — the sunburst, stars and foreground scene shift at different depths, as if the print is catching the light. When left untouched, the whole scene performs a slow, continuous idle drift and the atom keeps spinning, the rocket keeps climbing, and stars keep twinkling on their own. Motion is deliberately gentle and looping so it reads as a living screen-saver poster; on prefers-reduced-motion the parallax and all animation stop, leaving the full flat illustration intact and legible.

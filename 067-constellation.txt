@@ -1,0 +1,20 @@
+PROMPT:
+067-constellation.html — An interactive constellation map: tap stars to connect them, pan and zoom the night sky. Palette: deep midnight blue, soft star glow, gold connection lines. Signature: canvas starfield with drag-to-pan, click-to-connect stars, labeled constellations, parallax.
+
+TITLE:
+Celestial Atlas — Interactive Constellations
+
+DESIGN DESCRIPTION:
+A deep-midnight celestial atlas rendered on canvas: 380 twinkling field stars fill a wide starfield, while six recognizable constellations (Ursa Minor, Cassiopeia, Cygnus, Orion, Lyra, Corona) are placed across the sky as brighter, glowing node-stars joined by faint gold guide-lines, each labeled in spaced gold caps. The sky supports drag-to-pan and scroll-to-zoom with a cursor-centered zoom, and a live HUD reports the current zoom and a stylized RA/DEC readout of the sky's center. The whole field drifts with a subtle parallax tied to the pointer.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas starfield with per-star twinkle (sinusoidal alpha/radius) and warm/cool star tints.
+- World/projection system (px, py, zoom) enabling drag-pan and cursor-centered wheel-zoom.
+- Six hand-authored constellations with relative star offsets, edges and label anchors.
+- Faint gold auto guide-lines and glowing node-stars for each constellation.
+- User-drawn connection lines rendered as animated dashed gold strokes with glow and end-node halos.
+- Parallax nebula glow layer that shifts opposite the pointer.
+- HUD with live zoom + RA/DEC coordinate readout; system fonts only, fully inline.
+
+INTENDED INTERACTION MODEL:
+Drag anywhere to pan the night sky; scroll (or pinch-zoom on trackpads) to zoom in and out around the cursor. Tap two stars in sequence to bind them with a glowing gold line — connect your own constellations; the counter tracks how many lines you've drawn. Click "Clear lines" to reset your drawing. Pointer movement parallaxes the nebula glow.

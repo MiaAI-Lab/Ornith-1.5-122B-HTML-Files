@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Warp · Hyperspace Starfield</title>
+<style>
+  :root{
+    --space:#03050e; --ink:#cfe4ff; --blue:#7fb0ff; --dim:#4a6ea8;
+    --accent:#8fe0ff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#000;overflow:hidden}
+  body{font-family:ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;color:var(--ink);
+    -webkit-font-smoothing:antialiased;}
+
+  .stage{position:fixed;inset:0;overflow:hidden;background:var(--space);}
+  #bg{position:absolute;inset:0;width:100%;height:100%;display:block;
+    transform-origin:50% 50%;will-change:transform,filter;}
+  #fg{position:absolute;inset:0;width:100%;height:100%;display:block;}
+
+  /* cockpit vignette + scanline */
+  .vignette{position:absolute;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(75% 70% at 50% 48%, transparent 55%, rgba(2,4,12,.65) 100%);
+    box-shadow:inset 0 0 220px rgba(0,0,0,.85);}
+  .scan{position:absolute;inset:0;pointer-events:none;z-index:4;opacity:.35;
+    background:repeating-linear-gradient(to bottom, rgba(160,200,255,.05) 0 1px, transparent 1px 4px);
+    mix-blend-mode:overlay;}
+  .flash{position:absolute;inset:0;z-index:5;pointer-events:none;opacity:0;
+    background:radial-gradient(60% 60% at 50% 50%, rgba(200,235,255,.9), rgba(120,180,255,.35) 45%, transparent 72%);
+    transition:opacity .5s ease-out;}
+
+  /* corner brackets */
+  .brk{position:absolute;width:54px;height:54px;z-index:6;pointer-events:none;
+    border-color:rgba(140,200,255,.4);border-style:solid;border-width:0;}
+  .brk.tl{top:18px;left:18px;border-top-width:2px;border-left-width:2px;border-top-left-radius:8px;}
+  .brk.tr{top:18px;right:18px;border-top-width:2px;border-right-width:2px;border-top-right-radius:8px;}
+  .brk.bl{bottom:18px;left:18px;border-bottom-width:2px;border-left-width:2px;border-bottom-left-radius:8px;}
+  .brk.br{bottom:18px;right:18px;border-bottom-width:2px;border-right-width:2px;border-bottom-right-radius:8px;}
+
+  /* center reticle */
+  .reticle{position:absolute;left:50%;top:50%;width:120px;height:120px;transform:translate(-50%,-50%);
+    z-index:6;pointer-events:none;opacity:.5;animation:spin 24s linear infinite;}
+  .reticle::before,.reticle::after{content:"";position:absolute;inset:0;margin:auto;
+    border:1px solid rgba(140,210,255,.45);border-radius:50%;}
+  .reticle::before{width:78px;height:78px;}
+  .reticle::after{width:118px;height:118px;border-style:dashed;border-color:rgba(140,210,255,.25);}
+  .reticle i{position:absolute;left:50%;top:50%;width:1px;height:16px;background:rgba(150,215,255,.5);
+    transform:translate(-50%,-50%);}
+  .reticle i.a{transform:translate(-50%,-100%);}
+  .reticle i.b{transform:translate(-50%,0);}
+  .reticle i.c{transform:translate(-100%,-50%) rotate(90deg);}
+  .reticle i.d{transform:translate(0,-50%) rotate(90deg);}
+  @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+
+  /* HUD text */
+  .hud{position:absolute;z-index:7;pointer-events:none;}
+  .hud .tag{font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(170,205,255,.7);}
+  .hud .val{font-size:1.5rem;letter-spacing:.04em;color:#eaf4ff;
+    text-shadow:0 0 18px rgba(120,180,255,.6);}
+  .hud .sub{font-size:.58rem;letter-spacing:.28em;color:rgba(150,185,255,.5);text-transform:uppercase;margin-top:4px;}
+  .tl{top:26px;left:28px;}
+  .tr{top:26px;right:28px;text-align:right;}
+  .bl{bottom:28px;left:28px;}
+  .tr .val{font-variant-numeric:tabular-nums;}
+
+  /* control deck */
+  .deck{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:8;
+    display:flex;flex-direction:column;align-items:center;gap:12px;width:min(460px,88vw);}
+  .deck .bar{display:flex;align-items:center;gap:14px;width:100%;
+    padding:12px 18px;border-radius:14px;
+    background:linear-gradient(180deg, rgba(20,34,64,.55), rgba(8,14,30,.6));
+    border:1px solid rgba(120,180,255,.2);backdrop-filter:blur(7px);
+    box-shadow:0 10px 40px rgba(0,0,0,.5), inset 0 0 40px rgba(80,140,255,.05);}
+  .deck .lbl{font-size:.58rem;letter-spacing:.3em;color:rgba(150,190,255,.7);min-width:46px;}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:4px;
+    background:linear-gradient(90deg, rgba(90,140,220,.4), var(--accent));outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #bfe3ff 45%, #5aa0ff 85%);
+    box-shadow:0 0 14px rgba(120,190,255,.8);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #bfe3ff 45%, #5aa0ff 85%);
+    box-shadow:0 0 14px rgba(120,190,255,.8);cursor:pointer;}
+  .rnum{font-variant-numeric:tabular-nums;font-size:.82rem;color:#cfe6ff;min-width:64px;text-align:right;}
+  button{font-family:inherit;font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;
+    color:#dff0ff;background:rgba(90,150,255,.12);border:1px solid rgba(120,180,255,.4);
+    padding:10px 18px;border-radius:999px;transition:.2s;}
+  button:hover{background:rgba(90,150,255,.28);box-shadow:0 0 18px rgba(120,180,255,.4);}
+  button:active{transform:translateY(1px);}
+  .hint{font-size:.56rem;letter-spacing:.24em;color:rgba(150,185,255,.45);text-transform:uppercase;}
+
+  @media(max-width:520px){
+    .hud .val{font-size:1.15rem;}
+    .brk{width:38px;height:38px;}
+  }
+  @media(prefers-reduced-motion:reduce){ .reticle{animation:none} }
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="bg"></canvas>
+  <canvas id="fg"></canvas>
+  <div class="vignette"></div>
+  <div class="scan"></div>
+  <div class="flash" id="flash"></div>
+
+  <div class="brk tl"></div><div class="brk tr"></div>
+  <div class="brk bl"></div><div class="brk br"></div>
+
+  <div class="reticle" aria-hidden="true"><i class="a"></i><i class="b"></i><i class="c"></i><i class="d"></i></div>
+
+  <div class="hud tl">
+    <div class="tag">Flight · Nav Computer</div>
+    <div class="sub">Hyperspace Transit</div>
+  </div>
+  <div class="hud tr">
+    <div class="tag">Warp Factor</div>
+    <div class="val" id="warpVal">3.0</div>
+    <div class="sub" id="distSub">12.4 LY to anchor</div>
+  </div>
+  <div class="hud bl">
+    <div class="tag">Field Density</div>
+    <div class="val" id="densVal">512</div>
+    <div class="sub">streaks · pseudo-3D</div>
+  </div>
+
+  <div class="deck">
+    <div class="bar">
+      <span class="lbl">Warp</span>
+      <input type="range" id="warp" min="0" max="100" value="30" aria-label="Warp speed">
+      <span class="rnum" id="warpNum">3.0</span>
+    </div>
+    <button id="jump">▶ Engage Hyperspace</button>
+    <div class="hint">drag warp · tap hyperspace · move pointer to steer</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+
+  var bg = document.getElementById("bg");
+  var fg = document.getElementById("fg");
+  var bgx = bg.getContext("2d");
+  var fgx = fg.getContext("2d");
+  var flash = document.getElementById("flash");
+  var warp = document.getElementById("warp");
+  var warpNum = document.getElementById("warpNum");
+  var warpVal = document.getElementById("warpVal");
+  var densVal = document.getElementById("densVal");
+  var distSub = document.getElementById("distSub");
+  var jumpBtn = document.getElementById("jump");
+
+  var W = 0, H = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var NEAR = 1, FAR = 2200;
+  var COUNT = 480;
+  var stars = [];
+  var speed = 3, target = 3, cruise = 3;
+  var mx = 0, my = 0, smx = 0, smy = 0;
+  var last = performance.now();
+
+  function rand(a, b){ return a + Math.random() * (b - a); }
+
+  function spawn(s, full){
+    s.x = rand(-1, 1) * 1600;
+    s.y = rand(-1, 1) * 1600;
+    s.z = full ? rand(NEAR, FAR) : FAR;
+    s.t = Math.random();
+    s.cold = Math.random() < 0.32; // pale-blue vs white
+  }
+
+  function resize(){
+    W = Math.max(2, Math.round(window.innerWidth));
+    H = Math.max(2, Math.round(window.innerHeight));
+    bg.width = fg.width = Math.round(W * dpr);
+    bg.style.width = fg.style.width = W + "px";
+    bg.height = fg.height = Math.round(H * dpr);
+    bg.style.height = fg.style.height = H + "px";
+    bgx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fgx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    paintBackground();
+  }
+
+  // static deep-space backdrop: nebula clouds + far dim stars
+  function paintBackground(){
+    bgx.clearRect(0, 0, W, H);
+    var g = bgx.createLinearGradient(0, 0, W, H);
+    g.addColorStop(0, "#04060f");
+    g.addColorStop(0.5, "#070b1c");
+    g.addColorStop(1, "#030409");
+    bgx.fillStyle = g;
+    bgx.fillRect(0, 0, W, H);
+
+    var clouds = [
+      { x: W * 0.28, y: H * 0.34, r: Math.min(W, H) * 0.6, c: "42,30,86" },
+      { x: W * 0.74, y: H * 0.62, r: Math.min(W, H) * 0.55, c: "18,52,104" },
+      { x: W * 0.5,  y: H * 0.8,  r: Math.min(W, H) * 0.5,  c: "10,64,86" },
+      { x: W * 0.6,  y: H * 0.18, r: Math.min(W, H) * 0.42, c: "60,26,78" }
+    ];
+    for (var i = 0; i < clouds.length; i++){
+      var c = clouds[i];
+      var rg = bgx.createRadialGradient(c.x, c.y, 0, c.x, c.y, c.r);
+      rg.addColorStop(0, "rgba(" + c.c + ",0.34)");
+      rg.addColorStop(0.5, "rgba(" + c.c + ",0.12)");
+      rg.addColorStop(1, "rgba(" + c.c + ",0)");
+      bgx.fillStyle = rg;
+      bgx.fillRect(0, 0, W, H);
+    }
+
+    // far static stars
+    var n = Math.round(W * H / 9000);
+    for (var j = 0; j < n; j++){
+      var px = Math.random() * W, py = Math.random() * H;
+      var a = Math.random() * 0.6 + 0.1;
+      var sz = Math.random() * 1.2 + 0.3;
+      bgx.fillStyle = "rgba(" + (Math.random()<0.3?150:210) + "," + (Math.random()<0.3?180:225) + ",255," + a + ")";
+      bgx.fillRect(px, py, sz, sz);
+    }
+  }
+
+  function initStars(){
+    stars = [];
+    for (var i = 0; i < COUNT; i++){
+      var s = {};
+      spawn(s, true);
+      stars.push(s);
+    }
+  }
+
+  function frame(now){
+    if (!last) last = now;
+    var dt = Math.min((now - last) / 16.667, 3);
+    last = now;
+
+    // ease displayed speed toward target
+    speed += (target - speed) * 0.05 * dt;
+
+    // smooth pointer
+    smx += (mx - smx) * 0.05 * dt;
+    smy += (my - smy) * 0.05 * dt;
+
+    var cx = W / 2 - smx * 40;
+    var cy = H / 2 - smy * 40;
+    var focal = H * 0.8;
+    var spd = reduce ? 0 : speed;
+    var dz = spd * 3.2 * dt;
+    var streak = spd * 5.5;
+
+    // background smear + parallax at warp
+    var scale = 1 + Math.min(spd, 10) * 0.02;
+    bg.style.transform = "translate(" + (smx * 30) + "px," + (smy * 30) + "px) scale(" + scale + ")";
+    bg.style.filter = "blur(" + (Math.min(spd, 10) * 0.3).toFixed(2) + "px)";
+
+    // ---- warp stars ----
+    fgx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    fgx.clearRect(0, 0, W, H);
+    fgx.globalCompositeOperation = "lighter";
+
+    for (var i = 0; i < stars.length; i++){
+      var s = stars[i];
+      var z0 = s.z;
+      s.z -= dz;
+      if (s.z < NEAR){ spawn(s, false); continue; }
+
+      var k0 = focal / z0;
+      var x0 = cx + s.x * k0;
+      var y0 = cy + s.y * k0;
+
+      // skip if off screen
+      if (x0 < -50 || x0 > W + 50 || y0 < -50 || y0 > H + 50) continue;
+
+      var z1 = z0 + streak;
+      var k1 = focal / z1;
+      var x1 = cx + s.x * k1;
+      var y1 = cy + s.y * k1;
+
+      var bright = (FAR - z0) / (FAR - NEAR);
+      bright = bright * bright; // accelerate near the viewer
+      var col = s.cold ? "150,185,255" : "220,236,255";
+
+      fgx.strokeStyle = "rgba(" + col + "," + (bright * 0.9).toFixed(3) + ")";
+      fgx.lineWidth = 0.4 + bright * 2.2;
+      fgx.beginPath();
+      fgx.moveTo(x1, y1);
+      fgx.lineTo(x0, y0);
+      fgx.stroke();
+
+      // bright head
+      fgx.fillStyle = "rgba(255,255,255," + (bright * 0.95).toFixed(3) + ")";
+      fgx.beginPath();
+      fgx.arc(x0, y0, 0.5 + bright * 2.0, 0, 6.2832);
+      fgx.fill();
+    }
+
+    // central hyperspace core glow, intensifies with speed
+    var coreA = Math.min(spd / 10, 1) * 0.5;
+    if (coreA > 0.01){
+      var cg = fgx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(W, H) * 0.5);
+      cg.addColorStop(0, "rgba(210,240,255," + (coreA).toFixed(3) + ")");
+      cg.addColorStop(0.25, "rgba(120,185,255," + (coreA * 0.5).toFixed(3) + ")");
+      cg.addColorStop(1, "rgba(60,110,220,0)");
+      fgx.fillStyle = cg;
+      fgx.fillRect(0, 0, W, H);
+    }
+
+    fgx.globalCompositeOperation = "source-over";
+
+    // HUD
+    var w = speed.toFixed(1);
+    warpNum.textContent = w;
+    warpVal.textContent = w;
+    distSub.textContent = (12.4 - spd * 0.04).toFixed(1) + " LY to anchor";
+
+    requestAnimationFrame(frame);
+  }
+
+  // ---- controls ----
+  function setTarget(v){
+    target = v;
+    cruise = v;
+  }
+  warp.addEventListener("input", function(){ setTarget(this.value / 10); });
+
+  var jumping = false;
+  jumpBtn.addEventListener("click", function(){
+    if (jumping || reduce) return;
+    jumping = true;
+    this.textContent = "◼ Hyperspace Engaged";
+    flash.style.opacity = "0.75";
+    setTimeout(function(){ flash.style.opacity = "0"; }, 90);
+    setTimeout(function(){ flash.style.opacity = "0.25"; }, 260);
+    setTimeout(function(){ flash.style.opacity = "0"; }, 500);
+    // ramp up then return to cruise
+    var start = performance.now();
+    (function ramp(t){
+      var p = Math.min((t - start) / 1100, 1);
+      var e = 1 - Math.pow(1 - p, 3);
+      target = cruise + (10 - cruise) * e;
+      if (p < 1){ requestAnimationFrame(ramp); }
+      else{
+        setTimeout(function(){
+          target = cruise;
+          jumping = false;
+          jumpBtn.textContent = "▶ Engage Hyperspace";
+        }, 700);
+      }
+    })(performance.now());
+  });
+
+  window.addEventListener("mousemove", function(e){
+    mx = (e.clientX / window.innerWidth - 0.5) * 2;
+    my = (e.clientY / window.innerHeight - 0.5) * 2;
+  });
+  window.addEventListener("touchmove", function(e){
+    if (e.touches[0]){
+      mx = (e.touches[0].clientX / window.innerWidth - 0.5) * 2;
+      my = (e.touches[0].clientY / window.innerHeight - 0.5) * 2;
+    }
+  }, { passive: true });
+
+  densVal.textContent = COUNT;
+  window.addEventListener("resize", resize);
+  initStars();
+  resize();
+  setTarget(3);
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

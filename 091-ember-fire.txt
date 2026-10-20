@@ -1,0 +1,20 @@
+PROMPT:
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL. Files to create: 3. 091-ember-fire.html + 091-ember-fire.txt — A campfire with glowing embers, rising sparks and heat shimmer. Palette: deep red/orange coals, ash grey, near-black. Signature: canvas rising embers/sparks with gravity, glowing coal gradient, heat-haze distortion, gentle flame flicker.
+
+TITLE:
+Ember Fire — Rising Sparks
+
+DESIGN DESCRIPTION:
+A campfire glows low and hot against a near-black night. A bed of coals is rendered on a full-bleed canvas as a field of pulsing radial-gradient embers, each breathing at its own tempo so the whole bed shimmers like real coals. Above them a soft, blurred flame of layered 'lighter'-composited blobs flickers with layered sine noise. Hundreds of embers rise from the bed — gentle ones drift and cool from white-hot to deep orange, while brighter sparks launch upward and arc back under gravity. A translucent heat-haze band above the fire is distorted in real time by an SVG fractal-noise displacement filter, giving the signature shimmer. A warm light pool and a heavy vignette wrap the scene in intimate, moody light.
+
+MAJOR VISUAL TECHNIQUES:
+- Full-bleed <canvas> particle system with per-frame trail fade for silky motion
+- Two particle behaviours in one pool: drifting embers and gravity-arc sparks, cooling red->orange as they age (radial-gradient glow + hot core)
+- Coal bed built from pulsing, per-coal radial gradients scaled into ellipses
+- Gentle flame from layered 'lighter'-blended teardrop radial gradients driven by multi-sine flicker
+- Heat-haze distortion via an inline SVG feTurbulence + feDisplacementMap filter on a gradient band
+- Warmth light-pool (mix-blend-mode: screen) and a moody radial vignette
+- DPR-aware resize handling; pointer stoking and click/tap spark bursts
+
+INTENDED INTERACTION MODEL:
+Ambient by default — coals pulse and embers/sparks rise continuously. Moving the pointer over the scene "stokes" the fire, spawning extra embers and brightening the flames; clicking or tapping at a point launches a burst of sparks from that spot. Motion is gracefully reduced under prefers-reduced-motion.

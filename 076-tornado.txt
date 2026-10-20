@@ -1,0 +1,85 @@
+RECREATION PROMPT
+=================
+Build these standalone HTML page(s) as files in the current working directory.
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one
+  <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only),
+  no external images, no external SVG files, no libraries. Build all visuals
+  with CSS, HTML, inline SVG, or <canvas>.
+- Works fully offline by double-clicking. No network requests. Responsive
+  320px->4K; include <meta name="viewport" content="width=device-width,
+  initial-scale=1">. Valid HTML5.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic.
+  Distinctive art direction, curated palette, refined typography, deliberate
+  composition, real intentional motion, delightful details, one signature
+  effect. Handcrafted, unique, take design risks.
+- For each page also create a matching .txt with the SAME base name.
+
+PROMPT FOR THIS PAGE
+--------------------
+A tornado/vortex particle simulation spinning with an updraft and debris.
+Palette: stormy grey/brown, ominous dark sky. Signature: canvas particles
+spiraling up a vortex with turbulence, ground dust, flickering light, mouse to
+steer.
+
+TITLE
+=====
+MAELSTROM — Storm Cell 076
+
+DESIGN DESCRIPTION
+==================
+A cinematic supercell scene rendered entirely on one canvas over a stormy CSS
+backdrop. A full-height funnel dominates the frame: its body is a solid,
+rippling cone built each frame from a sampled left/right outline whose radius
+tapers from a wide dust-choked base to a narrow neck, with a dark inner core
+for depth and a screen-blended lit streak that slides across the wall so the
+funnel reads as rotating. A real vortex particle field — six hundred+ motes —
+spirals upward inside it: each particle has an angle, a height and a radial
+position, orbits faster near the neck, rises on an updraft, wobbles with
+turbulence, and respawns at the base when it reaches the top. Forty-plus debris
+chunks (tumbling dark squares) whirl through the lower third, and a band of
+soft radial dust clouds rolls out along the wet ground. Angled rain streaks
+sweep across on the wind, an ominous horizon glow sits behind the storm, and
+random lightning flashes wash the whole scene pale blue-white and brighten the
+particles. A soft vignette and an editorial wordmark (serif italic
+"Maelstrom") plus a mono storm-telemetry panel (wind, lean, debris, state, gust
+meter) complete the composition.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- Rippling funnel body: left/right outline sampled at 30 heights, radius =
+  geometric taper × perspective narrowing + layered sinusoidal turbulence;
+  filled with a vertical gradient, a dark inner core cone and a screen-blend
+  lit streak that drifts horizontally to sell rotation.
+- Vortex particle model: per-particle angle/height/radius, angular speed that
+  increases toward the neck, a per-particle updraft, turbulence wobble, alpha
+  and size falloff with height, warm-tinted dust motes mixed in; sorted
+  far-first for correct overlap.
+- Debris system: larger, darker, faster-tumbling chunks confined to the lower
+  funnel, each rotating independently and respawning from the base.
+- Ground dust: a field of soft radial-gradient clouds rolling outward along the
+  wet ground with a lean-driven drift; wet-ground specular highlight strip.
+- Steering: pointer position drives a top-heavy "lean" (funnel bends toward the
+  pointer, eased); pointer movement and clicks inject a decaying "gust" that
+  speeds the spin, kicks debris and widens the lit streak.
+- Lightning: randomized flash timer drives a full-screen radial screen-blend
+  flash and multiplies particle brightness, with rapid exponential decay.
+- Perspective funnel geometry: radius narrows and vertical position compresses
+  with height (pow 0.72) for a convincing 3D cone on a 2D canvas.
+- Storm atmosphere: CSS radial/linear storm gradients, screen-blend horizon
+  glow, angled canvas rain, and a radial vignette.
+- DPR-aware canvas, responsive re-layout, live telemetry readout + gust meter.
+- prefers-reduced-motion draws a single still frame and halts the loop.
+
+INTENDED INTERACTION MODEL
+==========================
+A steerable storm. Moving the pointer left/right bends the funnel toward it
+(the live "lean" readout tracks it) and the whole vortex leans and shifts; the
+faster the pointer moves, the more "gust" builds, spinning the particles up,
+whipping the debris and flaring the lit streak. Clicking / tapping delivers a
+sharp gust and a lean toward the cursor. A gust meter and a state readout
+("steady" → "gust" → "violent") respond in real time; Space re-ignites motion
+under reduced-motion. Angled rain and drifting ground dust reinforce the wind
+direction. Fully responsive, offline, and motion-sensitive friendly (the
+animation halts under prefers-reduced-motion, leaving a single rendered frame).

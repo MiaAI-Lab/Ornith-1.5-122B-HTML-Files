@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CLEAR WATER — Disturb the Surface</title>
+<style>
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; height:100%;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:#04243f; color:#dff2ff;
+    -webkit-font-smoothing:antialiased;
+  }
+  #water{position:fixed; inset:0; width:100%; height:100%; display:block; cursor:crosshair; touch-action:none}
+
+  .vignette{position:fixed; inset:0; z-index:2; pointer-events:none;
+    background:radial-gradient(120% 100% at 50% 42%, rgba(0,0,0,0) 55%, rgba(2,22,38,0.55) 100%)}
+
+  .wordmark{position:fixed; top:clamp(18px,4vw,48px); left:clamp(18px,4vw,48px); z-index:4; pointer-events:none}
+  .wordmark .kicker{font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.46em;
+    text-transform:uppercase; color:#a9e6ff; opacity:.7; margin-bottom:14px}
+  .wordmark h1{margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:400;
+    font-size:clamp(30px,6.4vw,74px); line-height:.94; color:#eafcff;
+    text-shadow:0 2px 20px rgba(0,60,110,.6)}
+  .wordmark h1 em{font-style:italic; color:#6fd0ff}
+  .wordmark .sub{margin-top:14px; max-width:40ch; font-size:13px; line-height:1.5; color:rgba(200,235,255,.72)}
+  .hint{position:fixed; left:clamp(18px,4vw,48px); bottom:clamp(16px,3.4vw,40px); z-index:4;
+    display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:.04em; color:rgba(200,235,255,.75)}
+  .hint .dot{width:9px; height:9px; border-radius:50%; background:#6fd0ff; flex:none;
+    box-shadow:0 0 12px rgba(111,208,255,.9); animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
+  .credit{position:fixed; right:clamp(16px,3.4vw,40px); bottom:clamp(16px,3.4vw,40px); z-index:4;
+    font:500 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.3em; text-transform:uppercase; color:rgba(180,220,245,.4); text-align:right}
+
+  @media (prefers-reduced-motion: reduce){ .hint .dot{animation:none !important} }
+  @media (max-width:560px){ .wordmark .sub,.credit{display:none} }
+</style>
+</head>
+<body>
+<canvas id="water"></canvas>
+<div class="vignette"></div>
+
+<div class="wordmark">
+  <div class="kicker">Clear Water · No. 087</div>
+  <h1>Touch it<br><em>and it remembers.</em></h1>
+  <div class="sub">A height-field ripple engine — every click and drag throws a ring that diffuses outward, bounces off the edges and fades. Slopes catch the light as shifting caustics across a reflective blue surface.</div>
+</div>
+
+<div class="hint"><span class="dot"></span>Click &amp; drag across the water to disturb it</div>
+<div class="credit">Clear&nbsp;Water<br>Series 087</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var canvas=document.getElementById('water'), ctx=canvas.getContext('2d');
+
+  var simW=0, simH=0, W=0, H=0, DPR=1;
+  var cur, nxt;                 // height-field buffers
+  var DAMP=0.986;
+  var simCanvas, simCtx, simImg;
+  var lastCell=null, ambientT=0, last=performance.now();
+
+  function idx(x,y){ return y*simW+x; }
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+
+    var cell=Math.max(6, Math.round(W/200));   // sim decoupled from display
+    simW=Math.max(60, Math.ceil(W/cell));
+    simH=Math.max(40, Math.ceil(H/cell));
+    var n=simW*simH;
+    cur=new Float32Array(n);
+    nxt=new Float32Array(n);
+
+    simCanvas=document.createElement('canvas');
+    simCanvas.width=simW; simCanvas.height=simH;
+    simCtx=simCanvas.getContext('2d');
+    simImg=simCtx.createImageData(simW,simH);
+
+    lastCell=null;
+  }
+
+  function splash(cx,cy,amp){
+    var x=Math.floor(cx), y=Math.floor(cy);
+    if(x<1||y<1||x>=simW-1||y>=simH-1) return;
+    var r=1, falloff=[1.4,1.0,0.5];
+    for(var dy=-r;dy<=r;dy++){
+      for(var dx=-r;dx<=r;dx++){
+        var gx=x+dx, gy=y+dy;
+        if(gx<1||gy<1||gx>=simW-1||gy>=simH-1) continue;
+        cur[idx(gx,gy)] += amp*falloff[dx===0&&dy===0?0:(Math.abs(dx)+Math.abs(dy)===1?1:2)];
+      }
+    }
+  }
+
+  function step(){
+    var w=simW, h=simH;
+    for(var y=1;y<h-1;y++){
+      var row=y*w;
+      for(var x=1;x<w-1;x++){
+        var i=row+x;
+        var val=(cur[i-1]+cur[i+1]+cur[i-w]+cur[i+w])*0.5 - nxt[i];
+        nxt[i]=val*DAMP;
+      }
+    }
+    // absorbing borders
+    for(var x=0;x<w;x++){ nxt[x]=0; nxt[(h-1)*w+x]=0; }
+    for(var y=0;y<h;y++){ nxt[y*w]=0; nxt[y*w+w-1]=0; }
+    var tmp=cur; cur=nxt; nxt=tmp;
+  }
+
+  // base water palette (vertical gradient: bright horizon -> deep floor)
+  var baseTop=[128,206,228], baseMid=[24,120,168], baseDeep=[4,42,78];
+  var Lx=-0.55, Ly=-0.62;                 // light comes from upper-left
+  var Llen=Math.sqrt(Lx*Lx+Ly*Ly+1);
+
+  function render(){
+    var w=simW, h=simH, data=simImg.data;
+    var tRow=0.30;
+    for(var y=0;y<h;y++){
+      var row=y*w;
+      var vT=Math.pow(Math.max(0,1-y/h),0.8);   // horizon brightness
+      for(var x=0;x<w;x++){
+        var i=row+x, p=i*4;
+        var ht=cur[i];
+        // slopes (finite differences)
+        var dx=0,dy=0;
+        if(x>0&&x<w-1) dx=cur[i+1]-cur[i-1];
+        if(y>0&&y<h-1) dy=cur[i+w]-cur[i-w];
+        // base colour by depth
+        var bR=baseDeep[0]+(baseTop[0]-baseDeep[0])*vT;
+        var bG=baseDeep[1]+(baseTop[1]-baseDeep[1])*vT;
+        var bB=baseDeep[2]+(baseTop[2]-baseDeep[2])*vT;
+        // reflective sheen grows with slope (Fresnel-ish)
+        var slope2=dx*dx+dy*dy;
+        var sheen=Math.min(1,slope2*0.9);
+        // specular caustic highlight where surface faces the light
+        var ndl=(dx*Lx+dy*Ly+1.0)/Llen;
+        var spec=Math.pow(Math.max(0,ndl),10)*255;
+        // ridge highlight from curvature (converging light)
+        var curv=0;
+        if(x>0&&x<w-1&&y>0&&y<h-1){
+          curv=cur[i-1]+cur[i+1]+cur[i-w]+cur[i+w]-4*ht;
+        }
+        var caustic=Math.max(0,curv)*340;
+
+        var R=bR + sheen*70 + spec*0.35 + caustic*0.5 + ht*6;
+        var G=bG + sheen*95 + spec*0.55 + caustic*0.8 + ht*8;
+        var B=bB + sheen*70 + spec*0.85 + caustic*1.0 + ht*9;
+        // subtle reflection tint toward the top (sky)
+        R+=vT*10; G+=vT*14; B+=vT*16;
+        data[p]=R>255?255:(R<0?0:R);
+        data[p+1]=G>255?255:(G<0?0:G);
+        data[p+2]=B>255?255:(B<0?0:B);
+        data[p+3]=255;
+      }
+    }
+    simCtx.putImageData(simImg,0,0);
+    ctx.imageSmoothingEnabled=true;
+    try{ ctx.drawImage(simCanvas,0,0,W,H); }catch(err){}
+  }
+
+  function toSim(clientX,clientY){
+    var r=canvas.getBoundingClientRect();
+    var px=(clientX-r.left)/r.width;
+    var py=(clientY-r.top)/r.height;
+    return {x:px*simW, y:py*simH};
+  }
+  function onMove(clientX,clientY){
+    var c=toSim(clientX,clientY);
+    if(lastCell){
+      var dx=c.x-lastCell.x, dy=c.y-lastCell.y;
+      var dist=Math.sqrt(dx*dx+dy*dy);
+      var steps=Math.max(1,Math.ceil(dist/1.2));
+      for(var s=0;s<=steps;s++){
+        var t=s/steps;
+        splash(lastCell.x+dx*t, lastCell.y+dy*t, 46);
+      }
+    } else {
+      splash(c.x,c.y,46);
+    }
+    lastCell=c;
+  }
+  function onDown(clientX,clientY){
+    var c=toSim(clientX,clientY);
+    splash(c.x,c.y,620);      // a thrown drop
+    lastCell=c;
+  }
+  function onUp(){ lastCell=null; }
+
+  canvas.addEventListener('mousedown',function(e){onDown(e.clientX,e.clientY);});
+  canvas.addEventListener('mousemove',function(e){ if(e.buttons) onMove(e.clientX,e.clientY); });
+  window.addEventListener('mouseup',onUp);
+  canvas.addEventListener('touchstart',function(e){var t=e.touches[0];onDown(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchmove',function(e){var t=e.touches[0];onMove(t.clientX,t.clientY);e.preventDefault();},{passive:false});
+  canvas.addEventListener('touchend',onUp);
+
+  var lastAmb=last;
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+
+    if(!reduce){
+      // occasional ambient drops so the surface is never fully still
+      ambientT+=dt;
+      if(ambientT>1.15){
+        ambientT=0;
+        splash(1+Math.random()*(simW-2), 1+Math.random()*(simH-2), 240*(0.6+Math.random()*0.7));
+      }
+    }
+    step();
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

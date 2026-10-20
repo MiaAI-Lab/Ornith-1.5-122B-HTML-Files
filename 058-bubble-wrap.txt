@@ -1,0 +1,22 @@
+PROMPT:
+World-class creative technologist & designer. Build standalone HTML page as a self-contained .html with ALL CSS in one <style> and ALL JS in one <script> (inline everything). ZERO external dependencies: no CDN, no external fonts (system stacks only), no external images/SVG files, no libraries — build all visuals with CSS, HTML, inline SVG, or <canvas>. Works fully offline by double-clicking (no network requests). Responsive 320px->4K with <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5. WOW BAR: genuinely stunning, premium, Awwwards-caliber, distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Also create a matching .txt with the same base name containing the exact prompt, a short TITLE, a one-paragraph DESIGN DESCRIPTION, a bulleted list of MAJOR VISUAL TECHNIQUES, and the INTENDED INTERACTION MODEL.
+
+Page: 058-bubble-wrap — An addictive interactive bubble-wrap pop toy. Palette: translucent pastel blues/pinks on soft grey. Signature: grid of glossy 3D bubbles that squish on press and 'pop' with a WebAudio blip + scale animation, auto-refill when all popped, satisfying haptic-like feedback.
+
+TITLE:
+POP ROOM — The Bubble Wrap You Can Actually Pop
+
+DESIGN DESCRIPTION:
+Staged as an editorial "Fidget Collection" plate, the page frames a full sheet of glossy pastel bubbles like a product photograph on soft grey. Each bubble is a layered radial-gradient sphere — a bright upper-left specular highlight, a lower-right bounce light, and a soft drop shadow — rendered in a rotating palette of sky blue, rose, mint, lilac and butter-yellow so no two rows read the same. Hold to squish (the sphere compresses vertically with a springy ease), release to pop: the bubble scales down with a bright flash while a six-point spark burst explodes outward and a tiny "+"/combo score floats up. A live mono readout tracks bubbles left, total popped and the current combo, and every pop fires a short WebAudio triangle-wave blip whose pitch climbs with the combo for a secretly musical, deeply satisfying sequence. Pop the whole sheet and it announces a fresh refill; a "Rain Mode" toggle pops every bubble in a cascading wave.
+
+MAJOR VISUAL TECHNIQUES:
+- Glossy 3D bubble look built entirely from layered radial gradients (specular highlight + bounce light) plus inset and drop shadows on a 50%-radius span, no images.
+- Press-to-squish using scaleY/scaleX on pointerdown with an overshoot cubic-bezier, releasing on pointerup.
+- Pop animation via a keyframed scale-to-zero + brightness flash, then visibility:hidden for the refilled slot.
+- Six-point radial spark burst using CSS custom-property --dx/--dy translation with per-particle angle and distance, plus a floating "+"/combo score label.
+- WebAudio oscillator blips (triangle wave, exponential pitch ramp) whose base frequency rises with the combo count, created lazily and resumed on first gesture.
+- Responsive grid that re-chooses column count (7→14) by viewport width and rebuilds on resize; haptic feedback via navigator.vibrate.
+- Editorial masthead, live mono HUD, blurred pill controls and a multiply-blended ambient tint for a crafted, gallery feel.
+
+INTENDED INTERACTION MODEL:
+Purely tactile and immediate — press and hold any bubble to squish it, let go to pop it (with sound, sparks, a floating score tick and a haptic buzz). Pop fast to build a combo that raises both your score multiplier and the blip pitch; the combo decays after ~0.9s of inactivity. The whole sheet auto-refills a moment after the last bubble pops, or the viewer can hit "Refill" at any time, toggle "Sound" on/off, or switch on "Rain Mode" so every bubble pops in a continuous cascading wave. Works with pointer, touch and keyboard (focus a bubble, press Enter/Space), and respects prefers-reduced-motion by disabling the burst and floating score.

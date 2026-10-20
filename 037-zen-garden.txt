@@ -1,0 +1,36 @@
+PROMPT
+------
+You are a world-class creative technologist & designer. Build the following standalone HTML page as a file in the current working directory.
+
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif, sans-serif, monospace), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+
+PAGE 037 — Interactive raked zen garden; drag to rake sand, stones placed. Palette: warm sand, grey stones, soft green. Signature: canvas sand texture, drag-rake trails, gentle ripple, minimalist composition.
+
+WOW QUALITY BAR: Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+
+TITLE
+-----
+Still Water, Raked Sand — An Interactive Zen Garden
+
+DESIGN DESCRIPTION
+------------------
+A minimalist composition sits on a soft green moss field: a bed of warm sand raked into concentric circles, three smooth grey stones arranged in an asymmetric triad (the classic "sanzui" grouping), and a single fallen leaf. The whole garden is rendered on a canvas whose sand grain is drawn procedurally, so the surface has a fine, tactile speckle rather than a flat fill. Dragging across the sand sweeps a rake through it, carving clean parallel grooves that part the grain and reveal a slightly darker layer beneath; the rake leaves a gentle ripple at its edges. Motion is deliberately slow and sparse — a drifting leaf, a faint breathing highlight across the water's edge — so the scene reads as calm and meditative rather than busy.
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Procedural canvas sand texture: layered seeded noise + fine grain speckle, no image assets.
+- Drag-rake trails: a moving "rake" mask carves parallel grooves by clearing/re-painting grain along the drag path, revealing a darker sub-layer.
+- Concentric raked rings around each stone, drawn as curved grooves to echo real zen-garden motifs.
+- Stones built from radial gradients for a rounded, wet-stone volume with soft cast shadows.
+- A single canvas loop compositing base sand, raked marks, stones, moss border and a drifting leaf — all offline, all generated.
+- Muted, curated palette (warm sand #d9c7a3, grey stones, soft green moss) and generous negative space for a calm, editorial feel.
+- Reduced-motion fallback: animation pauses, rake still works.
+
+INTENDED INTERACTION MODEL
+--------------------------
+Pointer / touch drag across the garden rakes the sand, leaving trailing grooves that follow the gesture; lifting the pointer ends the stroke. On touch devices the garden is pan-dragged with a single finger and raked at the same time. A short hint ("drag to rake") appears once and fades. No buttons or menus — the entire surface is the instrument, reinforcing the meditative, tool-less experience.

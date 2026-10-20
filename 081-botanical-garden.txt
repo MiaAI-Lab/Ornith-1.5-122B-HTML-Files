@@ -1,0 +1,27 @@
+PROMPT
+------
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+File: 081-botanical-garden.html + 081-botanical-garden.txt — A herbarium / botanical garden index of pressed-flower specimen cards. Palette: sage green, cream, terracotta, faded ink. Signature: card grid of CSS-constructed pressed flowers, hover-to-bloom animation, serif specimen labels, archival layout.
+
+TITLE
+-----
+The Herbarium — A Cabinet of Pressed-Flower Specimens
+
+DESIGN DESCRIPTION
+------------------
+An archival catalogue page for the fictional "Marlow Collection" (Catalogue No. 081), presenting eight pressed-flower specimens as a responsive grid of aged-paper index cards. Each card is a hand-monted sheet: a square "plate" window holds a flower built entirely from layered CSS petals (radially arranged, gradient-shaded, veined) around a pollen-dusted stamen, with a faded-ink specimen label beneath giving the italic binomial name, common name, Latin family, collector, date, locality and region, a hand-drawn rule, and a CSS barcode. The palette is sage green, cream and faded ink on a grainy paper background with a terracotta accent used for mounting tape, ribbon tabs and type highlights. Hovering (or tapping) a card lifts it and the flower "blooms" — petals rotate outward and scale up, saturation lifts, the stamen swells, and the card casts a deeper shadow — as if the pressed bloom were opening again. Cards rise into view on load with a staggered entrance.
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Pressed flowers built from pure CSS: petals are absolutely-positioned <span>s with border-radius petal shapes, layered gradients (to top, two-tone), inset shadows for volume, a central vein, and radial arrangement via CSS custom properties (--a angle, --spread bloom rotation, --i stagger index).
+- Multi-layer bloom: petal layers offset by half a petal for a dense, natural rosette; hover/`.blooming` rotates petals outward and scales them, with per-petal transition-delay for a sequential opening.
+- Archival paper aesthetic: repeating-linear-gradient grain overlay (multiply blend), soft inner vignette, aged-cream card gradients, mounting "tape" via ::before/::after, terracotta ribbon tabs and a CSS-drawn barcode.
+- Faded-ink typography: Georgia serif for binomials and labels, wide-tracked sans caps for accession numbers and fact keys, italic family names.
+- Signature effect: hover-to-bloom — a coordinated transform/saturation/stamen-scale animation that reopens each pressed flower.
+- Responsive auto-fill card grid (minmax 252px) scaling 320px to 4K; staggered keyframe entrance rise; full prefers-reduced-motion fallback that disables bloom motion and shows flowers at rest.
+- Accessible: cards are focusable <article role="button"> with Enter/Space to toggle bloom.
+
+INTENDED INTERACTION MODEL
+--------------------------
+Passive browsing of an index: the user scrolls the specimen grid and hovers a card to make the pressed flower bloom and the card lift; on touch or keyboard they click/tap or press Enter/Space to toggle the bloom and read the archival label. Motion is celebratory but brief and degrades gracefully when reduced motion is requested. No navigation chrome — the whole page is the cabinet.

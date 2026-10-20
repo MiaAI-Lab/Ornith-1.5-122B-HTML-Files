@@ -1,0 +1,24 @@
+PROMPT:
+     A golden honeycomb with dripping honey and busy bees.
+     Palette: amber gold, warm honey, soft green meadow.
+     Signature: CSS/SVG hex grid with honey fill animation, viscous dripping honey, flying bees on paths, warm glow.
+     Standalone, self-contained HTML page (094-honeycomb.html) — all CSS in one <style>, all JS in one <script>, no external dependencies, works offline, responsive 320px→4K, Awwwards-caliber art direction.
+
+TITLE:
+The Living Comb — honey ripening, dripping, and bees at work
+
+DESIGN DESCRIPTION:
+A warm, sunlit meadow glow fills the background canvas — soft rolling hills and a drifting sun haze behind a floating, glassmorphic control capsule. Over this, a second canvas renders a pointy-top hexagonal honeycomb built procedurally: each cell is a walled comb pocket that slowly ripens with honey, its level rising with a shimmering, sine-wobbled surface, tiny bubbles drifting up through the amber. When a cell overfills, a bead of viscous honey forms at its mouth, elongates, then peels away as a single droplet that falls and lands with a soft ripple splash. Above it all, a small swarm of hand-drawn bees — amber-and-umber striped bodies with flapping translucent wings and curling antennae — drifts on wander paths between their home cells, bobbing with perlin-like jitter and banking into their turns. Floating pollen motes rise through the warm light. The palette is deliberately honey-warm: glowing ambers, buttery golds and a soft meadow green, with a gentle bloom.
+
+MAJOR VISUAL TECHNIQUES:
+- Procedural pointy-top hex grid built on canvas with adjacent-row offset, each cell a clipped polygon.
+- Per-cell honey fill that rises over time, drawn as a gradient body with an animated sine-wobbled surface line and rising bubbles, all clipped to the hex.
+- Viscous drip simulation: a droplet forms (growing radius + connecting neck), then falls as a bead with a trailing thread, fading and landing with an expanding ripple splash.
+- Hand-drawn canvas bees: striped ellipses, flapping translucent wings (wing-flap via sine), curling antennae, drop shadow, banking rotation from velocity angle.
+- Wander-path bee AI with jitter, home-cell targeting, velocity damping and smooth steering toward randomized waypoints.
+- Floating pollen motes with sway and vertical drift, recycled at screen edges.
+- Warm glow: radial-gradient sun haze and layered translucent hills painted once to a background canvas.
+- DPR-aware, responsive canvases; glassmorphic control capsule with backdrop-blur, hairline border and inset highlight; gradient display type.
+
+INTENDED INTERACTION MODEL:
+Click or drag across the comb to instantly fill cells with honey (a splash ripple confirms each hit), so you can flood the comb and trigger a cascade of drips. Controls: a "Fill comb" button that fills every inner cell, a "Drip now" button that coaxes a droplet from every near-full cell, and toggles for Bees and Drips. Everything is pointer- and touch-driven and scales fluidly from phone to 4K; the comb rebuilds its hex grid to the viewport on every resize.

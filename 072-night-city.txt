@@ -1,0 +1,55 @@
+========================================================================
+PROMPT (exact, as issued):
+------------------------------------------------------------------------
+Build a standalone, self-contained HTML page: a city at night with
+randomly twinkling windows, neon signs and rain-slick reflections.
+Palette: midnight blue, warm window glow, neon pink/cyan. Signature: CSS
+skyline silhouette, randomized window twinkle, neon sign glow flicker,
+wet-street reflection plane.
+Constraints: one self-contained .html, ALL CSS in one <style> and ALL JS
+in one <script> (inline everything), ZERO external dependencies (no
+CDN, no external fonts — system stacks only, no external images/SVG
+files/libraries), works fully offline by double-clicking with no network
+requests, responsive 320px->4K, valid HTML5, Awwwards-caliber original
+art direction.
+
+------------------------------------------------------------------------
+TITLE:
+------------------------------------------------------------------------
+MIDNIGHT · City of Wet Light
+
+------------------------------------------------------------------------
+DESIGN DESCRIPTION:
+------------------------------------------------------------------------
+After the rain, a midnight-blue skyline comes alive: a procedurally
+generated silhouette of towers holds thousands of warm windows that blink
+on and off at random, while neon signs in pink, cyan and amber hum and
+stutter above the avenue. Every colour dissolves into the wet street
+below, where a flipped, blurred reflection ripples and shimmers — the
+avenue has turned to a mirror of light.
+
+------------------------------------------------------------------------
+MAJOR VISUAL TECHNIQUES:
+------------------------------------------------------------------------
+- Procedurally generated SVG skyline silhouette (random building widths,
+  heights, rooftop ledges and antennas) for a unique city each load.
+- Thousands of SVG windows driven by a JS twinkle loop that randomly
+  flicks opacity up and down, with occasional full on/off cutoffs.
+- CSS neon signs using layered text-shadow glows and stepped flicker
+  keyframes (pink / cyan / amber) for authentic stutter.
+- A wet-street reflection plane: a cloned skyline flipped with
+  transform:scaleY(-1), blurred, dimmed and masked into the pavement.
+- Canvas rain streaks (screen blend) plus a canvas ripple layer that
+  draws expanding elliptical puddle rings on pointer movement.
+- Twinkling starfield canvas, city-glow gradient, fog, sheen and a heavy
+  vignette to seat the composition in night.
+
+------------------------------------------------------------------------
+INTENDED INTERACTION MODEL:
+------------------------------------------------------------------------
+Atmospheric and self-running — windows twinkle, neon flickers, rain falls
+and reflections shimmer on their own. The pointer acts as a stone in a
+puddle: moving it draws ripples across the wet-street reflection, and a
+click (or the occasional automatic trigger) fires a brief lightning flash
+that washes the whole city in cold light. Interaction enhances the mood
+without disrupting it.

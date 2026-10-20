@@ -1,0 +1,22 @@
+EXACT PROMPT:
+Build a standalone, fully offline HTML5 page. One self-contained .html file: all CSS in a single <style> block, all JS in a single <script> block, inline everything. Zero external dependencies (no CDN, no external fonts — system stacks only, no external images/SVG files/libraries). Must work by double-clicking with no network requests. Responsive 320px to 4K. Valid HTML5.
+
+Scene: A fluid silk ribbon simulation flowing in space. Palette: jewel-toned silk (emerald, sapphire, ruby, amethyst, gold). Signature effects: canvas-rendered flowing ribbons built as a sum of sine waves, a glossy gradient that runs down each ribbon's length, and pointer parallax so nearer strands drift ahead of the far ones.
+
+TITLE:
+Threads of Liquid Light — Jewel-Toned Silk Ribbons
+
+DESIGN DESCRIPTION:
+Five luminous silk ribbons drift through a deep, near-black void, each one a continuous sum of three sine waves so the cloth folds and rolls rather than merely waving. Every ribbon carries its own jewel palette — emerald, sapphire, ruby, amethyst, gold — shaded from a deep edge tone through a saturated mid to a bright specular core. A per-ribbon twist term computes how much the face catches the light, driving both a symmetric glossy gradient across the width and the intensity of a bright specular spine down the centre. Soft ambient radial glows "breathe" behind the cloth, floating light motes pass in front of and behind the strands for depth, and a vignette focuses the eye. Editorial serif display type (Georgia) with a gradient-clipped accent word and tabular "Warp/Weft" readouts sit quietly over the motion.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas ribbons generated as a sum of three sine waves per strand (position-based, not sprite-based).
+- Per-sample normal + twist term to build left/right ribbon edges and a glossy symmetric gradient (createLinearGradient along the ribbon width).
+- Facing/ specular calculation (facingSum) to modulate a bright core stroke — the "silk catching light" effect.
+- Pointer parallax with eased smoothing; motes split into far/ front layers for true depth ordering.
+- Scroll-driven phase offset ("change the weave") and an animated tabular Warp counter.
+- Ambient radial-gradient glow layer with mix-blend-mode:screen and a CSS vignette.
+- requestAnimationFrame with delta-time and prefers-reduced-motion throttling.
+
+INTENDED INTERACTION MODEL:
+Passive cinematic drift by default. Moving the pointer parts the cloth via parallax (nearer ribbons and motes lead the farther ones); scrolling shifts the weave phase. prefers-reduced-motion slows the animation substantially and stops the ambient breathing. Canvas redraws on resize with a capped DPR for crispness on 4K. Fully responsive.

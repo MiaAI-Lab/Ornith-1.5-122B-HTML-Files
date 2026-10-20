@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SOLSTICE — A Sunrise Timeline</title>
+<style>
+  :root{
+    --ink:#14161c;
+    --ink-soft:#79828f;
+    --cream:#f4efe6;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --ease:cubic-bezier(.4,0,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--serif);
+    color:var(--cream);
+    background:#0b0d12;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;opacity:.55;
+    background:radial-gradient(70% 55% at 78% 4%, rgba(246,207,122,.10),transparent 60%),
+      radial-gradient(60% 50% at 6% 100%, rgba(91,74,138,.14),transparent 60%);
+  }
+  .sheet{
+    position:relative;max-width:1180px;margin:0 auto;
+    padding:clamp(22px,5vw,64px) clamp(18px,5vw,56px) clamp(34px,6vw,80px);
+    display:grid;gap:clamp(20px,3.5vw,40px);
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .kicker{font-family:var(--sans);font-size:12px;letter-spacing:.4em;text-transform:uppercase;color:#d8a86a;font-weight:600;margin:0 0 12px}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(38px,7vw,84px);line-height:.95;letter-spacing:-.01em;margin:0}
+  h1 em{font-style:italic;color:#f6cf7a}
+  .tag{font-family:var(--sans);font-size:14px;line-height:1.55;color:var(--ink-soft);max-width:34ch;margin:14px 0 0}
+  .stats{display:flex;gap:clamp(16px,3vw,34px);align-items:flex-end;font-family:var(--mono)}
+  .stat{display:block;text-align:right}
+  .stat .n{font-size:clamp(26px,4vw,44px);line-height:1;color:var(--cream);font-weight:500;font-variant-numeric:tabular-nums}
+  .stat .l{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-soft);margin-top:8px}
+  .stat .n.gold{color:#f6cf7a}
+
+  /* ---------- Stage ---------- */
+  .stage{
+    position:relative;border-radius:16px;overflow:hidden;
+    border:1px solid rgba(246,207,122,.18);
+    box-shadow:0 50px 120px -60px rgba(0,0,0,.9), 0 0 0 1px rgba(255,255,255,.02) inset;
+    background:#14161c;
+  }
+  canvas{display:block;width:100%;height:auto;touch-action:none}
+
+  .phase{
+    position:absolute;left:18px;top:16px;
+    font-family:var(--sans);font-size:11px;letter-spacing:.24em;text-transform:uppercase;
+    color:#14161c;background:rgba(244,239,230,.85);padding:8px 16px;border-radius:999px;
+    backdrop-filter:blur(6px);transition:background .4s ease;
+  }
+  .clock{
+    position:absolute;right:18px;top:16px;
+    font-family:var(--mono);font-size:12px;letter-spacing:.12em;
+    color:#f4efe6;background:rgba(20,22,28,.5);border:1px solid rgba(246,207,122,.25);
+    padding:8px 14px;border-radius:999px;backdrop-filter:blur(6px);
+  }
+
+  /* ---------- Scrubber ---------- */
+  .timeline{display:grid;gap:14px}
+  .track-row{display:flex;align-items:center;gap:16px}
+  .scrub{
+    -webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:999px;cursor:pointer;
+    background:linear-gradient(90deg,#242350 0%, #5b4a8a 28%, #e89b78 52%, #f6cf7a 74%, #7fb2e0 100%);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.5);
+  }
+  .scrub::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff6e0, #f6cf7a 60%, #d89a4a);
+    border:2px solid rgba(255,255,255,.7);box-shadow:0 6px 16px -4px rgba(0,0,0,.7),0 0 0 6px rgba(246,207,122,.14);
+    cursor:grab;transition:transform .15s var(--ease);
+  }
+  .scrub::-webkit-slider-thumb:active{transform:scale(1.14);cursor:grabbing}
+  .scrub::-moz-range-thumb{
+    width:24px;height:24px;border-radius:50%;border:2px solid rgba(255,255,255,.7);
+    background:radial-gradient(circle at 35% 30%, #fff6e0, #f6cf7a 60%, #d89a4a);
+    box-shadow:0 6px 16px -4px rgba(0,0,0,.7);cursor:grab;
+  }
+  .labels{display:flex;justify-content:space-between;font-family:var(--sans);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-soft)}
+  .controls{display:flex;gap:10px;flex-wrap:wrap}
+  .controls button{
+    font-family:var(--sans);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+    border:1px solid rgba(246,207,122,.35);background:transparent;color:var(--cream);
+    padding:10px 18px;border-radius:999px;cursor:pointer;transition:.25s var(--ease);
+  }
+  .controls button:hover{background:#f6cf7a;color:#14161c;border-color:#f6cf7a;transform:translateY(-1px)}
+  .controls button.on{background:rgba(246,207,122,.16);border-color:rgba(246,207,122,.6)}
+  .caption{font-family:var(--sans);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft)}
+  .caption b{color:var(--cream);font-weight:600}
+
+  @media (prefers-reduced-motion:reduce){
+    .phase,.clock{transition:none}
+  }
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header class="masthead">
+      <div>
+        <p class="kicker">The Weather Room · No. 060</p>
+        <h1>Watch the <em>sun</em> climb.</h1>
+        <p class="tag">A single sunrise, stretched into a timeline. Drag the gold dial to move the
+          hour; the sky shifts from indigo pre-dawn through peach and gold to a clear morning blue,
+          the sun arcs over the hills, and the shadows lengthen then fall away.</p>
+      </div>
+      <div class="stats">
+        <span class="stat"><span class="n gold" id="hour">05:12</span><span class="l">Local</span></span>
+        <span class="stat"><span class="n" id="elev">0.0&deg;</span><span class="l">Sun &Elev;</span></span>
+        <span class="stat"><span class="n" id="shadow">long</span><span class="l">Shadow</span></span>
+      </div>
+    </header>
+
+    <section class="stage">
+      <span class="phase" id="phase">nightfall</span>
+      <span class="clock" id="clock">05:12</span>
+      <canvas id="sky" width="1120" height="620" aria-label="A sunrise over rolling hills"></canvas>
+    </section>
+
+    <footer class="timeline">
+      <div class="track-row">
+        <input type="range" min="0" max="1000" value="0" class="scrub" id="scrub" aria-label="Time of day">
+      </div>
+      <div class="labels">
+        <span>Pre-dawn</span><span>Dawn</span><span>Sunrise</span><span>Gold hour</span><span>Morning</span>
+      </div>
+      <div class="controls">
+        <button id="play" class="on">Play</button>
+        <button id="loop" class="on">Loop</button>
+        <button id="restart">Restart</button>
+      </div>
+      <div class="caption">Generative · <b id="res">—</b> canvas</div>
+    </footer>
+  </main>
+  <script>
+  (function(){
+    "use strict";
+    var canvas = document.getElementById('sky');
+    var ctx = canvas.getContext('2d');
+    var scrub = document.getElementById('scrub');
+    var phaseEl = document.getElementById('phase');
+    var clockEl = document.getElementById('clock');
+    var hourEl = document.getElementById('hour');
+    var elevEl = document.getElementById('elev');
+    var shadowEl = document.getElementById('shadow');
+    var resEl = document.getElementById('res');
+    var playBtn = document.getElementById('play');
+    var loopBtn = document.getElementById('loop');
+    var restartBtn = document.getElementById('restart');
+
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    var W = 1120, H = 620, DPR = 1;
+    var t = 0;                 // 0..1 time of day
+    var playing = !reduce, looping = true;
+    var last = 0, lastFrame = 0;
+
+    // sky keyframes: {at, top:[r,g,b], bot:[r,g,b], haze:[r,g,b]}
+    var KF = [
+      {at:0.00, top:[20,22,44],   bot:[32,30,58],   haze:[26,26,50]},
+      {at:0.22, top:[58,50,100],  bot:[110,88,140], haze:[90,80,130]},
+      {at:0.45, top:[122,100,150],bot:[232,155,120],haze:[232,150,120]},
+      {at:0.60, top:[210,150,120],bot:[246,207,122],haze:[250,190,130]},
+      {at:0.80, top:[240,200,140],bot:[247,224,168],haze:[250,210,150]},
+      {at:1.00, top:[127,178,224],bot:[207,230,242],haze:[200,220,235]}
+    ];
+
+    function hex(s){ s=s.replace('#',''); return [parseInt(s.substr(0,2),16),parseInt(s.substr(2,2),16),parseInt(s.substr(4,2),16)]; }
+    function lerp(a,b,f){ return [
+      Math.round(a[0]+(b[0]-a[0])*f),
+      Math.round(a[1]+(b[1]-a[1])*f),
+      Math.round(a[2]+(b[2]-a[2])*f)
+    ]; }
+    function rgb(c,a){ return 'rgba('+c[0]+','+c[1]+','+c[2]+','+a+')'; }
+    function keyAt(at){
+      var i=0;
+      while(i<KF.length-1 && KF[i+1].at < at) i++;
+      var a=KF[i], b=KF[Math.min(i+1,KF.length-1)];
+      var f=(b.at===a.at)?0:(at-a.at)/(b.at-a.at);
+      return {
+        top: lerp(a.top,b.top,f),
+        bot: lerp(a.bot,b.bot,f),
+        haze: lerp(a.haze,b.haze,f)
+      };
+    }
+
+    // stars
+    var stars = [];
+    for(var s=0;s<90;s++){
+      stars.push({x:Math.random(), y:Math.random()*0.6, r:0.4+Math.random()*1.3, tw:Math.random()*6.28});
+    }
+
+    // hill ridges (precomputed shapes) — three layers
+    var ridges = [];
+    function buildRidges(){
+      ridges = [];
+      var layers = [
+        {base:0.60, amp:0.055, freq:1.6, ph:0.3, shade:[60,55,80]},
+        {base:0.70, amp:0.075, freq:1.1, ph:1.7, shade:[40,40,62]},
+        {base:0.82, amp:0.095, freq:0.8, ph:3.1, shade:[26,28,44]}
+      ];
+      for(var L=0;L<layers.length;L++){
+        var lg = layers[L], pts=[], N=46;
+        for(var i=0;i<=N;i++){
+          var x=i/N;
+          var y = lg.base - lg.amp*Math.sin(Math.PI*(lg.freq*x+lg.ph)) - lg.amp*0.4*Math.sin(Math.PI*(lg.freq*2.3*x+lg.ph+1));
+          pts.push({x:x, y:y});
+        }
+        ridges.push({pts:pts, shade:lg.shade, base:lg.base});
+      }
+      // trees on the near ridge
+      var trees=[];
+      var placements=[0.16,0.30,0.44,0.62,0.78,0.9];
+      for(var k=0;k<placements.length;k++){
+        var tx=placements[k];
+        var ty=ridgeY(2, tx);
+        trees.push({x:tx, y:ty, h:0.05+Math.random()*0.03, w:0.012+Math.random()*0.006});
+      }
+      ridges.trees = trees;
+    }
+    function ridgeY(layer, fx){
+      var pts=ridges[layer].pts;
+      var pos=fx*pts.length;
+      var i=Math.floor(pos);
+      if(i>=pts.length-1) return pts[pts.length-1].y;
+      var f=pos-i;
+      return pts[i].y*(1-f)+pts[i+1].y*f;
+    }
+
+    function resize(){
+      var sw = canvas.parentElement.clientWidth;
+      W = Math.max(320, sw);
+      H = Math.round(W * 620 / 1120);
+      DPR = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(W*DPR);
+      canvas.height = Math.round(H*DPR);
+      canvas.style.height = H + 'px';
+      ctx.setTransform(DPR,0,0,DPR,0,0);
+      buildRidges();
+      resEl.textContent = Math.round(W)+'×'+Math.round(H);
+    }
+
+    function drawSky(k){
+      var g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0, rgb(k.top,1));
+      g.addColorStop(0.6, rgb(k.bot,1));
+      g.addColorStop(1, rgb(k.haze,1));
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+      // stars fade with dawn
+      var starA = Math.max(0, 1 - elevNorm*2.4);
+      if(starA>0.01){
+        for(var i=0;i<stars.length;i++){
+          var st=stars[i];
+          var tw = 0.5+0.5*Math.sin(performance.now()*0.003 + st.tw);
+          ctx.fillStyle = rgb([230,235,255], starA*tw*0.9);
+          ctx.beginPath();
+          ctx.arc(st.x*W, st.y*H, st.r, 0, 6.283);
+          ctx.fill();
+        }
+      }
+
+      // horizon haze band (warm near sunrise)
+      var hz = ctx.createLinearGradient(0,H*0.4,0,H*0.72);
+      hz.addColorStop(0, rgb(k.haze,0));
+      hz.addColorStop(0.5, rgb(k.haze,0.35));
+      hz.addColorStop(1, rgb(k.haze,0));
+      ctx.fillStyle=hz; ctx.fillRect(0,H*0.4,W,H*0.32);
+    }
+
+    var elevNorm = 0; // set in loop
+
+    function drawSun(k){
+      var sx = (0.10 + 0.80*t)*W;
+      var sy = H*0.66 - elevNorm*H*0.5;
+      var R = Math.min(W,H)*0.065;
+      // glow
+      var glow = ctx.createRadialGradient(sx,sy,R*0.4, sx,sy,R*6);
+      var gc = elevNorm < 0.35 ? k.haze : lerp(k.haze,[255,240,210,],1);
+      glow.addColorStop(0, rgb([255,240,205], 0.55));
+      glow.addColorStop(0.25, rgb(gc, 0.28));
+      glow.addColorStop(1, rgb(gc, 0));
+      ctx.fillStyle=glow;
+      ctx.fillRect(0,0,W,H);
+      // disc
+      var disc = ctx.createRadialGradient(sx-R*0.25,sy-R*0.25, R*0.1, sx,sy,R);
+      disc.addColorStop(0, 'rgba(255,250,235,1)');
+      disc.addColorStop(0.6, rgb([255,226,160],1));
+      disc.addColorStop(1, rgb(k.haze,0.9));
+      ctx.fillStyle=disc;
+      ctx.beginPath(); ctx.arc(sx,sy,R,0,6.283); ctx.fill();
+      return {sx:sx, sy:sy};
+    }
+
+    function drawRidge(idx, k, sun){
+      var r = ridges[idx];
+      var shade = r.shade.slice();
+      // warm-tint toward sun side a touch
+      ctx.beginPath();
+      ctx.moveTo(0, H);
+      for(var i=0;i<r.pts.length;i++){
+        ctx.lineTo(r.pts[i].x*W, r.pts[i].y*H);
+      }
+      ctx.lineTo(W, H); ctx.closePath();
+      var gg = ctx.createLinearGradient(0, r.base*H*0.6, 0, H);
+      gg.addColorStop(0, rgb(shade,1));
+      gg.addColorStop(1, rgb(shade.map(function(v){return v*0.6;}),1));
+      ctx.fillStyle=gg; ctx.fill();
+    }
+
+    function drawTreesAndShadows(k){
+      var trees = ridges.trees;
+      var shLen = 90 / (elevNorm*100 + 12); // longer at dawn
+      var sunSide = (0.10+0.80*t); // 0..1 sun x fraction
+      for(var i=0;i<trees.length;i++){
+        var tr=trees[i];
+        var tx=tr.x*W, ty=tr.y*H, th=tr.h*H, tw=tr.w*W;
+        // cast shadow away from sun
+        var dir = tr.x < sunSide ? -1 : 1;
+        var len = th*shLen*0.9;
+        ctx.fillStyle='rgba(12,14,24,0.28)';
+        ctx.beginPath();
+        ctx.moveTo(tx, ty);
+        ctx.lineTo(tx + dir*len, ty + th*0.10);
+        ctx.lineTo(tx + dir*len*0.6, ty + th*0.22);
+        ctx.lineTo(tx, ty);
+        ctx.closePath();
+        ctx.fill();
+        // tree silhouette (two triangles)
+        ctx.fillStyle='#14161f';
+        ctx.beginPath();
+        ctx.moveTo(tx, ty-th);
+        ctx.lineTo(tx-tw, ty);
+        ctx.lineTo(tx+tw, ty);
+        ctx.closePath();
+        ctx.fill();
+        ctx.beginPath();
+        ctx.moveTo(tx, ty-th*0.7);
+        ctx.lineTo(tx-tw*0.8, ty-th*0.05);
+        ctx.lineTo(tx+tw*0.8, ty-th*0.05);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+
+    function render(){
+      var k = keyAt(t);
+      elevNorm = (1 - Math.cos(Math.PI*t))/2;
+      drawSky(k);
+      var sun = drawSun(k);
+      drawRidge(0, k, sun);
+      drawRidge(1, k, sun);
+      drawRidge(2, k, sun);
+      drawTreesAndShadows(k);
+      updateHUD(k);
+    }
+
+    function updateHUD(k){
+      var totalMin = Math.round((5 + t*4)*60); // 05:00 -> 09:00
+      var hh = Math.floor(totalMin/60), mm = totalMin%60;
+      var str = (hh<10?'0':'')+hh+':'+(mm<10?'0':'')+mm;
+      hourEl.textContent = str;
+      clockEl.textContent = str;
+      var elevDeg = (elevNorm*88);
+      elevEl.innerHTML = elevDeg.toFixed(0)+'&deg;';
+      var sl;
+      if(elevDeg<8) sl='long'; else if(elevDeg<32) sl='medium'; else if(elevDeg<62) sl='short'; else sl='brief';
+      shadowEl.textContent = sl;
+      var ph;
+      if(t<0.12) ph='night'; else if(t<0.30) ph='pre-dawn'; else if(t<0.50) ph='dawn';
+      else if(t<0.65) ph='sunrise'; else if(t<0.82) ph='gold hour'; else ph='morning';
+      phaseEl.textContent = ph;
+    }
+
+    function frame(now){
+      if(!last) last = now;
+      var dt = (now - last)/1000; last = now;
+      if(playing && !pausedByReduce){
+        t += dt / 18;            // ~18s for the full sunrise
+        if(t >= 1){
+          if(looping) t = t >= 1.0001 ? 0 : 1;
+          else { t = 1; playing = false; syncPlayBtn(); }
+        }
+        scrub.value = Math.min(1000, Math.round(t*1000));
+      }
+      render();
+      requestAnimationFrame(frame);
+    }
+    var pausedByReduce = false;
+
+    function syncPlayBtn(){
+      playBtn.textContent = playing ? 'Pause' : 'Play';
+      playBtn.classList.toggle('on', playing);
+    }
+
+    scrub.addEventListener('input', function(){
+      t = scrub.value/1000;
+      if(playing){ playing=false; syncPlayBtn(); }
+    });
+    playBtn.addEventListener('click', function(){
+      if(t>=1 && !looping){ t=0; }
+      playing = !playing; syncPlayBtn();
+    });
+    loopBtn.addEventListener('click', function(){
+      looping = !looping;
+      loopBtn.classList.toggle('on', looping);
+    });
+    restartBtn.addEventListener('click', function(){
+      t=0; if(!playing){ playing=true; syncPlayBtn(); }
+    });
+
+    var rt;
+    window.addEventListener('resize', function(){ clearTimeout(rt); rt=setTimeout(resize,180); });
+
+    resize();
+    syncPlayBtn();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

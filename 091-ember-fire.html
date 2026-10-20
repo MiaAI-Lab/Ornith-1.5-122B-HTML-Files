@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember Fire — Rising Sparks</title>
+<style>
+  :root{
+    --coal0:#140703; --coal1:#3a1405; --coal2:#7c2a07; --coal3:#d85413; --coal4:#ffb03a;
+    --ash:#1a1513; --bg:#060403;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 50% 92%, #2a0d03 0%, #140703 30%, #060403 70%);
+    color:#f4d9b8;
+    min-height:100vh;
+    overflow:hidden;
+    position:relative;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+  }
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+
+  /* vignette — moody, intimate */
+  .vignette{
+    position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(70% 65% at 50% 88%, transparent 40%, rgba(0,0,0,.55) 78%, rgba(0,0,0,.9) 100%);
+  }
+  /* warm pool of light rising off the coals */
+  .warmth{
+    position:fixed;left:50%;bottom:0;transform:translateX(-50%);
+    width:120%;height:70%;pointer-events:none;z-index:2;
+    background:radial-gradient(55% 60% at 50% 100%, rgba(255,120,30,.28), rgba(255,80,20,.10) 40%, transparent 70%);
+    mix-blend-mode:screen;
+    animation:breathe 4.5s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.85}50%{opacity:1}}
+
+  /* heat-haze distortion band above the fire */
+  .haze{
+    position:fixed;left:50%;bottom:6%;transform:translateX(-50%);
+    width:60%;height:46%;pointer-events:none;z-index:4;
+    filter:url(#haze);
+    background:linear-gradient(to top, rgba(255,150,60,.16), rgba(255,120,50,.06) 40%, transparent 78%);
+    mix-blend-mode:screen;
+    opacity:.9;
+  }
+
+  .caption{
+    position:fixed;left:0;right:0;bottom:0;z-index:6;text-align:center;
+    padding:2.4rem 1rem 2.6rem;
+    background:linear-gradient(to top, rgba(6,4,3,.75), transparent);
+    pointer-events:none;
+  }
+  .caption .t{
+    font-family:Georgia,'Segoe UI',serif;font-weight:400;
+    font-size:clamp(1.6rem,5.4vw,3rem);letter-spacing:.24em;text-transform:uppercase;
+    background:linear-gradient(180deg,#ffe6b8,#ff9a4d 60%,#c8481a);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 0 40px rgba(255,120,40,.25);
+  }
+  .caption .s{display:block;margin-top:.6rem;font-size:clamp(.62rem,2.1vw,.8rem);
+    letter-spacing:.34em;text-transform:uppercase;color:rgba(244,217,184,.55)}
+
+  .hint{position:fixed;top:3.4%;left:0;right:0;text-align:center;z-index:6;
+    font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(244,217,184,.32)}
+
+  @media (prefers-reduced-motion: reduce){
+    .warmth,.haze{animation:none !important}
+    .warmth{opacity:1}
+  }
+</style>
+</head>
+<body>
+  <canvas id="fire"></canvas>
+  <div class="warmth"></div>
+  <div class="haze"></div>
+  <div class="vignette"></div>
+
+  <!-- SVG turbulence used by the heat-haze filter -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="haze">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.022" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </svg>
+
+  <div class="hint">move pointer to stoke the fire · click to send up a burst of sparks</div>
+  <div class="caption">
+    <div class="t">Ember Fire</div>
+    <span class="s">rising sparks · heat shimmer · glowing coals</span>
+  </div>
+  <script>
+    (function(){
+      var cv = document.getElementById('fire');
+      var ctx = cv.getContext('2d');
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var W = 0, H = 0, DPR = 1;
+
+      function resize(){
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth; H = window.innerHeight;
+        cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        buildCoals();
+      }
+
+      // ---- glowing coal bed ----
+      var coals = [];
+      function buildCoals(){
+        coals = [];
+        var base = H * 0.93;
+        var cols = Math.max(6, Math.floor(W / 70));
+        for (var i = 0; i < cols; i++){
+          var cx = (i + 0.5) / cols * W + (Math.random() - .5) * 30;
+          coals.push({
+            x: cx,
+            y: base + (Math.random() - .5) * 14,
+            rx: 26 + Math.random() * 46,
+            ry: 14 + Math.random() * 16,
+            hot: 0.5 + Math.random() * 0.5,
+            phase: Math.random() * 6.28,
+            speed: 0.6 + Math.random() * 1.2
+          });
+        }
+      }
+
+      function drawCoals(t){
+        for (var i = 0; i < coals.length; i++){
+          var c = coals[i];
+          var pulse = 0.75 + 0.25 * Math.sin(t * 0.001 * c.speed + c.phase) * c.hot;
+          var g = ctx.createRadialGradient(c.x, c.y, 1, c.x, c.y, c.rx);
+          g.addColorStop(0,   'rgba(255,' + Math.floor(180 * pulse) + ',' + Math.floor(60 * pulse) + ',0.95)');
+          g.addColorStop(0.35,'rgba(210,' + Math.floor(80 * pulse) + ',18,0.8)');
+          g.addColorStop(0.7, 'rgba(90,30,12,0.55)');
+          g.addColorStop(1,   'rgba(20,8,4,0)');
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.scale(1, c.ry / c.rx);
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.arc(0, 0, c.rx, 0, 6.2832);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+
+      // ---- gentle flame (soft, blurred, flickering) ----
+      function drawFlame(t){
+        var base = H * 0.86;
+        var flick = 0.85 + 0.15 * Math.sin(t * 0.013) * Math.sin(t * 0.021);
+        var blobs = [
+          {dx:0,   w:0.55, h:0.42, col:'rgba(255,120,30,', a:0.20},
+          {dx:-0.06,w:0.34,h:0.55, col:'rgba(255,180,60,', a:0.16},
+          {dx:0.07, w:0.30,h:0.48, col:'rgba(255,90,25,',  a:0.16},
+          {dx:0.0,  w:0.16,h:0.60, col:'rgba(255,235,150,',a:0.14}
+        ];
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < blobs.length; i++){
+          var b = blobs[i];
+          var bx = W * 0.5 + b.dx * W;
+          var bw = W * b.w * flick;
+          var bh = H * b.h * (0.9 + 0.1 * Math.sin(t * 0.016 + i));
+          var g = ctx.createRadialGradient(bx, base, 2, bx, base - bh * 0.4, bw);
+          g.addColorStop(0, b.col + (b.a * flick) + ')');
+          g.addColorStop(0.5, b.col + (b.a * flick * 0.4) + ')');
+          g.addColorStop(1, b.col + '0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(bx, base);
+          ctx.quadraticCurveTo(bx + bw * 0.6, base - bh * 0.5, bx, base - bh);
+          ctx.quadraticCurveTo(bx - bw * 0.6, base - bh * 0.5, bx, base);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // ---- particles: rising embers + arcing sparks ----
+      var parts = [];
+      var mouseX = W * 0.5, mouseY = H * 0.6, stoke = 0;
+      function spawn(x, y, kind){
+        parts.push({
+          x:x, y:y,
+          vx:(Math.random() - .5) * (kind === 'spark' ? 2.2 : 0.9),
+          vy: -(kind === 'spark' ? (2.6 + Math.random() * 3.4) : (0.5 + Math.random() * 1.3)),
+          g:  kind === 'spark' ? 0.055 : 0.0,
+          life:0, max: kind === 'spark' ? (40 + Math.random() * 40) : (120 + Math.random() * 150),
+          size: kind === 'spark' ? (0.8 + Math.random() * 1.4) : (1.2 + Math.random() * 2.4),
+          kind: kind,
+          wob: Math.random() * 6.28, ws: 0.05 + Math.random() * 0.12
+        });
+      }
+      function drawParts(){
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = parts.length - 1; i >= 0; i--){
+          var p = parts[i];
+          p.vy += p.g;
+          p.wob += p.ws;
+          p.x += p.vx + Math.sin(p.wob) * 0.5;
+          p.y += p.vy;
+          p.life++;
+          var k = p.life / p.max;
+          if (k >= 1 || p.y < -20){ parts.splice(i, 1); continue; }
+          // temperature cools red->deep orange as it ages
+          var temp = 1 - k;
+          var R = 255, G = Math.floor(90 + 120 * temp), B = Math.floor(20 + 40 * temp);
+          var alpha = Math.sin(k * Math.PI) * (p.kind === 'spark' ? 1 : 0.85);
+          var r = p.size * (p.kind === 'spark' ? (1 - k * 0.5) : (0.6 + 0.6 * temp));
+          var gg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r * 3.2);
+          gg.addColorStop(0, 'rgba(' + R + ',' + G + ',' + B + ',' + alpha + ')');
+          gg.addColorStop(0.4, 'rgba(' + R + ',' + Math.floor(G*0.6) + ',10,' + (alpha*0.5) + ')');
+          gg.addColorStop(1, 'rgba(' + R + ',30,6,0)');
+          ctx.fillStyle = gg;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r * 3.2, 0, 6.2832);
+          ctx.fill();
+          // hot core
+          ctx.fillStyle = 'rgba(255,240,' + Math.floor(180*temp) + ',' + alpha + ')';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, r * 0.5, 0, 6.2832);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // ---- main loop ----
+      var last = 0, spawnAcc = 0;
+      function frame(ts){
+        if (!last) last = ts;
+        var dt = Math.min(40, ts - last); last = ts;
+
+        // fade the canvas slightly each frame for silky trails
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = 'rgba(6,4,3,0.22)';
+        ctx.fillRect(0, 0, W, H);
+
+        drawCoals(ts);
+        drawFlame(ts);
+
+        // spawn rate
+        var rate = reduce ? 2.5 : 22;
+        rate += stoke * 60;                 // pointer stoking
+        spawnAcc += rate * dt / 16.67;
+        while (spawnAcc >= 1){
+          spawnAcc -= 1;
+          var sx = Math.random() * W;
+          spawn(sx, H * 0.9 + (Math.random() - .5) * 10, Math.random() < 0.14 ? 'spark' : 'ember');
+        }
+        drawParts();
+
+        if (stoke > 0) stoke = Math.max(0, stoke - dt * 0.004);
+        requestAnimationFrame(frame);
+      }
+
+      // ---- interaction ----
+      window.addEventListener('pointermove', function(e){
+        mouseX = e.clientX; mouseY = e.clientY;
+        stoke = Math.min(1, stoke + 0.25);
+        for (var i = 0; i < 2; i++){
+          spawn(e.clientX + (Math.random() - .5) * 26,
+                e.clientY + (Math.random() - .5) * 10, 'ember');
+        }
+      });
+      window.addEventListener('click', function(e){
+        for (var i = 0; i < 42; i++){
+          spawn(e.clientX + (Math.random() - .5) * 40,
+                e.clientY + (Math.random() - .3) * 12, 'spark');
+        }
+        stoke = 1;
+      });
+      window.addEventListener('touchmove', function(e){
+        if (e.touches[0]){
+          stoke = Math.min(1, stoke + 0.2);
+          for (var i = 0; i < 2; i++){
+            spawn(e.touches[0].clientX + (Math.random() - .5) * 26,
+                  e.touches[0].clientY + (Math.random() - .5) * 10, 'ember');
+          }
+        }
+      }, {passive:true});
+
+      window.addEventListener('resize', resize);
+      resize();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

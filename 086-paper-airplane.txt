@@ -1,0 +1,21 @@
+PROMPT:
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+Page 2: 086-paper-airplane.html + 086-paper-airplane.txt — A folded paper airplane gliding through layered clouds with parallax. Palette: sky blue, soft white clouds, warm sun. Signature: CSS paper plane on a looping flight path, parallax cloud layers, folded-paper shadows, drifting leaves.
+
+TITLE: Paper Airplane — A Loop Through the Clouds
+
+DESIGN DESCRIPTION:
+A crisp folded paper airplane glides along a gentle looping arc through a bright, layered sky. The palette is warm and airy — gradient sky blue deepening upward, a soft golden sun low on the horizon, and billowing white clouds rendered purely in CSS gradients. Multiple cloud rows drift past at different speeds to create real parallax depth, while a few paper leaves and a faint contrail trail the plane. The plane itself is built from angled polygon facets with crisp crease highlights and soft folded-paper drop shadows, giving it tangible thickness as it banks along its path.
+
+MAJOR VISUAL TECHNIQUES:
+- Paper plane assembled from CSS polygon facets (polygons/clips) with crease highlights and layered drop shadows for folded-paper thickness
+- Multi-layer parallax: several cloud rows (pure CSS radial/elliptical gradients) translating at staggered speeds
+- A looping flight path driven by CSS keyframes (translate + rotate) so the plane banks and arcs naturally
+- Warm sun glow via stacked radial gradients and soft blur
+- Drifting leaves / paper bits with sway-and-rotate keyframes for ambient life
+- Gentle bob and contrail fade for delight without clutter
+- Georgia/serif display headline with airy letter-spacing; reduced-motion freezes drift and flight
+
+INTENDED INTERACTION MODEL:
+Largely ambient and cinematic — it loops forever as a living wallpaper. On pointer down / tap, the plane performs a quick barrel-roll flourish and a fresh gust of clouds is released; moving the pointer left/right nudges the parallax speed so the viewer feels a light breeze. No scrolling or complex input required; fully self-playing with a reduced-motion fallback.

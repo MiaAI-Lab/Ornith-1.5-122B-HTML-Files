@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ABYSS · Bioluminescent Jellyfish</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;
+    background:radial-gradient(120% 95% at 50% 0%, #0a2350 0%, #061433 42%, #020718 74%, #01030c 100%);
+    overflow:hidden;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  .stage{position:fixed;inset:0}
+  #abyss{position:absolute;inset:0;display:block}
+  .vig{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(130% 110% at 50% 40%, transparent 55%, rgba(0,2,10,.7) 100%)}
+
+  .ui{position:fixed;inset:0;z-index:5;pointer-events:none}
+  .brand{position:fixed;left:clamp(22px,4.4vw,60px);top:clamp(22px,4.4vh,52px)}
+  .brand .k{font-size:.62rem;letter-spacing:.46em;text-transform:uppercase;color:#7fd8ff;opacity:.85}
+  .brand h1{margin:.3em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(2rem,6.4vw,4.2rem);line-height:.96;color:#eaf6ff;letter-spacing:.01em;
+    text-shadow:0 2px 30px rgba(0,10,30,.7)}
+  .brand h1 em{font-style:italic;
+    background:linear-gradient(100deg,#7ff0ff,#b98bff 45%,#ff6fd0);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .side{position:fixed;right:clamp(20px,3.6vw,48px);top:clamp(22px,4.4vh,52px);text-align:right}
+  .side .lab{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:#7fa6c8}
+  .side .val{display:block;font-size:1.25rem;color:#dff2ff;letter-spacing:.08em;margin-top:.16em;
+    font-variant-numeric:tabular-nums}
+  .note{position:fixed;left:clamp(22px,4.4vw,60px);bottom:clamp(22px,4.4vh,48px);max-width:min(520px,80vw)}
+  .note p{margin:0;color:#bcd4ee;font-size:clamp(.72rem,1.55vw,.9rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 12px rgba(0,0,0,.8)}
+  .note .hint{margin-top:.7em;font-size:.68em;letter-spacing:.18em;text-transform:uppercase;color:#7fd8b6}
+  .rule{position:fixed;right:clamp(20px,3.6vw,48px);bottom:clamp(22px,4.4vh,48px);width:min(220px,40vw);
+    height:1px;background:linear-gradient(90deg,transparent,rgba(120,210,255,.55));z-index:5}
+  @media (prefers-reduced-motion: reduce){}
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="abyss" aria-label="Bioluminescent jellyfish pulsing through deep water with glowing tentacles"></canvas>
+  <div class="vig"></div>
+</div>
+
+<div class="ui">
+  <div class="brand">
+    <div class="k">Abyssal Life &middot; No. 048</div>
+    <h1>Levitating in the<br><em>midnight zone.</em></h1>
+  </div>
+  <div class="side">
+    <div class="lab">Depth</div>
+    <span class="val" id="depth">0 m</span>
+    <div class="lab">Contraction</div>
+    <span class="val" id="pulse">0 bpm</span>
+  </div>
+  <div class="note">
+    <p>A siphonophore dream &mdash; bells contract and expel water, each pulse firing a flare of
+       cyan and magenta through the ink. Tentacles stream behind like thread. Drift the pointer to look
+       around; tap the water to make them flinch.</p>
+    <div class="hint">Move to drift &middot; click to startle</div>
+  </div>
+  <div class="rule"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv=document.getElementById("abyss");
+  var ctx=cv.getContext("2d");
+  var depthEl=document.getElementById("depth");
+  var pulseEl=document.getElementById("pulse");
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var W=0,H=0,DPR=1;
+  var parX=0,parY=0,tX=0,tY=0;
+  var t=0, last=performance.now();
+  var jellies=[];
+  var particles=[];
+
+  function makeGlow(r,g,b,size){
+    var c=document.createElement("canvas");c.width=c.height=size;
+    var x=c.getContext("2d"),s=size/2;
+    var gr=x.createRadialGradient(s,s,0,s,s,s);
+    gr.addColorStop(0,"rgba("+r+","+g+","+b+",1)");
+    gr.addColorStop(0.28,"rgba("+r+","+g+","+b+",.55)");
+    gr.addColorStop(1,"rgba("+r+","+g+","+b+",0)");
+    x.fillStyle=gr;x.fillRect(0,0,size,size);return c;
+  }
+  var glowCyan=makeGlow(80,225,255,128);
+  var glowMag=makeGlow(255,80,205,128);
+  var glowWht=makeGlow(225,245,255,96);
+
+  // soft vertical god-ray sprite
+  var ray=document.createElement("canvas");ray.width=64;ray.height=512;
+  (function(){var x=ray.getContext("2d");
+    var gr=x.createRadialGradient(32,256,6,32,256,230);
+    gr.addColorStop(0,"rgba(150,205,255,.5)");gr.addColorStop(1,"rgba(150,205,255,0)");
+    x.fillStyle=gr;x.fillRect(0,0,64,512);
+  })();
+
+  function rgba(col,a){return "rgba("+col[0]+","+col[1]+","+col[2]+","+a+")";}
+  var CYAN=[110,240,255],MAG=[255,90,205],WHT=[230,248,255];
+
+  function bellOutline(cx,cy,w,h,dip,phase){
+    var pts=[],N=40,a,i;
+    for(i=0;i<=N;i++){a=Math.PI*i/N;pts.push([cx+w*Math.cos(a),cy-h*Math.sin(a)]);}
+    var lobes=14;
+    for(i=0;i<=N;i++){a=Math.PI*(1-i/N);
+      var scal=w*0.032*Math.sin(a*lobes+t*2.0+phase);
+      pts.push([cx+w*Math.cos(a),cy+dip*Math.sin(a)+scal]);}
+    return pts;
+  }
+
+  function tentacle(sx,sy,len,baseW,swayAmp,k,vspd,ph,colHalo,colCore,alpha){
+    var segs=22,i,s,f,P=[],sway;
+    for(i=0;i<=segs;i++){s=len*i/segs;
+      sway=Math.sin(s*k-t*vspd+ph)*(0.35+(s/len))*swayAmp;
+      P.push([sx+sway,sy+s]);}
+    for(i=0;i<segs;i++){f=i/segs;
+      ctx.beginPath();ctx.moveTo(P[i][0],P[i][1]);ctx.lineTo(P[i+1][0],P[i+1][1]);
+      ctx.lineCap="round";
+      ctx.lineWidth=baseW*(1-f)+1.4;ctx.strokeStyle=rgba(colHalo,alpha*(1-f)*0.4);ctx.stroke();
+      ctx.lineWidth=Math.max(0.5,baseW*(1-f)*0.4);ctx.strokeStyle=rgba(colCore,alpha*(1-f));ctx.stroke();
+    }
+  }
+
+  function drawJelly(j){
+    j.pulse+=j.pds;
+    var c=0.5*(1+Math.sin(j.pulse));           // contraction 0..1
+    var bob=Math.sin(j.pulse*0.5+j.phase)*7*j.size*0.05;
+    var cx=j.x+parX*j.depth+Math.sin(t*0.22+j.phase)*9*j.depth;
+    var cy=j.y+bob+parY*j.depth*0.5;
+    var w=j.size*(1+0.10*c), h=j.size*(0.76-0.12*c), dip=j.size*(0.30-0.20*c);
+    if(!isFinite(cx))cx=W/2;if(!isFinite(cy))cy=H/2;
+    if(!isFinite(w)||w<=0)w=Math.min(W,H)*0.15;
+    if(!isFinite(h)||h<=0)h=w*0.7;if(!isFinite(dip)||dip<=0)dip=h*0.4;
+    var a0=j.alpha, add=ctx.globalCompositeOperation;
+
+    ctx.globalCompositeOperation="lighter";
+    // outer glow halo, flares on contraction
+    var gs=w*2.6*(0.9+0.25*c);
+    ctx.globalAlpha=a0*(0.30+0.22*c);
+    ctx.drawImage(glowCyan,cx-gs/2,cy-gs*0.55,gs,gs);
+    var ms=w*1.5;
+    ctx.globalAlpha=a0*(0.28+0.34*c);
+    ctx.drawImage(glowMag,cx-ms*0.5,cy-ms*0.3,ms,ms);
+    // hot core
+    var cs=w*(0.9+0.6*c);
+    ctx.globalAlpha=a0*(0.35+0.45*c);
+    ctx.drawImage(glowWht,cx-cs*0.5,cy-h*0.55-cs*0.3,cs,cs);
+    ctx.globalAlpha=1;
+
+    // bell body
+    var pts=bellOutline(cx,cy,w,h,dip,j.phase);
+    ctx.globalCompositeOperation="source-over";
+    ctx.globalAlpha=a0*0.92;
+    ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<pts.length;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.closePath();
+    var g=ctx.createRadialGradient(cx,cy-h*0.36,w*0.06,cx,cy,w*1.25);
+    g.addColorStop(0,"rgba(226,255,255,0.95)");
+    g.addColorStop(0.26,"rgba(120,245,255,0.82)");
+    g.addColorStop(0.6,"rgba(255,95,205,0.5)");
+    g.addColorStop(1,"rgba(255,95,205,0)");
+    ctx.fillStyle=g;ctx.fill();
+
+    // inner organ (gastric cavity) warm blob
+    ctx.globalAlpha=a0*0.7;
+    var g2=ctx.createRadialGradient(cx,cy-h*0.06,w*0.03,cx,cy-h*0.04,w*0.62);
+    g2.addColorStop(0,"rgba(255,160,225,0.7)");g2.addColorStop(1,"rgba(255,160,225,0)");
+    ctx.fillStyle=g2;ctx.fill();
+
+    // rim highlight on the dome
+    ctx.globalCompositeOperation="lighter";
+    ctx.globalAlpha=a0*(0.5+0.5*c);
+    ctx.beginPath();
+    for(i=0;i<=24;i++){var q=i/24;var aa=Math.PI*q;var px=cx+w*Math.cos(aa),py=cy-h*Math.sin(aa);
+      if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}
+    ctx.strokeStyle=rgba(WHT,0.9);ctx.lineWidth=1.6;ctx.stroke();
+    ctx.globalAlpha=1;ctx.globalCompositeOperation=add;
+
+    // oral arms (thick, curly, pink) from near centre of skirt
+    var midL=pts.length*0.36, midR=pts.length*0.64;
+    var arms=[
+      [pts[Math.floor(pts.length*0.5)][0],cy+dip*0.4, j.size*0.7, 5, 3.2, 0.9, j.phase],
+      [pts[Math.floor(pts.length*0.44)][0],cy+dip*0.3, j.size*0.6, 4.4, 3.6, 1.1, j.phase+1],
+      [pts[Math.floor(pts.length*0.56)][0],cy+dip*0.3, j.size*0.6, 4.4, 3.6, 1.1, j.phase+2]
+    ];
+    for(i=0;i<arms.length;i++){var ar=arms[i];
+      tentacle(ar[0],ar[1],ar[2],ar[3],ar[4],ar[5],ar[6],ar[6]*0.7,MAG,MAG,a0*0.75);}
+
+    // long tentacles around the skirt
+    var nT=j.big?9:5, lt=j.size*(j.big?1.5:1.1);
+    for(i=0;i<nT;i++){
+      var frac=0.14+0.72*(i/(nT-1));
+      var sp=pts[Math.floor(pts.length*frac)];
+      var swayA=j.size*(0.5+0.3*(i%2));
+      tentacle(sp[0],sp[1]+dip*0.2, lt*(0.7+0.5*((i*7)%5)/4), j.size*0.05,
+        swayA, 0.05+i*0.006, 1.3+i*0.05, j.phase+i, CYAN, WHT, a0*0.85);
+    }
+  }
+
+  function makeParticles(){
+    particles=[];
+    var n=reduce?28:90,i;
+    for(i=0;i<n;i++){
+      particles.push({x:Math.random()*W,y:Math.random()*H,
+        z:Math.random()*0.8+0.2,
+        s:Math.random()*1.6+0.5,
+        vy:-(Math.random()*6+3),vx:(Math.random()-0.5)*3,
+        ph:Math.random()*6.28,
+        spd:Math.random()*0.5+0.5,
+        glow:Math.random()<0.35,col:Math.random()<0.5?glowCyan:glowMag});
+    }
+  }
+
+  function drawParticles(dt){
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<particles.length;i++){
+      var p=particles[i];
+      if(!reduce){
+        p.y+=p.vy*p.spd*dt*0.06;
+        p.x+=p.vx*p.spd*dt*0.06+Math.sin(t*0.4+p.ph)*0.25;
+      }
+      if(p.y<-10){p.y=H+10;p.x=Math.random()*W;}
+      if(p.y>H+10){p.y=-10;p.x=Math.random()*W;}
+      var sz=p.glow?(p.s*9):(p.s*3.4);
+      if(p.glow){ctx.globalAlpha=0.18*p.z+0.12*(0.5+0.5*Math.sin(t*1.5+p.ph));
+        ctx.drawImage(p.col,p.x-sz/2+parX*p.z*14,p.y-sz/2+parY*p.z*8,sz,sz);}
+      else{ctx.globalAlpha=0.5*p.z;
+        ctx.fillStyle="rgba(210,235,255,"+(0.5*p.z).toFixed(2)+")";
+        ctx.beginPath();ctx.arc(p.x+parX*p.z*14,p.y+parY*p.z*8,p.s*p.z,0,6.283);ctx.fill();}
+    }
+    ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+  }
+
+  function drawRays(){
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<4;i++){
+      var bx=W*(0.18+0.22*i)+Math.sin(t*0.1+i*1.3)*40+parX*20;
+      var rot=Math.sin(t*0.07+i)*0.06;
+      var wdt=80+30*Math.sin(t*0.15+i);
+      ctx.save();ctx.translate(bx,0);ctx.rotate(rot);
+      ctx.globalAlpha=0.10+0.04*Math.sin(t*0.4+i);
+      ctx.drawImage(ray,-32,-20,wdt,H+40);
+      ctx.restore();
+    }
+    ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";
+  }
+
+  function setup(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=cv.clientWidth||window.innerWidth;H=cv.clientHeight||window.innerHeight;
+    if(W<=0)W=window.innerWidth;if(H<=0)H=window.innerHeight;
+    cv.width=Math.max(1,Math.floor(W*DPR));cv.height=Math.max(1,Math.floor(H*DPR));
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    jellies=[
+      {x:W*0.5,y:H*0.46,size:Math.min(W,H)*0.155,depth:0.62,phase:0,
+       pulseSpeed:1.55,alpha:1,big:true,pds:0},
+      {x:W*0.2,y:H*0.26,size:Math.min(W,H)*0.075,depth:0.32,phase:2.1,
+       pulseSpeed:1.0,alpha:0.55,big:false,pds:0},
+      {x:W*0.76,y:H*0.64,size:Math.min(W,H)*0.06,depth:0.38,phase:4.0,
+       pulseSpeed:1.2,alpha:0.45,big:false,pds:0}
+    ];
+    // init pulse progressors
+    for(var i=0;i<jellies.length;i++)jellies[i].pds=jellies[i].pulseSpeed*(reduce?0.016:0.016);
+    makeParticles();
+  }
+
+  // pointer parallax
+  window.addEventListener("pointermove",function(e){
+    if(W>0&&H>0){tX=(e.clientX/W-0.5)*2;tY=(e.clientY/H-0.5)*2;}
+  });
+  function startle(e){
+    if(reduce)return;
+    var ex=(e.touches?e.touches[0].clientX:e.clientX),ey=(e.clientY||e.touches&&e.touches[0].clientY);
+    for(var i=0;i<jellies.length;i++){
+      var j=jellies[i];
+      var dx=(j.x-W*0.5),dy=(j.y-H*0.5);
+      // push jellies away from the tap and force a contraction
+      j.pulse-=(Math.PI*0.5);
+      var d=Math.hypot(ex-j.x,ey-j.y)||1;
+      j.x+=-(dx)*0.0; // no positional jump of anchor; keep composition
+      j.startle=Math.min(1,260/d);
+    }
+  }
+  window.addEventListener("pointerdown",startle);
+  window.addEventListener("touchstart",startle,{passive:true});
+
+  var depth=240;
+  function frame(now){
+    var dt=Math.min(0.05,(now-last)/1000);last=now;t+=dt;
+    if(!reduce){parX+=(tX-parX)*0.045;parY+=(tY-parY)*0.045;}
+    if(!isFinite(parX))parX=0;if(!isFinite(parY))parY=0;
+    if(!isFinite(tX))tX=0;if(!isFinite(tY))tY=0;
+    ctx.clearRect(0,0,W,H);
+    drawRays();
+    drawParticles(dt);
+    // background jellies first, hero last
+    for(var i=1;i<jellies.length;i++)drawJelly(jellies[i]);
+    drawJelly(jellies[0]);
+    depth+=dt*1.4;
+    depthEl.textContent=Math.round(depth)+" m";
+    var bpm=Math.round(60*jellies[0].pulseSpeed*0.6+ (jellies[0].startle||0)*40);
+    pulseEl.textContent=bpm+" bpm";
+    for(var k=0;k<jellies.length;k++){if(jellies[k].startle)jellies[k].startle*=0.94;}
+    requestAnimationFrame(frame);
+  }
+
+  var rt=null;
+  window.addEventListener("resize",function(){if(rt)clearTimeout(rt);rt=setTimeout(setup,200);});
+  setup();
+  if(reduce){t=0;last=performance.now();}
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

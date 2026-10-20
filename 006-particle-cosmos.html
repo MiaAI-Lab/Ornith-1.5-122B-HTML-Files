@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>NEXUS · Interactive Galaxy</title>
+<style>
+  :root{ --violet:#8b5cff; --cyan:#38e8ff; --pink:#ff4fd8; --star:#f6f9ff; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#04060e}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    color:var(--star);
+    cursor:crosshair;
+    -webkit-user-select:none;user-select:none;
+    touch-action:none;
+  }
+  #space{position:fixed;inset:0;display:block;width:100%;height:100%}
+
+  /* nebula backdrop behind the trail canvas */
+  .nebula{
+    position:fixed;inset:0;pointer-events:none;
+    background:
+      radial-gradient(420px 380px at 22% 30%, rgba(139,92,255,.28), transparent 65%),
+      radial-gradient(520px 460px at 80% 72%, rgba(56,232,255,.20), transparent 68%),
+      radial-gradient(380px 340px at 62% 20%, rgba(255,79,216,.14), transparent 70%),
+      radial-gradient(120% 120% at 50% 50%, #0a0e1e 0%, #05070f 45%, #02030a 100%);
+  }
+  .vignette{
+    position:fixed;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 220px 40px rgba(0,0,0,.7);
+  }
+
+  /* HUD */
+  .hud{position:fixed;inset:0;pointer-events:none;z-index:3;display:flex;flex-direction:column;
+    justify-content:space-between;padding:clamp(18px,4vw,44px)}
+  .top,.bottom{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .brand{display:flex;align-items:center;gap:14px}
+  .brand .glyph{width:34px;height:34px;border-radius:50%;position:relative;flex:0 0 auto;
+    background:conic-gradient(from 0deg,var(--cyan),var(--violet),var(--pink),var(--cyan));
+    box-shadow:0 0 22px rgba(139,92,255,.8),0 0 2px #fff;animation:spin 9s linear infinite}
+  .brand .glyph::after{content:"";position:absolute;inset:9px;border-radius:50%;background:#06080f;
+    box-shadow:inset 0 0 8px rgba(56,232,255,.8)}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .brand h1{font-size:clamp(.95rem,2vw,1.35rem);font-weight:800;letter-spacing:.22em}
+  .brand p{font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(246,249,255,.55);margin-top:3px}
+
+  .readout{text-align:right;font-size:.62rem;letter-spacing:.14em;text-transform:uppercase;
+    color:rgba(246,249,255,.6);font-variant-numeric:tabular-nums;line-height:1.9}
+  .readout b{color:var(--cyan);font-weight:700}
+
+  .bottom{align-items:flex-end}
+  .hint{max-width:340px;font-size:.72rem;line-height:1.7;color:rgba(246,249,255,.62);letter-spacing:.02em;
+    background:rgba(10,14,26,.35);backdrop-filter:blur(6px);
+    border:1px solid rgba(139,92,255,.18);padding:14px 18px;border-radius:14px;pointer-events:auto}
+  .hint kbd{display:inline-block;background:rgba(56,232,255,.14);border:1px solid rgba(56,232,255,.35);
+    border-radius:6px;padding:1px 7px;font-size:.66rem;font-family:inherit;color:var(--cyan);margin:0 1px}
+  .fps{font-variant-numeric:tabular-nums;color:rgba(246,249,255,.4);font-size:.6rem;letter-spacing:.1em}
+
+  .fade{transition:opacity 1.1s ease}
+  .fade.gone{opacity:0}
+  @media(max-width:560px){ .readout{display:none} .hint{max-width:none} }
+</style>
+</head>
+<body>
+  <div class="nebula"></div>
+  <canvas id="space"></canvas>
+  <div class="vignette"></div>
+
+  <div class="hud">
+    <div class="top">
+      <div class="brand">
+        <div class="glyph" aria-hidden="true"></div>
+        <div>
+          <h1>NEXUS</h1>
+          <p>Interactive Galaxy Field</p>
+        </div>
+      </div>
+      <div class="readout">
+        bodies <b id="count">0</b><br>
+        mass <b id="mass">0</b> M☉<br>
+        well <b id="well">—</b>
+      </div>
+    </div>
+    <div class="bottom">
+      <div class="hint fade" id="hint">
+        Move your cursor (or finger) to bend spacetime and draw the stars inward.
+        <kbd>Click</kbd> to fire an attractor pulse · <kbd>Hold</kbd> to deepen the well · <kbd>Esc</kbd> to release.
+      </div>
+      <div class="fps" id="fps"></div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    "use strict";
+    var cv=document.getElementById("space"), ctx=cv.getContext("2d");
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var W=0,H=0;
+    function resize(){
+      W=cv.clientWidth; H=cv.clientHeight;
+      cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    resize();
+
+    /* ---------- palette ---------- */
+    var PALETTES=[
+      {c:[139,92,255]}, {c:[56,232,255]}, {c:[255,79,216]},
+      {c:[246,249,255]}, {c:[120,180,255]}
+    ];
+
+    /* ---------- background twinkling stars ---------- */
+    var bg=[];
+    var BG_COUNT=160;
+    for(var i=0;i<BG_COUNT;i++){
+      bg.push({
+        x:Math.random(), y:Math.random(),
+        r:Math.random()*1.1+0.2,
+        tw:Math.random()*Math.PI*2,
+        sp:0.6+Math.random()*1.6,
+        base:0.25+Math.random()*0.5
+      });
+    }
+
+    /* ---------- galaxy particles ---------- */
+    var N=Math.round(Math.min(900,Math.max(360,W*H/14000)));
+    document.getElementById("count").textContent=N;
+    document.getElementById("mass").textContent=Math.round(N*1.4);
+    var parts=[];
+    function spawn(pivot){
+      // spiral-arm disk distribution around pivot (center by default)
+      var cx=pivot?pivot.x:W*0.5, cy=pivot?pivot.y:H*0.5;
+      var arm=Math.floor(Math.random()*3);
+      var baseAngle=arm*(Math.PI*2/3);
+      var rr=Math.pow(Math.random(),0.6)*Math.min(W,H)*0.42;
+      var a=baseAngle + rr*0.006 + (Math.random()-0.5)*0.9;
+      var x=cx+Math.cos(a)*rr, y=cy+Math.sin(a)*rr;
+      var pal=PALETTES[(Math.random()*PALETTES.length)|0];
+      var bright=Math.random()<0.14;
+      // tangential orbital velocity (roughly circular), scaled by radius
+      var orb=0.10+Math.random()*0.10;
+      var vx=-Math.sin(a)*orb + (Math.random()-0.5)*0.15;
+      var vy= Math.cos(a)*orb + (Math.random()-0.5)*0.15;
+      parts.push({
+        x:x,y:y,vx:vx,vy:vy,
+        r:bright? (1.4+Math.random()*1.6) : (0.5+Math.random()*1.2),
+        col:pal.c, bright:bright,
+        trail:bright?0.9:0.45
+      });
+    }
+    for(var i=0;i<N;i++) spawn(null);
+
+    /* ---------- pointer / gravity well ---------- */
+    var mouse={x:W*0.5,y:H*0.5,active:false,down:false,inWells:false};
+    var hint=document.getElementById("hint");
+    function setWell(txt){ document.getElementById("well").textContent=txt; }
+    setWell("—");
+    if(hint) setTimeout(function(){ hint.classList.add("gone"); },4200);
+
+    function movePointer(cx,cy){
+      mouse.x=cx; mouse.y=cy; mouse.active=true;
+    }
+    cv.addEventListener("mousemove",function(e){ movePointer(e.clientX,e.clientY); });
+    cv.addEventListener("mousedown",function(e){ mouse.down=true; });
+    window.addEventListener("mouseup",function(){ mouse.down=false; });
+    cv.addEventListener("mouseleave",function(){ mouse.active=false; });
+    // touch
+    cv.addEventListener("touchstart",function(e){
+      mouse.down=true; mouse.active=true;
+      if(e.touches[0]) movePointer(e.touches[0].clientX,e.touches[0].clientY);
+    },{passive:true});
+    cv.addEventListener("touchmove",function(e){
+      mouse.active=true;
+      if(e.touches[0]) movePointer(e.touches[0].clientX,e.touches[0].clientY);
+      e.preventDefault();
+    },{passive:false});
+    cv.addEventListener("touchend",function(){ mouse.down=false; mouse.active=false; });
+    // pulse on click
+    var pulses=[];
+    cv.addEventListener("click",function(e){
+      pulses.push({x:e.clientX,y:e.clientY,r:0,life:1});
+    });
+
+    /* ---------- resize re-pivot ---------- */
+    var rt;
+    window.addEventListener("resize",function(){
+      clearTimeout(rt);
+      rt=setTimeout(function(){
+        resize();
+        // gently re-pivot existing particles toward new center
+        var cx=W*0.5,cy=H*0.5;
+        for(var i=0;i<parts.length;i++){
+          parts[i].x+=(cx-parts[i].x)*0.3;
+          parts[i].y+=(cy-parts[i].y)*0.3;
+        }
+      },150);
+    });
+
+    /* ---------- main loop ---------- */
+    var TRAIL="rgba(3,5,13,0.135)";
+    var last=performance.now(), fpsAcc=0, fpsN=0, fpsT=last;
+    function frame(now){
+      var dt=Math.min((now-last)/16.67,2.2); last=now;
+
+      // translucent clear for light trails
+      ctx.globalCompositeOperation="source-over";
+      ctx.fillStyle=TRAIL;
+      ctx.fillRect(0,0,W,H);
+
+      // background twinkle stars (drawn fresh, additive)
+      ctx.globalCompositeOperation="lighter";
+      for(var i=0;i<bg.length;i++){
+        var s=bg[i]; s.tw+=s.sp*0.02*dt;
+        var a=s.base*(0.55+0.45*Math.sin(s.tw));
+        ctx.fillStyle="rgba(220,232,255,"+a.toFixed(3)+")";
+        ctx.beginPath();
+        ctx.arc(s.x*W,s.y*H,s.r,0,6.2832);
+        ctx.fill();
+      }
+
+      // gravity from pointer
+      var gx=mouse.x, gy=mouse.y, gStr=0;
+      if(mouse.active){ gStr = mouse.down? 2600 : 1400; }
+
+      // pulses expand & attract briefly
+      for(var p=pulses.length-1;p>=0;p--){
+        var pl=pulses[p]; pl.r+=2.4*dt; pl.life-=0.012*dt;
+        if(pl.life<=0){ pulses.splice(p,1); continue; }
+      }
+
+      ctx.globalCompositeOperation="lighter";
+      for(var i=0;i<parts.length;i++){
+        var pt=parts[i];
+
+        // central gentle pull keeps the disk bound
+        var dcx=(W*0.5)-pt.x, dcy=(H*0.5)-pt.y;
+        var d2c=dcx*dcx+dcy*dcy+4000;
+        var fc=140/d2c;
+        pt.vx+=dcx*fc*dt; pt.vy+=dcy*fc*dt;
+
+        // pointer gravity well (inverse-square, softened)
+        if(gStr>0){
+          var dx=gx-pt.x, dy=gy-pt.y;
+          var d2=dx*dx+dy*dy+900;
+          var inv=Math.sqrt(d2);
+          var f=gStr/d2;
+          if(f>0.9) f=0.9;
+          pt.vx+=(dx/inv)*f*dt;
+          pt.vy+=(dy/inv)*f*dt;
+        }
+
+        // pulse attraction rings
+        for(var q=0;q<pulses.length;q++){
+          var pl=pulses[q];
+          var dpx=pt.x-pl.x, dpy=pt.y-pl.y;
+          var dd=Math.sqrt(dpx*dpx+dpy*dpy)+0.001;
+          var ringDist=Math.abs(dd-pl.r);
+          if(ringDist<40){
+            var push=(1-ringDist/40)*pl.life*2.2;
+            pt.vx+=(dpx/dd)*push*dt*0.6;
+            pt.vy+=(dpy/dd)*push*dt*0.6;
+          }
+        }
+
+        // damping
+        pt.vx*=0.985; pt.vy*=0.985;
+        pt.x+=pt.vx*dt; pt.y+=pt.vy*dt;
+
+        // soft wrap so none escape forever
+        var m=60;
+        if(pt.x<-m) pt.x=W+m; else if(pt.x>W+m) pt.x=-m;
+        if(pt.y<-m) pt.y=H+m; else if(pt.y>H+m) pt.y=-m;
+
+        // draw
+        var col=pt.col;
+        var glow=pt.r* (pt.bright?7:3.4);
+        var g=ctx.createRadialGradient(pt.x,pt.y,0,pt.x,pt.y,glow);
+        var a0=pt.bright?0.95:0.55;
+        g.addColorStop(0,"rgba("+col[0]+","+col[1]+","+col[2]+","+a0+")");
+        g.addColorStop(0.35,"rgba("+col[0]+","+col[1]+","+col[2]+","+(a0*0.35)+")");
+        g.addColorStop(1,"rgba("+col[0]+","+col[1]+","+col[2]+",0)");
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.arc(pt.x,pt.y,glow,0,6.2832);
+        ctx.fill();
+      }
+
+      // draw pulses as expanding rings
+      ctx.lineWidth=1.4;
+      for(var q=0;q<pulses.length;q++){
+        var pl=pulses[q];
+        ctx.strokeStyle="rgba(56,232,255,"+(pl.life*0.6)+")";
+        ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.r,0,6.2832); ctx.stroke();
+        ctx.strokeStyle="rgba(255,79,216,"+(pl.life*0.35)+")";
+        ctx.beginPath(); ctx.arc(pl.x,pl.y,pl.r*0.7,0,6.2832); ctx.stroke();
+      }
+
+      // active-well indicator
+      if(gStr>0){
+        var wa=mouse.down?0.5:0.28;
+        ctx.strokeStyle="rgba(139,92,255,"+wa+")";
+        ctx.lineWidth=1.2;
+        ctx.beginPath(); ctx.arc(mouse.x,mouse.y,10+6*Math.sin(now*0.006),0,6.2832); ctx.stroke();
+        ctx.strokeStyle="rgba(56,232,255,"+(wa*0.5)+")";
+        ctx.beginPath(); ctx.arc(mouse.x,mouse.y,20+8*Math.sin(now*0.004),0,6.2832); ctx.stroke();
+      }
+
+      // fps
+      fpsN++;
+      if(now-fpsT>500){
+        document.getElementById("fps").textContent=Math.round(fpsN*1000/(now-fpsT))+" fps";
+        fpsN=0; fpsT=now;
+      }
+      setWell(gStr>0?(mouse.down?"PULSE":"WELL"):"—");
+
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>

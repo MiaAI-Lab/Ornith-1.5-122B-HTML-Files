@@ -1,0 +1,22 @@
+PROMPT:
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+FILE: 089-candy-land.html + 089-candy-land.txt — A sweet candy-land world with swaying lollipops, gumdrops and candy cane path. Palette: pastel pink, mint, lavender, candy yellow. Signature: CSS candy shapes, swaying lollipops, scrolling sweets parallax, playful bounce motion.
+
+TITLE:
+Candy Land — A Sweet Little World
+
+DESIGN DESCRIPTION:
+A sun-drenched confectionery valley rendered entirely in pastel: a candy-yellow sun glows over a gradient sky of blush pink melting into lavender, while three layers of rolling hills (lilac, mint, and fresh green) drift in a gentle horizontal parallax. A winding candy-cane path — pink-and-cream diagonal stripes drawn in an inline SVG pattern — threads from the foreground into the misty distance. Swaying lollipops on striped sticks bounce into place and rock on their stems, gumdrops with sugar-dusted tops dot the meadow, and a field of hand-drawn inline-SVG candies (rounds, wrapped swirls, domes) floats at varied depths so the whole world tilts and drifts as you move the pointer.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered SVG hill silhouettes with independent CSS translate parallax on pointer move.
+- Inline SVG candy-cane path built from a rotated <pattern> of pink/cream stripes plus a shading gradient.
+- CSS-drawn lollipops: gradient stick, radial-gradient swirl head, springy cubic-bezier "pop" entrance, and a pendulum sway keyframe with per-plant timing.
+- Gumdrops assembled from a rounded-cone body, sugar-dot dot-grid overlay (radial-gradient background-image), and a soft highlight cap.
+- JS-generated floating sweets (14) with randomized size, palette color, depth and z-index, driven by a smoothed requestAnimationFrame parallax loop.
+- Subtle 3D scene tilt (perspective + rotateX/Y) for depth, plus drifting cloud puffs and twinkling sparkle stars.
+- Fully responsive clamp() typography, italic serif display title, and prefers-reduced-motion fallback.
+
+INTENDED INTERACTION MODEL:
+Passive exploration. Move the mouse (or drag on touch) to steer a soft parallax — hills, floating sweets and a gentle 3D tilt all respond at different depths, so the world feels alive and dimensional. The lollipops and gumdrops loop their own playful sway/bob regardless, rewarding a still moment with continuous gentle motion. No clicks required; it is a mood piece to drift through.

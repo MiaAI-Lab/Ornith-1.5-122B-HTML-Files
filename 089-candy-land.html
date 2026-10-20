@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Candy Land — A Sweet Little World</title>
+<style>
+  :root{
+    --pink:#f78fb3; --pink-soft:#ffc4d6; --mint:#9fe6c4; --mint-deep:#5fc9a3;
+    --lav:#c9b6f0; --lav-deep:#a487e6; --yellow:#ffe08a; --yellow-deep:#ffc95c;
+    --cream:#fff7ef; --sky-top:#ffe3f0; --sky-mid:#efe0ff; --sky-low:#d6f3e4;
+  }
+  html,body{margin:0;height:100%;background:#ffd9ea;overflow:hidden;}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .scene{
+    position:fixed; inset:0; overflow:hidden;
+    background:
+      linear-gradient(180deg, var(--sky-top) 0%, #f3d6ef 30%, var(--sky-mid) 52%, var(--sky-low) 78%, #c4efdd 100%);
+  }
+
+  /* --- soft candy sun with breathing glow --- */
+  .sun{
+    position:absolute; left:74%; top:16%; width:34vmin; height:34vmin; margin:-34vmin 0 0 -34vmin;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(255,244,214,1) 0%, rgba(255,230,170,.85) 34%, rgba(255,226,150,.25) 60%, rgba(255,226,150,0) 72%);
+    animation:breathe 9s ease-in-out infinite;
+    will-change:transform,opacity;
+  }
+  @keyframes breathe{ 0%,100%{ opacity:.85; transform:scale(1); } 50%{ opacity:1; transform:scale(1.07); } }
+
+  /* --- cotton-candy clouds built from clustered blobs --- */
+  .cloud{ position:absolute; filter:drop-shadow(0 8px 14px rgba(190,150,210,.28)); will-change:transform; }
+  .blob{ position:absolute; border-radius:50%; }
+  .cloud1{ left:-6%; top:12%; animation:driftR 68s linear infinite; }
+  .cloud2{ left:40%; top:8%;  transform:scale(.7); animation:driftR 96s linear infinite; }
+  .cloud3{ left:70%; top:30%; transform:scale(.55); animation:driftL 84s linear infinite; }
+  @keyframes driftR{ from{ transform:translateX(-22vw); } to{ transform:translateX(122vw); } }
+  @keyframes driftL{ from{ transform:translateX(22vw); } to{ transform:translateX(-122vw); } }
+
+  /* --- rolling candy hills (layered SVG, parallax) --- */
+  .hills{ position:absolute; left:0; right:0; bottom:0; height:62vh; }
+  .hill{ position:absolute; left:-4%; width:108%; bottom:0; will-change:transform; }
+  .hill svg{ display:block; width:100%; height:auto; }
+  .h1{ bottom:30%; animation:parX1 26s ease-in-out infinite; }
+  .h2{ bottom:16%; animation:parX2 20s ease-in-out infinite; }
+  .h3{ bottom:0;   animation:parX3 15s ease-in-out infinite; }
+  @keyframes parX1{ 0%,100%{ transform:translateX(-1.4%); } 50%{ transform:translateX(1.8%); } }
+  @keyframes parX2{ 0%,100%{ transform:translateX(1.8%); } 50%{ transform:translateX(-2.4%); } }
+  @keyframes parX3{ 0%,100%{ transform:translateX(-2.4%); } 50%{ transform:translateX(3%); } }
+
+  /* --- candy-cane path winding into the distance --- */
+  .path-wrap{ position:absolute; left:0; right:0; bottom:0; height:52vh; pointer-events:none; }
+  .cane-path{ width:100%; height:100%; display:block; }
+
+  /* --- floating sweets parallax field --- */
+  .sweets{ position:absolute; inset:0; pointer-events:none; }
+  .sweet{ position:absolute; will-change:transform; }
+  .sw1{ animation:floaty 7s ease-in-out infinite; }
+  .sw2{ animation:floaty 9s ease-in-out infinite 1s; }
+  .sw3{ animation:floaty 6s ease-in-out infinite .4s; }
+  .sw4{ animation:floaty 11s ease-in-out infinite .8s; }
+  @keyframes floaty{ 0%,100%{ transform:translateY(0) rotate(-4deg); } 50%{ transform:translateY(-14px) rotate(4deg); } }
+
+  /* --- lollipops: swaying on their sticks --- */
+  .lolly{ position:absolute; bottom:0; transform:translate(-50%,0); will-change:transform; }
+  .sway{ transform-origin:50% 100%; animation:sway 3.4s cubic-bezier(.45,.05,.55,.95) infinite; }
+  .sway.b{ animation-duration:4.1s; animation-delay:.5s; }
+  .sway.c{ animation-duration:2.9s; animation-delay:1.1s; }
+  .sway.d{ animation-duration:3.7s; animation-delay:.2s; }
+  @keyframes sway{
+    0%,100%{ transform:rotate(-6deg); }
+    50%{ transform:rotate(6deg); }
+  }
+  .stick{
+    position:absolute; left:50%; bottom:0; width:9px; height:var(--h,120px);
+    transform:translateX(-50%);
+    border-radius:5px;
+    background:linear-gradient(90deg, #fff 0 40%, #ffe9f0 40% 60%, #fff 60%);
+    box-shadow:inset 2px 0 3px rgba(0,0,0,.06);
+  }
+  .head{
+    position:absolute; left:50%; top:0; transform:translate(-50%,-50%) scale(.05);
+    width:var(--hd,74px); height:var(--hd,74px);
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #fff 55%, #f4e6ee 100%);
+    box-shadow:0 6px 12px rgba(180,120,160,.35), inset 0 0 0 3px rgba(255,255,255,.6);
+    animation:pop 1.1s cubic-bezier(.34,1.56,.64,1) infinite alternate;
+  }
+  @keyframes pop{ from{ transform:translate(-50%,-50%) scale(.9); } to{ transform:translate(-50%,-50%) scale(1); } }
+  .head svg{ display:block; width:100%; height:100%; }
+
+  /* --- gumdrops: rounded sugar cones with sparkle --- */
+  .gum{ position:absolute; bottom:0; width:var(--gw,56px); height:var(--gh,74px);
+        transform:translate(-50%,0); will-change:transform; animation:bob 5s ease-in-out infinite; }
+  @keyframes bob{ 0%,100%{ transform:translate(-50%,0); } 50%{ transform:translate(-50%, -6px); } }
+  .gum .cap{ position:absolute; left:50%; top:-8px; transform:translateX(-50%);
+             width:12px; height:12px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#fff,#d7f0e2);
+             box-shadow:0 2px 4px rgba(0,0,0,.15); }
+  .gum .body{ position:absolute; left:0; right:0; bottom:0; height:100%;
+              border-radius:42% 42% 12px 12px / 58% 58% 12px 12px;
+              box-shadow:inset -6px -8px 14px rgba(0,0,0,.12), inset 6px 8px 12px rgba(255,255,255,.4), 0 6px 10px rgba(0,0,0,.12); }
+  .gum .sugar{ position:absolute; left:0; right:0; top:22%; bottom:16%;
+               background-image:radial-gradient(rgba(255,255,255,.95) 1.4px, transparent 1.8px);
+               background-size:9px 9px; opacity:.8; mix-blend-mode:screen; }
+
+  /* --- caption --- */
+  .caption{
+    position:fixed; z-index:5; left:0; right:0; top:6vh; text-align:center;
+    pointer-events:none; user-select:none;
+  }
+  .caption .t{
+    font-family:Georgia,'Segoe UI',serif;
+    font-weight:400; font-style:italic;
+    font-size:clamp(1.8rem,7vw,4.2rem); letter-spacing:.02em; color:#fff;
+    text-shadow:0 2px 0 rgba(247,143,179,.55), 0 6px 22px rgba(160,90,140,.4);
+  }
+  .caption .s{
+    display:block; margin:1rem auto 0; font-size:clamp(.6rem,1.6vw,.82rem);
+    letter-spacing:.34em; text-transform:uppercase; color:#fff; opacity:.85;
+    text-shadow:0 2px 10px rgba(160,90,140,.45);
+  }
+  .credit{
+    position:fixed; z-index:5; right:5vw; bottom:4vh; text-align:right;
+    font-size:.6rem; letter-spacing:.24em; text-transform:uppercase;
+    color:rgba(120,70,110,.55); pointer-events:none;
+  }
+
+  /* --- tiny floating sparkle stars --- */
+  .twinkle{ position:absolute; width:6px; height:6px; border-radius:50%;
+            background:radial-gradient(circle,#fff,rgba(255,255,255,0));
+            animation:tw 3.5s ease-in-out infinite; pointer-events:none; }
+  @keyframes tw{ 0%,100%{ opacity:.2; transform:scale(.6); } 50%{ opacity:1; transform:scale(1.2); } }
+
+  @media (prefers-reduced-motion: reduce){
+    .sun,.cloud,.hill,.sweet,.lolly .sway,.gum,.head,.twinkle{ animation:none !important; }
+    .head{ transform:translate(-50%,-50%) scale(1) !important; }
+    .cloud1,.cloud2,.cloud3{ transform:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="scene">
+
+  <div class="sun"></div>
+
+  <div class="cloud cloud1">
+    <span class="blob" style="left:0;   top:14px; width:64px; height:64px; background:radial-gradient(circle at 35% 30%,#fff,#ffe3ef);"></span>
+    <span class="blob" style="left:34px; top:0;   width:78px; height:78px; background:radial-gradient(circle at 35% 30%,#fff,#ffeef5);"></span>
+    <span class="blob" style="left:86px; top:16px; width:58px; height:58px; background:radial-gradient(circle at 35% 30%,#fff,#efe0ff);"></span>
+    <span class="blob" style="left:56px; top:34px; width:70px; height:44px; background:radial-gradient(circle at 35% 30%,#fff,#ffe3ef);"></span>
+  </div>
+  <div class="cloud cloud2">
+    <span class="blob" style="left:0; top:10px; width:50px; height:50px; background:radial-gradient(circle at 35% 30%,#fff,#efe0ff);"></span>
+    <span class="blob" style="left:26px; top:0; width:62px; height:62px; background:radial-gradient(circle at 35% 30%,#fff,#fff7ef);"></span>
+    <span class="blob" style="left:66px; top:14px; width:46px; height:46px; background:radial-gradient(circle at 35% 30%,#fff,#ffc4d6);"></span>
+  </div>
+  <div class="cloud cloud3">
+    <span class="blob" style="left:0; top:10px; width:46px; height:46px; background:radial-gradient(circle at 35% 30%,#fff,#d6f3e4);"></span>
+    <span class="blob" style="left:24px; top:0; width:56px; height:56px; background:radial-gradient(circle at 35% 30%,#fff,#efe0ff);"></span>
+    <span class="blob" style="left:60px; top:14px; width:40px; height:40px; background:radial-gradient(circle at 35% 30%,#fff,#ffc4d6);"></span>
+  </div>
+
+  <!-- floating sweets field (parallax, JS-driven on mouse) -->
+  <div class="sweets" id="sweets"></div>
+
+  <!-- rolling candy hills -->
+  <div class="hills">
+    <div class="hill h1" data-depth="0.02">
+      <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#d9b8ef" d="M0,220 C240,120 480,250 720,190 C960,130 1200,240 1440,170 L1440,320 L0,320 Z"/>
+      </svg>
+    </div>
+    <div class="hill h2" data-depth="0.04">
+      <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#b7ecd0" d="M0,250 C220,180 420,300 660,240 C900,180 1120,300 1440,220 L1440,320 L0,320 Z"/>
+      </svg>
+    </div>
+    <div class="hill h3" data-depth="0.07">
+      <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+        <path fill="#8fdcae" d="M0,280 C260,220 520,320 760,270 C1000,220 1240,320 1440,260 L1440,320 L0,320 Z"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- candy-cane winding path -->
+  <div class="path-wrap">
+    <svg class="cane-path" viewBox="0 0 1440 600" preserveAspectRatio="none">
+      <defs>
+        <pattern id="caneStripes" width="46" height="46" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="46" height="46" fill="#fff6fa"/>
+          <rect width="23" height="46" fill="#ff7fa3"/>
+        </pattern>
+        <linearGradient id="pathShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="1" stop-color="rgba(120,60,90,0.14)"/>
+        </linearGradient>
+      </defs>
+      <path d="M620,0 C560,120 700,200 640,320 C580,440 760,500 700,600 L900,600 C960,500 760,440 820,320 C880,200 740,120 820,0 Z"
+            fill="url(#caneStripes)" stroke="#ffd0e0" stroke-width="6"/>
+      <path d="M620,0 C560,120 700,200 640,320 C580,440 760,500 700,600 L900,600 C960,500 760,440 820,320 C880,200 740,120 820,0 Z"
+            fill="url(#pathShade)"/>
+    </svg>
+  </div>
+
+  <!-- swaying lollipops -->
+  <div class="lolly" style="left:9%; bottom:20%; --h:150px; --hd:96px; color:#f78fb3;">
+    <div class="sway">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <div class="lolly" style="left:22%; bottom:12%; --h:110px; --hd:66px; color:#a487e6;">
+    <div class="sway b">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <div class="lolly" style="left:34%; bottom:24%; --h:170px; --hd:110px; color:#5fc9a3;">
+    <div class="sway c">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <div class="lolly" style="left:52%; bottom:8%; --h:96px; --hd:58px; color:#ffc95c;">
+    <div class="sway d">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <div class="lolly" style="left:90%; bottom:18%; --h:140px; --hd:90px; color:#ff7fa3;">
+    <div class="sway">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <div class="lolly" style="left:78%; bottom:26%; --h:168px; --hd:104px; color:#9fe6c4;">
+    <div class="sway b">
+      <div class="head">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+          <circle cx="50" cy="50" r="21" fill="#fff"/>
+          <path d="M30,50 a20,20 0 0 1 40,0 a18,18 0 0 0 -36,0 a16,16 0 0 1 32,0 a14,14 0 0 0 -28,0 a12,12 0 0 1 24,0 a10,10 0 0 0 -20,0 a8,8 0 0 1 16,0 a6,6 0 0 0 -12,0 a4,4 0 0 1 8,0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stick"></div>
+    </div>
+  </div>
+
+  <!-- gumdrops -->
+  <div class="gum" style="left:4%;  bottom:6%;  --gw:52px; --gh:68px; animation-delay:.2s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#ffd1e2,#f78fb3);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:16%; bottom:3%;  --gw:44px; --gh:58px; animation-delay:.9s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#d9c9fb,#a487e6);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:28%; bottom:7%;  --gw:60px; --gh:78px; animation-delay:.5s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#c4f2dc,#5fc9a3);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:44%; bottom:4%;  --gw:46px; --gh:60px; animation-delay:1.3s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#fff0c9,#ffc95c);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:62%; bottom:6%;  --gw:54px; --gh:70px; animation-delay:.0s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#ffd1e2,#ff7fa3);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:74%; bottom:3%;  --gw:42px; --gh:56px; animation-delay:.7s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#d9c9fb,#c9b6f0);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:86%; bottom:6%;  --gw:58px; --gh:74px; animation-delay:1.0s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#c4f2dc,#9fe6c4);"></div>
+    <div class="sugar"></div>
+  </div>
+  <div class="gum" style="left:96%; bottom:3%;  --gw:40px; --gh:54px; animation-delay:.4s;">
+    <span class="cap"></span>
+    <div class="body" style="background:linear-gradient(160deg,#fff0c9,#ffe08a);"></div>
+    <div class="sugar"></div>
+  </div>
+
+  <!-- sparkle stars -->
+  <span class="twinkle" style="left:14%; top:24%;"></span>
+  <span class="twinkle" style="left:48%; top:16%; animation-delay:1.2s;"></span>
+  <span class="twinkle" style="left:82%; top:40%; animation-delay:.6s;"></span>
+  <span class="twinkle" style="left:34%; top:44%; animation-delay:2s;"></span>
+  <span class="twinkle" style="left:66%; top:22%; animation-delay:1.6s;"></span>
+
+  <!-- caption -->
+  <div class="caption">
+    <div class="t">Candy&nbsp;Land</div>
+    <span class="s">Follow the cane path &nbsp;·&nbsp; lose yourself in sweetness</span>
+  </div>
+  <div class="credit">A sweet little world · move to parallax</div>
+</div><!-- /.scene -->
+
+  <script>
+  (function(){
+    "use strict";
+    var scene = document.querySelector('.scene');
+    var sweetsLayer = document.getElementById('sweets');
+    if(!scene || !sweetsLayer) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // --- candy shapes drawn as inline SVG ---
+    var candySVG = [
+      // round candy
+      '<svg viewBox="0 0 60 60" width="100%" height="100%"><defs><radialGradient id="r1" cx="35%" cy="30%"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="{C}"/></radialGradient></defs><circle cx="30" cy="30" r="17" fill="url(#r1)"/><circle cx="24" cy="24" r="4" fill="#fff" opacity=".7"/></svg>',
+      // wrapped candy (with twist ends)
+      '<svg viewBox="0 0 80 48" width="100%" height="100%"><path d="M20,24 L8,12 L14,24 L8,36 Z" fill="{C}" opacity=".85"/><path d="M60,24 L72,12 L66,24 L72,36 Z" fill="{C}" opacity=".85"/><ellipse cx="40" cy="24" rx="22" ry="15" fill="{C}"/><ellipse cx="34" cy="19" rx="6" ry="4" fill="#fff" opacity=".55"/></svg>',
+      // gumdrop-ish dome
+      '<svg viewBox="0 0 56 60" width="100%" height="100%"><path d="M12,48 Q12,16 28,16 Q44,16 44,48 Z" fill="{C}"/><path d="M12,48 Q12,56 28,56 Q44,56 44,48 Z" fill="{C}" opacity=".75"/><circle cx="24" cy="26" r="3" fill="#fff" opacity=".6"/></svg>'
+    ];
+    var palette = ['#f78fb3','#a487e6','#5fc9a3','#ffc95c','#ff7fa3','#9fe6c4','#c9b6f0','#ffe08a'];
+
+    var N = 14;
+    for(var i=0;i<N;i++){
+      var el = document.createElement('div');
+      el.className = 'sweet sw' + (1 + (i % 4));
+      var size = 18 + Math.random()*34;
+      var c = palette[Math.floor(Math.random()*palette.length)];
+      var shape = candySVG[i % candySVG.length].replace('{C}', c);
+      el.innerHTML = shape;
+      el.style.left = (3 + Math.random()*92) + '%';
+      el.style.top = (6 + Math.random()*58) + '%';
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.opacity = (0.55 + Math.random()*0.4).toFixed(2);
+      el.style.zIndex = (10 + Math.floor(Math.random()*8));
+      el._depth = 0.02 + Math.random()*0.10;
+      el._ox = 0; el._oy = 0;
+      sweetsLayer.appendChild(el);
+    }
+
+    var sweetEls = sweetsLayer.querySelectorAll('.sweet');
+
+    // --- parallax on pointer move ---
+    var tx = 0, ty = 0, cx = 0, cy = 0;
+    function onMove(e){
+      var w = window.innerWidth, h = window.innerHeight;
+      var px = (e.clientX != null) ? e.clientX : (e.touches && e.touches[0] ? e.touches[0].clientX : w/2);
+      var py = (e.clientY != null) ? e.clientY : (e.touches && e.touches[0] ? e.touches[0].clientY : h/2);
+      tx = (px / w - 0.5);
+      ty = (py / h - 0.5);
+    }
+    window.addEventListener('mousemove', onMove, {passive:true});
+    window.addEventListener('touchmove', onMove, {passive:true});
+
+    var hills = document.querySelectorAll('.hill');
+    var raf = null;
+    function loop(){
+      cx += (tx - cx) * 0.06;
+      cy += (ty - cy) * 0.06;
+      for(var i=0;i<hills.length;i++){
+        var d = parseFloat(hills[i].getAttribute('data-depth')) || 0.03;
+        hills[i].style.transform = 'translateX(' + (-cx * d * 90) + 'px)';
+      }
+      for(var j=0;j<sweetEls.length;j++){
+        var dd = sweetEls[j]._depth;
+        sweetEls[j].style.transform = 'translate(' + (-cx * dd * 160) + 'px,' + (-cy * dd * 120) + 'px)';
+      }
+      // subtle scene tilt for depth
+      scene.style.transform = 'perspective(1200px) rotateX(' + (cy*1.2) + 'deg) rotateY(' + (-cx*1.4) + 'deg)';
+      raf = null;
+    }
+    function kick(){ if(raf===null) raf = requestAnimationFrame(loop); }
+    window.addEventListener('mousemove', kick, {passive:true});
+    window.addEventListener('touchmove', kick, {passive:true});
+
+    if(reduce){
+      scene.style.transform = 'none';
+    }
+  })();
+  </script>
+</body>
+</html>

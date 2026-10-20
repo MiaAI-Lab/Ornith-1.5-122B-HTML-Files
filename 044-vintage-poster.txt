@@ -1,0 +1,23 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page — a vintage travel poster: a flat illustration of a mountain-lake scene with a cabin and pine trees. Palette: warm retro (ochre, teal, cream, rust, dusty sky blue). Signature: flat vector shapes built in CSS/SVG, a strictly limited palette, a subtle film-grain overlay, bold condensed display type, and a sun disk with rings. One self-contained .html file, all CSS in a single <style> block, all JS in a single <script> block, no external dependencies (no CDN, fonts, images or libraries — system font stacks only), responsive 320px–4K, valid HTML5. WOW quality bar: genuinely stunning, premium, Awwwards-caliber, distinctive art direction, curated palette, refined typography, real intentional motion, one signature effect, handcrafted and unique.
+
+TITLE:
+"Crystal Peaks — A Vintage Mountain-Lake Travel Poster"
+
+DESIGN DESCRIPTION:
+A mid-century WPA-style travel poster framed like an aged print on a warm paper mat. Inside a cream-and-rust inset border, a flat vector landscape rises in stacked bands: a dusty-blue sky melts down to a warm ochre horizon where an ochre sun disk sits inside four concentric rings; hazy rust mountain ranges with chalky snow caps recede behind teal foothills; and a still teal lake mirrors the peaks beneath a glowing sun-column. On the shoreline sits a warm-lit cabin with a snow-dusted roof, flanked by layered triangular pine forests, a wooden dock and a small rowboat. Everything is built from clean flat shapes in a deliberately restricted five-color retro palette, then aged with a real feTurbulence film-grain overlay, a multiply vignette and faint corner stains. Bold condensed cream display type ("CRYSTAL PEAKS") with a rust+teal offset drop shadow anchors the lower third, under a spaced kicker and a rust ribbon reading "VISIT THE GREAT OUTDOORS."
+
+MAJOR VISUAL TECHNIQUES:
+- Full scene composed as a single inline SVG (viewBox 0 0 600 800, preserveAspectRatio slice) so the poster scales crisply from 320px to 4K.
+- Strictly limited retro palette driven by CSS custom properties (ochre, teal, rust, cream, dusty sky blue) for a cohesive vintage screen-print look.
+- Signature sun disk with four concentric stroke rings and a soft glow halo, plus a mirrored sun-column reflection on the lake.
+- Flat, layered mountain ranges and foothills built from single-path polygons with chalky snow-cap accents; depth via value shifts within the fixed palette.
+- Layered triangular pine trees in two dark-teal tones with rust-tinted highlight faces for a stylized forest feel.
+- Real film grain via an SVG feTurbulence/feColorMatrix filter layer set to mix-blend-mode: multiply at low opacity — no external texture files.
+- Aged-print treatment: multiply vignette radial overlay + faint warm corner/edge stains to mimic an antique paper postcard.
+- Bold condensed display type (Arial Narrow / condensed system stack) with a dual rust + teal offset drop shadow for that classic letterpress poster punch.
+- Framed-poster presentation: paper-mat stage with aspect-ratio 3/4, layered print shadows, and a cream + rust inset "mat" border.
+- Deliberate, subtle motion only: the lake highlight bars gently pulse and drift so the water appears to breathe, all disabled under prefers-reduced-motion.
+
+INTENDED INTERACTION MODEL:
+Essentially a static, gallery-style poster — meant to be admired, not manipulated. The only motion is ambient and subtle: the lake shimmer lines softly pulse so the water feels alive, while the sun, mountains, type and grain stay fixed like a printed postcard. The composition is centered and responsive, reflowing cleanly from a phone (320px) up to a 4K display while preserving the 3:4 poster proportion. The single tappable element is the bottom "VISIT THE GREAT OUTDOORS" ribbon. The page honors prefers-reduced-motion by freezing the shimmer, and makes zero network requests so it works by simply double-clicking the file offline.

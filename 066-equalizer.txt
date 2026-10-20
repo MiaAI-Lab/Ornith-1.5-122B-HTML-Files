@@ -1,0 +1,20 @@
+PROMPT:
+066-equalizer.html — A cinematic audio equalizer driven by a WebAudio synth, with reactive glow and a mirror reflection. Palette: deep black with neon magenta/cyan spectrum. Signature: canvas or CSS bars animated from a WebAudio analyser (a played oscillator chord), bloom glow, reflective floor.
+
+TITLE:
+Spectrum — Cinematic Equalizer
+
+DESIGN DESCRIPTION:
+A cinematic sound visualizer set in pure black: a WebAudio synth plays a slow, evolving major-major chord built from detuned oscillators through a filter and master gain, and an AnalyserNode feeds a canvas that draws ~72 neon bars as a smooth spectrum with a cyan→magenta color ramp. Each bar blooms with a soft glow and casts a mirrored, fading reflection beneath a glossy floor line, so the whole instrument appears to float above its own echo; a live readout shows the current chord and waveform, and a meter tracks the synth's output level.
+
+MAJOR VISUAL TECHNIQUES:
+- WebAudio synth: four detuned oscillators (chord) → BiquadFilter → DynamicsCompressor → AnalyserNode → GainNode.
+- Canvas spectrum drawn from analyser time-domain data as a smooth catmull-rom-style curve of vertical bars.
+- Cyan→magenta spectrum ramp with per-bar additive glow and a bright specular core.
+- Mirror reflection: the bars are redrawn below the floor line with shrinking alpha and a blur-like fade.
+- Glossy floor line with a soft highlight and a live level meter.
+- Auto-playing chord with a gentle LFO on the filter for motion; respects prefers-reduced-motion.
+- Fully self-contained: no audio files, no libraries, system fonts only.
+
+INTENDED INTERACTION MODEL:
+Tap / click "Play" (required on browsers that block autoplay) to start the synth; the equalizer then reacts live to the audio. The chord cycles on its own and the visualizer is continuously reactive. "Clear" stops the audio and resets the scene. Pointer movement adds a subtle parallax to the glow.

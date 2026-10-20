@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Karesansui — A Raked Stone Garden</title>
+<style>
+  :root{
+    --sand:#d9c49a; --sand2:#cdaa78; --sand-hi:#efe1c0; --sand-dk:#b6935f;
+    --stone:#6f6a63; --moss:#7c8a57;
+    --ink:#4a3f2c;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;
+    background:#2a241a;
+    font-family:system-ui,-apple-system,"Segoe UI",Georgia,serif;
+    -webkit-font-smoothing:antialiased}
+  .stage{position:fixed;inset:0}
+  canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+  #ripple{pointer-events:none}
+
+  .frame{position:absolute;inset:0;pointer-events:none;
+    box-shadow:inset 0 0 120px 30px rgba(40,32,18,.55), inset 0 0 2px 1px rgba(80,64,40,.25)}
+
+  .wordmark{position:absolute;left:clamp(16px,4vw,48px);top:clamp(16px,4vh,44px);pointer-events:none;color:var(--ink)}
+  .wordmark .jp{font-family:Georgia,"Times New Roman",serif;font-size:clamp(26px,5vw,58px);letter-spacing:.06em;line-height:.95;
+    color:rgba(74,63,44,.82);text-shadow:0 1px 0 rgba(255,255,255,.25)}
+  .wordmark .en{margin-top:.5em;font-size:clamp(10px,1.4vw,14px);letter-spacing:.42em;text-transform:uppercase;
+    color:rgba(74,63,44,.6);font-weight:600}
+
+  .hint{position:absolute;left:50%;bottom:clamp(20px,5vh,54px);transform:translateX(-50%);
+    pointer-events:none;color:rgba(74,63,44,.72);font-size:clamp(11px,1.5vw,15px);letter-spacing:.16em;
+    text-transform:uppercase;display:flex;align-items:center;gap:12px;
+    transition:opacity 1.1s ease}
+  .hint .dot{width:5px;height:5px;border-radius:50%;background:rgba(74,63,44,.55);box-shadow:0 0 0 4px rgba(74,63,44,.12)}
+  .hint.hide{opacity:0}
+
+  .bar{position:absolute;right:clamp(14px,3vw,40px);bottom:clamp(16px,4vh,44px);pointer-events:auto;display:flex;gap:10px}
+  .btn{pointer-events:auto;border:none;cursor:pointer;font:inherit;
+    font-size:clamp(10px,1.3vw,12px);letter-spacing:.24em;text-transform:uppercase;
+    color:rgba(74,63,44,.72);background:rgba(239,225,192,.4);
+    padding:11px 18px;border-radius:999px;backdrop-filter:blur(4px);
+    border:1px solid rgba(120,96,56,.28);transition:all .3s ease}
+  .btn:hover{color:var(--ink);background:rgba(239,225,192,.72);border-color:rgba(120,96,56,.5);transform:translateY(-1px)}
+  .btn:active{transform:translateY(0)}
+  @media (prefers-reduced-motion: reduce){.hint{transition:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="sand"></canvas>
+  <canvas id="ripple"></canvas>
+  <div class="frame"></div>
+  <div class="wordmark">
+    <div class="jp">枯山水</div>
+    <div class="en">Karesansui · dry landscape</div>
+  </div>
+  <div class="hint" id="hint"><span class="dot"></span><span id="hintText">drag across the sand to rake</span></div>
+  <div class="bar">
+    <button class="btn" id="reset">re-rake</button>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var sandC = document.getElementById("sand");
+  var ripC  = document.getElementById("ripple");
+  var sctx  = sandC.getContext("2d");
+  var rctx  = ripC.getContext("2d");
+  var hint  = document.getElementById("hint");
+  var hintEl= document.getElementById("hintText");
+  var reset = document.getElementById("reset");
+
+  var SAND="#d9c49a", SAND2="#cdaa78", SAND_HI="#efe1c0", SAND_DK="#b6935f",
+      STONE="#6f6a63", STONE_DK="#4f4a44", STONE_HI="#948d82", MOSS="#86935c", INK="rgba(74,63,44,";
+
+  var W=0, H=0, DPR=1;
+  var stones=[], pebbles=[], ripples=[];
+  var last=null, dragging=false, rippleTimer=0;
+  var hintHidden=false;
+
+  function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+  var rng = mulberry32(1337);
+
+  function resize(){
+    DPR = Math.min(window.devicePixelRatio||1, 2.2);
+    W = Math.round(window.innerWidth*DPR);
+    H = Math.round(window.innerHeight*DPR);
+    for(var i=0;i<2;i++){
+      var c = i?ripC:sandC;
+      if(c.width!==W||c.height!==H){
+        var img = i?rctx.getImageData(0,0,c.width,c.height):null;
+        c.width=W; c.height=H;
+        (i?rctx:sctx).setTransform(1,0,0,1,0,0);
+      }
+    }
+    buildScene();
+  }
+
+  function buildScene(){
+    rng = mulberry32(1337 + Math.floor(Math.max(W,H)/1));
+    stones=[]; pebbles=[];
+    // --- sand base wash ---
+    var g = sctx.createLinearGradient(0,0,W*0.2,H);
+    g.addColorStop(0,SAND_HI); g.addColorStop(0.5,SAND); g.addColorStop(1,SAND2);
+    sctx.fillStyle=g; sctx.fillRect(0,0,W,H);
+
+    // --- fine grain speckle (three passes) ---
+    var speckle = function(n, rmax, col, alpha){
+      sctx.fillStyle=col;
+      for(var k=0;k<n;k++){
+        var x=rng()*W, y=rng()*H, r=rng()*rmax+0.3;
+        sctx.globalAlpha=alpha*(0.4+rng()*0.6);
+        sctx.beginPath(); sctx.arc(x,y,r,0,7); sctx.fill();
+      }
+      sctx.globalAlpha=1;
+    };
+    speckle(Math.floor(W*H/9000), 1.1, "rgba(150,118,70,1)", 0.5);
+    speckle(Math.floor(W*H/22000), 1.8, "rgba(255,246,224,1)", 0.5);
+    speckle(Math.floor(W*H/60000), 3.0, "rgba(120,92,52,1)", 0.22);
+
+    // --- place stones with min distance ---
+    var target = Math.max(4, Math.min(6, Math.round((W*H)/260000)));
+    var tries=0, guard=0;
+    var minD = Math.max(70*DPR, W*0.11);
+    while(stones.length<target && guard<400){ guard++;
+      var x=W*(0.14+rng()*0.72), y=H*(0.16+rng()*0.66), rad=(Math.min(W,H)*(0.05+rng()*0.05));
+      var ok=true;
+      for(var s=0;s<stones.length;s++){ var d=Math.hypot(stones[s].x-x,stones[s].y-y); if(d<minD+stones[s].r+rad*0.5){ok=false;break;} }
+      if(!ok||x<W*0.12||x>W*0.88) continue;
+      stones.push({x:x,y:y,r:rad,rot:rng()*6.28,swell:0.8+rng()*0.4,seed:rng()*1e4});
+    }
+    stones.forEach(function(st){
+      for(var p=0;p<2;p++){ pebbles.push({x:st.x+((rng()-0.5)*st.r*1.8),y:st.y+((rng()-0.5)*st.r*1.4),r:st.r*(0.12+rng()*0.14)}); }
+    });
+    drawStones();
+    last=null; dragging=false;
+  }
+
+  function poly(a,b,seed,amp){ return Math.sin(a*0.01+seed)*amp + Math.sin(b*0.01+seed*2.1)*amp*0.4; }
+
+  function drawStones(){
+    stones.forEach(function(st){
+      sctx.save();
+      sctx.translate(st.x,st.y);
+      // soft cast shadow (sand side, lower-right)
+      var sh=sctx.createRadialGradient(st.r*0.3,st.r*0.3,st.r*0.1, st.r*0.5,st.r*0.5,st.r*1.7);
+      sh.addColorStop(0,"rgba(60,46,26,0.34)"); sh.addColorStop(1,"rgba(60,46,26,0)");
+      sctx.fillStyle=sh;
+      sctx.beginPath(); sctx.ellipse(st.r*0.25,st.r*0.35,st.r*1.6,st.r*1.35,0.2,0,7); sctx.fill();
+      // stone body
+      sctx.rotate(st.rot);
+      var rr=sctx.createRadialGradient(-st.r*0.4,-st.r*0.5,st.r*0.1, 0,0,st.r*st.swell);
+      rr.addColorStop(0,STONE_HI); rr.addColorStop(0.55,STONE); rr.addColorStop(1,STONE_DK);
+      sctx.fillStyle=rr;
+      sctx.beginPath();
+      var sides=48;
+      for(var i=0;i<=sides;i++){ var a=(i/sides)*Math.PI*2; var wob=Math.sin(a*3+st.seed)*st.r*0.06+Math.sin(a*5+st.seed*1.5)*st.r*0.03; var R=st.r+wob; var px=Math.cos(a)*R*st.swell, py=Math.sin(a)*R; if(i===0)sctx.moveTo(px,py); else sctx.lineTo(px,py);}
+      sctx.closePath(); sctx.fill();
+      // moss cap on top-left
+      sctx.globalAlpha=0.5;
+      var ms=sctx.createRadialGradient(-st.r*0.35,-st.r*0.4,0,-st.r*0.35,-st.r*0.4,st.r*0.8);
+      ms.addColorStop(0,MOSS); ms.addColorStop(1,"rgba(134,147,92,0)");
+      sctx.fillStyle=ms; sctx.beginPath(); sctx.ellipse(-st.r*0.35,-st.r*0.4,st.r*0.75,st.r*0.55,-0.4,0,7); sctx.fill();
+      sctx.globalAlpha=1;
+      sctx.restore();
+    });
+    // pebbles
+    pebbles.forEach(function(p){
+      var pg=sctx.createRadialGradient(p.x-p.r*0.4,p.y-p.r*0.4,0,p.x,p.y,p.r*1.4);
+      pg.addColorStop(0,STONE_HI); pg.addColorStop(1,STONE_DK);
+      sctx.fillStyle=pg; sctx.beginPath(); sctx.arc(p.x,p.y,p.r,0,7); sctx.fill();
+    });
+  }
+
+  function groove(a,b,off,color,alpha,w){
+    sctx.strokeStyle=color; sctx.globalAlpha=alpha; sctx.lineWidth=w; sctx.lineCap="round";
+    sctx.beginPath(); sctx.moveTo(a.x+off.x,a.y+off.y); sctx.lineTo(b.x+off.x,b.y+off.y); sctx.stroke();
+  }
+
+  function rake(a,b){
+    var dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy);
+    if(len<0.4) return;
+    var nx=-dy/len, ny=dx/len;
+    var tines=7, spacing=4.2*DPR;
+    sctx.globalAlpha=1;
+    for(var t=-3;t<=3;t++){
+      var wobA=Math.sin((a.x+a.y)*0.01 + t)*1.4*DPR;
+      var wobB=Math.sin((b.x+b.y)*0.01 + t)*1.4*DPR;
+      // dark valley of each tine
+      groove(a,b,{x:nx*(t*spacing+wobA), y:ny*(t*spacing+wobA)}, "rgba(120,92,52,1)", 0.30, 2.2*DPR);
+      // light crest riding just beside each valley
+      groove(a,b,{x:nx*(t*spacing+wobB)-nx*1.3*DPR, y:ny*(t*spacing+wobB)-ny*1.3*DPR}, "rgba(255,247,224,1)", 0.28, 1.3*DPR);
+    }
+    sctx.globalAlpha=1;
+  }
+
+  // --- ripples ---
+  function spawnRipple(){
+    if(!stones.length) return;
+    var st=stones[Math.floor(rng()*stones.length)];
+    ripples.push({x:st.x,y:st.y,r:st.r*1.1, maxR:Math.max(W,H)*0.5, spd:(0.5+rng()*0.5)*DPR, life:1});
+    if(ripples.length>40) ripples.shift();
+  }
+
+  function drawFrame(){
+    rctx.clearRect(0,0,W,H);
+    rctx.drawImage(sandC,0,0);
+    // gentle animated ripple rings
+    for(var i=ripples.length-1;i>=0;i--){
+      var rp=ripples[i];
+      rp.r += rp.spd;
+      if(rp.r>=rp.maxR){ ripples.splice(i,1); continue; }
+      var op = Math.pow(1-(rp.r/rp.maxR),1.6)*0.5;
+      for(var ring=0;ring<3;ring++){
+        var rr=rp.r + ring*7*DPR;
+        if(rr>rp.maxR) continue;
+        var o2 = op*(1-ring*0.28);
+        rctx.strokeStyle=INK + o2.toFixed(3) + ")";
+        rctx.lineWidth=(1.1-ring*0.25)*DPR;
+        rctx.beginPath(); rctx.arc(rp.x,rp.y,rr,0,7); rctx.stroke();
+      }
+    }
+    if(!reduce){ requestAnimationFrame(drawFrame); }
+  }
+
+  // --- pointer / rake interaction ---
+  function toLocal(e){
+    var r=sandC.getBoundingClientRect();
+    var px=(e.touches?e.touches[0].clientX:e.clientX), py=(e.touches?e.touches[0].clientY:e.clientY);
+    return {x:(px-r.left)/r.width*W, y:(py-r.top)/r.height*H};
+  }
+  function start(e){ dragging=true; last=toLocal(e); hideHint(); e.preventDefault(); }
+  function move(e){
+    if(!dragging) return;
+    var p=toLocal(e);
+    if(last){ rake(last,p); }
+    last=p; e.preventDefault();
+  }
+  function end(){ dragging=false; last=null; }
+  function hideHint(){ if(hintHidden)return; hintHidden=true; hint.classList.add("hide"); }
+
+  sandC.addEventListener("pointerdown",start);
+  window.addEventListener("pointermove",move,{passive:false});
+  window.addEventListener("pointerup",end);
+  sandC.addEventListener("pointerleave",end);
+  // touch fallback
+  sandC.addEventListener("touchstart",start,{passive:false});
+  window.addEventListener("touchmove",move,{passive:false});
+  window.addEventListener("touchend",end);
+
+  reset.addEventListener("click",function(){
+    buildScene();
+    ripples.length=0;
+    hideHint();
+  });
+
+  window.addEventListener("resize",resize);
+  resize();
+
+  // periodic gentle ripples + start loop
+  if(reduce){
+    // static: one faint resting ring per stone
+    stones.forEach(function(st){ ripples.push({x:st.x,y:st.y,r:st.r*1.2,maxR:st.r*6,spd:0,life:1}); });
+  } else {
+    setInterval(function(){ if(!dragging) spawnRipple(); }, 2200);
+    requestAnimationFrame(drawFrame);
+  }
+})();
+</script>
+</body>
+</html>

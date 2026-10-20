@@ -1,0 +1,69 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: a cathedral stained-glass window
+with sun rays and colored glow. Palette: rich ruby, sapphire, emerald, gold lead
+lines. Signature: SVG geometric panels, animated light rays, soft colored glow
+pulsing. Hard constraints: one self-contained .html, all CSS in one <style>, all
+JS in one <script>, zero external dependencies (system fonts only, no CDN, no
+external images/SVG files), responsive 320px→4K, valid HTML5, must run by
+double-click with no network requests. WOW bar: Awwwards/SiteInspire-caliber,
+distinctive art direction, real motion, one signature effect. A matching .txt
+with the same base name must accompany it.
+
+
+TITLE
+-----
+Lumen Vitæ — a luminous rose window that breathes daylight through leaded glass.
+
+
+DESIGN DESCRIPTION
+------------------
+A dark cathedral interior opens onto a single, enormous rose window set inside a
+pointed gothic-arch stone frame. The window is drawn as real inline SVG: five
+concentric rings of annular-sector "glass" panels — each filled with a backlit
+radial gradient — are separated by glowing gold lead came (concentric circles,
+radial mullions and tracery bosses), all softened by a subtle SVG glow filter. At
+the hub sits a radiant medallion with an eight-point core star. Behind the whole
+window a large screen-blended, blurred multicolor halo (ruby, sapphire, emerald,
+amethyst) pulses slowly as if clouds of light are passing over the glass, while a
+slowly rotating conic-gradient cone casts animated colored light rays across the
+nave. Below, a trapezoidal projected "light pool" pools on the stone floor and a
+field of drifting dust motes twinkles brightest inside the beam. The entire glass
+layer gently tilts and rotates toward the pointer for a living, dimensional feel,
+and a soft highlight sweeps diagonally across the lead lines like passing sun.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Procedurally generated SVG rose window: annular-sector (donut-segment) paths
+  computed in JS for perfect radial symmetry across five color-cycled rings.
+- Backlit glass look via per-color radial gradients (bright core → deep edge) and
+  a gold linear "lead" gradient for the came, with an SVG feGaussianBlur glow
+  filter on every lead line and boundary.
+- A pulsing, screen-blended, blurred multicolor halo behind the window for the
+  "soft colored glow" that breathes in and out on a 7s ease loop.
+- A slowly rotating conic-gradient light-ray cone (mix-blend-mode: screen) plus a
+  blurred central bloom, and a matching animated light pool on the floor.
+- A canvas dust-mote field (devicePixelRatio-aware) whose particles drift upward,
+  twinkle, and brighten the closer they are to the light source.
+- Gothic-arch window framing via clip-path polygon; faint masked stone-block grid
+  backdrop; a diagonal highlight "sweep" masked across the lead lines.
+- Pointer-driven parallax/tilt on the whole glass layer with eased requestAnimationFrame.
+- Full prefers-reduced-motion fallback (animations and parallax disabled).
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Ambient, always alive: the halo pulses, the ray cone rotates, the floor pool
+  breathes, dust motes drift, and a highlight sweeps the lead lines on infinite
+  loops so the window feels like real shifting daylight even when idle.
+- Pointer move (mouse or touch) over the viewport nudges the entire glass layer
+  toward the cursor with eased rotation + translation, giving the glass depth and
+  a subtle parallax against the stone frame.
+- The light pool and glow intensify/relax together on their pulse cycle, so the
+  room appears to brighten and dim as though weather moves outside.
+- Responsive: the window stage scales by the smaller of viewport width/height and
+  caps at 640px, keeping the arch perfectly square from 320px to 4K; type and
+  spacing use fluid clamp() values throughout.
+- Reduced-motion users get a still, static window with glow and rays set to a
+  fixed state and no parallax or dust drift.

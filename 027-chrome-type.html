@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chrome — Liquid Reflection</title>
+<style>
+  :root{
+    --bg0:#0a1424; --bg1:#0e1c34; --bg2:#060d1a;
+    --chrome-hi:#ffffff; --chrome-mid:#aeb9c6; --chrome-lo:#5b6675;
+    --blue:#5aa7ff; --cyan:#8ff0ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden}
+  body{
+    font-family:'Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 20% 12%, rgba(90,167,255,.28), transparent 55%),
+      radial-gradient(120% 100% at 82% 88%, rgba(143,240,255,.20), transparent 55%),
+      radial-gradient(140% 130% at 50% 50%, rgba(30,60,110,.5), transparent 62%),
+      linear-gradient(160deg,var(--bg1),var(--bg0) 40%,var(--bg2));
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* moving environment bands the chrome reflects */
+  .env{position:fixed;inset:-20%;z-index:0;pointer-events:none;opacity:.55;
+    background:
+      linear-gradient(115deg, transparent 30%, rgba(143,240,255,.10) 46%, rgba(90,167,255,.14) 50%, transparent 54%),
+      linear-gradient(75deg, transparent 55%, rgba(255,255,255,.08) 60%, transparent 64%);
+    background-size:200% 100%, 200% 100%;
+    animation:envdrift 18s linear infinite}
+  @keyframes envdrift{from{background-position:0 0, 0 0}to{background-position:-100% 0, 100% 0}}
+
+  /* SVG displacement filter for the liquid ripple (defined in body, above script) */
+  svg.fx{position:fixed;width:0;height:0;z-index:-1}
+
+  .stage{position:relative;z-index:2;text-align:center;padding:0 6vw;user-select:none}
+
+  .word{
+    position:relative;line-height:.82;font-weight:900;letter-spacing:-.02em;
+    font-size:clamp(4.2rem,24vw,28rem);
+    background:linear-gradient(100deg,
+      var(--chrome-hi) 0%, #dfe7ef 12%, var(--blue) 22%, var(--chrome-mid) 30%,
+      #f4f8fc 40%, var(--chrome-lo) 50%, #d6dee7 58%, var(--cyan) 68%,
+      var(--chrome-mid) 78%, #eef3f8 88%, var(--chrome-hi) 100%);
+    background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 7s linear infinite;
+    filter:drop-shadow(0 10px 30px rgba(0,0,0,.45));
+  }
+  @keyframes shimmer{from{background-position:0% 0}to{background-position:220% 0}}
+
+  /* specular band sweeping across the letters */
+  .sheen{position:absolute;inset:0;overflow:hidden;pointer-events:none;mix-blend-mode:overlay}
+  .sheen::before{content:"";position:absolute;inset:-40% -10%;
+    background:linear-gradient(105deg, transparent 42%, rgba(255,255,255,.9) 50%, transparent 58%);
+    background-size:220% 100%;animation:sheen 5.5s ease-in-out infinite}
+  @keyframes sheen{0%{background-position:130% 0}60%{background-position:-30% 0}100%{background-position:-30% 0}}
+
+  /* reflection: flipped copy, rippled by the SVG filter, faded downward */
+  .reflect{
+    position:absolute;left:0;right:0;top:100%;margin-top:0.28em;
+    transform:scaleY(-1);transform-origin:top center;z-index:1;
+    font-weight:900;letter-spacing:-.02em;line-height:.82;
+    font-size:clamp(4.2rem,24vw,28rem);
+    background:linear-gradient(100deg,
+      #8fa4bd 0%, var(--chrome-mid) 20%, #cfd8e2 40%, var(--chrome-lo) 52%,
+      #b9c4d1 66%, var(--blue) 78%, #c4d2e2 90%, #7f8da0 100%);
+    background-size:220% 100%;
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    animation:shimmer 7s linear infinite;
+    mask-image:linear-gradient(180deg, rgba(0,0,0,.72), rgba(0,0,0,.28) 45%, transparent 90%);
+    -webkit-mask-image:linear-gradient(180deg, rgba(0,0,0,.72), rgba(0,0,0,.28) 45%, transparent 90%);
+    filter:url(#ripple) drop-shadow(0 6px 22px rgba(0,0,0,.4));
+    opacity:.9;
+  }
+
+  .label{position:relative;z-index:3;margin-top:clamp(14px,3vh,34px);
+    font-size:clamp(.6rem,1.4vw,.95rem);letter-spacing:.5em;text-transform:uppercase;
+    color:rgba(200,220,245,.7);font-weight:600}
+  .label b{color:var(--cyan);font-weight:600}
+
+  .corner{position:fixed;z-index:3;font-family:ui-monospace,Menlo,Consolas,monospace;
+    font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:rgba(180,205,235,.55)}
+  .corner.tl{top:clamp(16px,3vw,30px);left:clamp(16px,3vw,30px)}
+  .corner.br{bottom:clamp(16px,3vw,30px);right:clamp(16px,3vw,30px);text-align:right}
+  .corner b{color:rgba(200,220,245,.85)}
+
+  @media (prefers-reduced-motion:reduce){*{animation:none!important}}
+  @media (max-width:560px){
+    .corner{display:none}
+    .label{letter-spacing:.34em}
+  }
+</style>
+</head>
+<body>
+  <div class="env" aria-hidden="true"></div>
+
+  <svg class="fx" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="ripple" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence id="turb" type="fractalNoise" baseFrequency="0.006 0.014" numOctaves="2" seed="9" result="n"/>
+        <feDisplacementMap id="disp" in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <div class="stage">
+    <div class="word" id="word">CHROME
+      <div class="sheen" aria-hidden="true"></div>
+    </div>
+    <div class="reflect" id="reflect" aria-hidden="true">CHROME</div>
+    <div class="label">Liquid Chrome · <b>Reflection Study</b> 027</div>
+  </div>
+
+  <div class="corner tl">Mirror&nbsp;·&nbsp;<b>Specular</b></div>
+  <div class="corner br">feTurbulence&nbsp;+&nbsp;Displacement<br><b>Ripple Engine</b></div>
+
+<script>
+(function(){
+  "use strict";
+  var turb = document.getElementById('turb');
+  var disp = document.getElementById('disp');
+  var t0 = performance.now();
+  function frame(now){
+    var t = (now - t0)/1000;
+    // animate the noise field for a living liquid ripple
+    var bx = 0.006 + 0.004*Math.sin(t*0.5);
+    var by = 0.014 + 0.006*Math.sin(t*0.7 + 1.2);
+    turb.setAttribute('baseFrequency', bx.toFixed(5) + ' ' + by.toFixed(5));
+    // gentle ripple depth breathing
+    disp.setAttribute('scale', (14 + 6*Math.sin(t*0.9)).toFixed(2));
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

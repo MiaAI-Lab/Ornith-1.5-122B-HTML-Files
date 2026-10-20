@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MARMORE · Sculptural Gallery</title>
+<style>
+  :root{
+    --bg:#e9e4dc;
+    --bg-2:#ddd6ca;
+    --floor:#d8d0c2;
+    --marble:#f4f1ea;
+    --vein:#c9c0b0;
+    --vein-dark:#8f8670;
+    --gold:#c9a24b;
+    --gold-2:#e7c877;
+    --ink:#2b2620;
+    --muted:#8a8172;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --ease:cubic-bezier(.5,.05,.15,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:var(--serif);
+    color:var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% 0%, #f3efe7 0%, var(--bg) 45%, var(--bg-2) 100%);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+
+  /* studio room: floor + back wall + light shaft */
+  .room{
+    position:fixed;inset:0;pointer-events:none;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(232,226,214,0) 40%),
+      linear-gradient(180deg, transparent 55%, rgba(120,110,92,.28) 100%);
+  }
+  .floor-line{
+    position:fixed;left:0;right:0;bottom:0;height:34%;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,.15), rgba(150,138,118,.35)),
+      repeating-linear-gradient(90deg, rgba(120,110,92,.10) 0 1px, transparent 1px 140px);
+    transform:perspective(500px) rotateX(58deg);
+    transform-origin:50% 100%;
+    opacity:.5;
+  }
+  .lightshaft{
+    position:fixed;top:-10%;left:18%;width:60%;height:120%;
+    background:linear-gradient(180deg, rgba(255,246,224,.5), transparent 70%);
+    filter:blur(40px);
+    transform:skewX(-14deg);
+    mix-blend-mode:multiply;
+    opacity:.5;
+    animation:driftLight 16s var(--ease) infinite alternate;
+  }
+  @keyframes driftLight{from{opacity:.35;left:14%}to{opacity:.55;left:24%}}
+
+  header{
+    position:relative;z-index:3;
+    max-width:1240px;margin:0 auto;
+    padding:clamp(28px,5vw,64px) clamp(20px,5vw,64px) clamp(16px,3vw,40px);
+    display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px;
+  }
+  .brand{font-size:13px;letter-spacing:.5em;text-transform:uppercase;color:var(--muted);font-family:var(--sans)}
+  .brand b{color:var(--gold);display:block;font-size:26px;letter-spacing:.06em;margin-top:8px}
+  h1{
+    font-weight:500;font-size:clamp(30px,4.6vw,58px);line-height:1;margin:0;letter-spacing:-.01em;
+  }
+  h1 em{font-style:italic;color:var(--gold)}
+  .sub{font-family:var(--sans);font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);margin-top:12px}
+
+  .gallery{
+    position:relative;z-index:2;
+    max-width:1240px;margin:0 auto;
+    padding:clamp(16px,3vw,40px) clamp(20px,5vw,64px) clamp(40px,6vw,90px);
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:clamp(20px,3.4vw,48px);
+  }
+  @media (max-width:900px){.gallery{grid-template-columns:repeat(2,1fr)}}
+  @media (max-width:560px){.gallery{grid-template-columns:1fr;max-width:360px}}
+
+  .piece{
+    display:flex;flex-direction:column;align-items:center;
+    animation:rise 1s var(--ease) both;
+  }
+  .piece:nth-child(1){animation-delay:.05s}
+  .piece:nth-child(2){animation-delay:.18s}
+  .piece:nth-child(3){animation-delay:.31s}
+  .piece:nth-child(4){animation-delay:.44s}
+  .piece:nth-child(5){animation-delay:.57s}
+  .piece:nth-child(6){animation-delay:.70s}
+  @keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:translateY(0)}}
+
+  /* the sculpture: a marble form with veining, lit from upper-left */
+  .statue{
+    position:relative;
+    width:100%;
+    aspect-ratio:3/4;
+    display:flex;align-items:flex-end;justify-content:center;
+  }
+  .form{
+    position:relative;
+    width:74%;
+    height:82%;
+    background:
+      radial-gradient(55% 40% at 34% 26%, #ffffff 0%, var(--marble) 40%, var(--vein) 78%, #b7ac99 100%);
+    box-shadow:
+      0 2px 0 rgba(255,255,255,.9) inset,
+      0 -30px 50px -24px rgba(90,80,64,.5) inset,
+      22px 30px 44px -22px rgba(70,60,46,.55);
+    overflow:hidden;
+  }
+  /* marble veining layer — animated slow drift */
+  .form::before{
+    content:"";position:absolute;inset:-30%;
+    background:
+      conic-gradient(from 20deg at 50% 50%,
+        transparent 0 30%, rgba(143,130,110,.30) 31% 33%, transparent 34% 55%,
+        rgba(120,108,90,.22) 56% 58%, transparent 59% 78%,
+        rgba(160,148,128,.28) 79% 81%, transparent 82% 100%),
+      repeating-linear-gradient(118deg,
+        transparent 0 22px,
+        rgba(120,110,92,.14) 22px 24px,
+        transparent 24px 40px);
+    mix-blend-mode:multiply;
+    filter:blur(.4px);
+    animation:veinDrift 26s linear infinite;
+    opacity:.8;
+  }
+  @keyframes veinDrift{from{transform:translate(0,0) rotate(0)}to{transform:translate(-6%,4%) rotate(6deg)}}
+  /* specular highlight sweep */
+  .form::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(115deg, transparent 38%, rgba(255,255,255,.65) 46%, transparent 54%);
+    mix-blend-mode:screen;
+    animation:sheen 9s var(--ease) infinite;
+  }
+  @keyframes sheen{0%,100%{transform:translateX(-30%)}50%{transform:translateX(30%)}}
+
+  /* distinct silhouettes per form */
+  .f-blob{border-radius:48% 52% 46% 54%/58% 46% 54% 42%}
+  .f-vase{border-radius:42% 42% 46% 46%/20% 20% 70% 70%;height:88%}
+  .f-egg{border-radius:50% 50% 48% 48%/62% 62% 38% 38%}
+  .f-torus{border-radius:50%;background:
+      radial-gradient(55% 40% at 34% 26%, #fff 0%, var(--marble) 42%, var(--vein) 80%, #b7ac99 100%);}
+  .f-pillar{border-radius:12% 12% 8% 8%/10% 10% 6% 6%;width:44%;height:92%}
+  .f-dome{border-radius:50% 50% 12% 12%/46% 46% 12% 12%}
+
+  /* gold-veined accent variant */
+  .gilded .form{
+    background:
+      radial-gradient(55% 40% at 34% 26%, #fffdf5 0%, #efe9dc 42%, #d9cba6 80%, #b39a63 100%);
+  }
+  .gilded .form::before{
+    background:
+      repeating-linear-gradient(96deg, transparent 0 30px, rgba(176,141,87,.34) 30px 31px, transparent 31px 52px),
+      conic-gradient(from -30deg at 60% 40%, transparent 0 40%, rgba(190,150,80,.3) 41% 43%, transparent 44%);
+  }
+
+  /* pedestal */
+  .pedestal{
+    position:relative;width:60%;margin-top:-2%;
+    height:26px;
+    background:linear-gradient(180deg,#fbf8f1,#e4dccd);
+    border-radius:3px;
+    box-shadow:0 10px 18px -8px rgba(70,60,46,.5), 0 2px 0 rgba(255,255,255,.9) inset;
+  }
+  .pedestal::after{ /* cast ground shadow */
+    content:"";position:absolute;left:8%;right:8%;bottom:-14px;height:16px;border-radius:50%;
+    background:radial-gradient(50% 100% at 50% 50%, rgba(60,50,36,.42), transparent 70%);
+    filter:blur(3px);
+  }
+
+  .label{
+    margin-top:22px;text-align:center;
+  }
+  .label .no{font-family:var(--sans);font-size:10px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+  .label .nm{font-style:italic;font-size:19px;margin:6px 0 2px}
+  .label .ds{font-family:var(--sans);font-size:11px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+
+  footer{
+    position:relative;z-index:2;
+    max-width:1240px;margin:0 auto;
+    padding:0 clamp(20px,5vw,64px) clamp(30px,4vw,56px);
+    font-family:var(--sans);font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  }
+  footer b{color:var(--ink)}
+
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important}
+  }
+</style>
+</head>
+<body>
+  <div class="room" aria-hidden="true"></div>
+  <div class="floor-line" aria-hidden="true"></div>
+  <div class="lightshaft" aria-hidden="true"></div>
+
+  <header>
+    <div class="brand">Est. Studio<b>Marmore</b></div>
+    <div>
+      <h1>The <em>Veined</em> Collection</h1>
+      <div class="sub">Sculptural forms in quarried marble · Gallery 03</div>
+    </div>
+  </header>
+
+  <main class="gallery">
+    <article class="piece">
+      <div class="statue"><div class="form f-blob"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 01</div><div class="nm">Onde</div><div class="ds">Carrara · 2026</div></div>
+    </article>
+
+    <article class="piece gilded">
+      <div class="statue"><div class="form f-vase"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 02</div><div class="nm">Orea</div><div class="ds">Giallo · 2026</div></div>
+    </article>
+
+    <article class="piece">
+      <div class="statue"><div class="form f-egg"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 03</div><div class="nm">Uovo</div><div class="ds">Statuario · 2025</div></div>
+    </article>
+
+    <article class="piece">
+      <div class="statue"><div class="form f-pillar"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 04</div><div class="nm">Colonna</div><div class="ds">Grigio · 2025</div></div>
+    </article>
+
+    <article class="piece gilded">
+      <div class="statue"><div class="form f-dome"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 05</div><div class="nm">Volta</div><div class="ds">Bianco · 2024</div></div>
+    </article>
+
+    <article class="piece">
+      <div class="statue"><div class="form f-torus"></div></div>
+      <div class="pedestal"></div>
+      <div class="label"><div class="no">No. 06</div><div class="nm">Sfera</div><div class="ds">Nuvolato · 2024</div></div>
+    </article>
+  </main>
+
+  <footer>
+    <span>© MMXXVI · <b>Marmore Atelier</b></span>
+    <span>Care: dust with soft brush · <b>Room 21°C</b></span>
+  </footer>
+</body>
+</html>

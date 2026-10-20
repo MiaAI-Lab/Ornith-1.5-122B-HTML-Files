@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lava · Real-Time Metaball Lamp</title>
+<style>
+  :root{
+    --metal-1:#26262c; --metal-2:#56565f; --metal-3:#9a9aa4; --metal-4:#3a3a42;
+    --amber:#ffb14e; --ember:#ff5a2a; --crimson:#7a1018; --bg:#0a0607;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--bg)}
+  body{
+    font-family:system-ui,'Segoe UI',sans-serif;
+    min-height:100vh;display:flex;align-items:center;justify-content:center;
+    color:#f4e9e4;overflow-x:hidden;-webkit-font-smoothing:antialiased;
+  }
+
+  .room{
+    position:relative;width:100%;min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;padding:40px 16px 60px;
+    background:
+      radial-gradient(60% 46% at 50% 44%, rgba(255,90,40,.16), rgba(120,30,16,.08) 55%, transparent 78%),
+      radial-gradient(120% 90% at 50% 50%, #170d0e 0%, #0a0607 60%, #050303 100%);
+  }
+  .room::after{ /* warm pool of light on the surface below */
+    content:"";position:absolute;left:50%;bottom:6%;width:60%;height:60px;transform:translateX(-50%);
+    background:radial-gradient(50% 100% at 50% 50%, rgba(255,120,50,.28), transparent 70%);
+    filter:blur(14px);animation:breathe 6s ease-in-out infinite;
+  }
+  @keyframes breathe{0%,100%{opacity:.55}50%{opacity:.9}}
+
+  .lamp{position:relative;width:min(360px,84vw);display:flex;flex-direction:column;align-items:center;z-index:2;}
+
+  /* ---- top cap ---- */
+  .cap{
+    width:44%;height:54px;border-radius:15px 15px 8px 8px;margin-bottom:2px;position:relative;z-index:3;
+    background:linear-gradient(100deg, var(--metal-1) 0%, var(--metal-3) 24%, #c6c6cf 48%, var(--metal-2) 66%, var(--metal-1) 100%);
+    box-shadow:inset 0 2px 3px rgba(255,255,255,.35), inset 0 -3px 5px rgba(0,0,0,.5), 0 3px 8px rgba(0,0,0,.5);
+  }
+  .cap::before{content:"";position:absolute;left:16%;right:16%;top:8px;height:5px;border-radius:4px;
+    background:linear-gradient(90deg, rgba(255,255,255,.6), rgba(255,255,255,0));}
+
+  /* ---- neck ---- */
+  .neck{width:26%;height:20px;z-index:3;
+    background:linear-gradient(100deg, var(--metal-4), var(--metal-2) 50%, var(--metal-4));
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.2), inset 0 -2px 3px rgba(0,0,0,.5);}
+
+  /* ---- glass globe ---- */
+  .glass{
+    position:relative;width:56%;flex:1;min-height:320px;max-height:62vh;margin:0 6px;
+    border-radius:50% 50% 48% 48% / 30% 30% 70% 70%;overflow:hidden;z-index:3;
+    background:radial-gradient(65% 60% at 50% 78%, rgba(255,70,24,.22), rgba(60,8,12,.1) 55%, rgba(10,4,5,.4) 100%);
+    box-shadow:
+      inset 0 0 60px rgba(255,80,30,.18),
+      inset 0 -30px 60px rgba(0,0,0,.55),
+      0 0 70px rgba(255,90,40,.14);
+  }
+  #lava{position:absolute;inset:0;width:100%;height:100%;display:block;}
+  /* gooey threshold applied to the whole composited canvas */
+  #lava.goo{filter:blur(9px) contrast(22) saturate(1.35);}
+
+  /* glass sheen + rim */
+  .sheen{position:absolute;inset:0;pointer-events:none;z-index:4;
+    background:
+      linear-gradient(118deg, rgba(255,255,255,.34) 0%, rgba(255,255,255,.05) 12%, transparent 22%, transparent 70%, rgba(255,255,255,.05) 86%, transparent 100%),
+      linear-gradient(to right, rgba(0,0,0,.4), transparent 18%, transparent 82%, rgba(0,0,0,.45));
+    mix-blend-mode:soft-light;}
+  .sheen::after{content:"";position:absolute;top:8%;left:20%;width:9%;height:64%;border-radius:50%;
+    background:linear-gradient(to bottom, rgba(255,255,255,.5), rgba(255,255,255,0));filter:blur(3px);}
+  .tint{position:absolute;inset:0;pointer-events:none;z-index:5;mix-blend-mode:screen;
+    background:radial-gradient(50% 55% at 50% 80%, rgba(255,80,30,.32), transparent 72%);
+    animation:tintPulse 7s ease-in-out infinite;}
+  @keyframes tintPulse{0%,100%{opacity:.75}50%{opacity:1}}
+
+  /* ---- base ---- */
+  .base{width:74%;height:76px;margin-top:2px;z-index:3;border-radius:8px 8px 46% 46%;position:relative;
+    background:linear-gradient(100deg, var(--metal-1) 0%, var(--metal-3) 26%, #c9c9d2 50%, var(--metal-2) 70%, var(--metal-1) 100%);
+    box-shadow:inset 0 2px 3px rgba(255,255,255,.35), inset 0 -6px 12px rgba(0,0,0,.55), 0 6px 16px rgba(0,0,0,.6);}
+  .base::before{content:"";position:absolute;left:18%;right:18%;top:10px;height:6px;border-radius:4px;
+    background:linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,0));}
+  .foot{position:absolute;left:-12%;right:-12%;bottom:-18px;height:34px;border-radius:50%;z-index:2;
+    background:linear-gradient(100deg, var(--metal-4), var(--metal-2) 45%, var(--metal-3) 60%, var(--metal-4));
+    box-shadow:inset 0 2px 3px rgba(255,255,255,.3), inset 0 -5px 10px rgba(0,0,0,.6), 0 10px 26px rgba(0,0,0,.7);}
+  .glow{position:absolute;left:-30%;right:-30%;bottom:-40px;height:80px;z-index:1;pointer-events:none;
+    background:radial-gradient(50% 100% at 50% 50%, rgba(255,90,40,.35), transparent 70%);filter:blur(16px);
+    animation:breathe 6s ease-in-out infinite;}
+
+  /* ---- controls ---- */
+  .controls{z-index:3;margin-top:34px;width:min(360px,84vw);display:flex;flex-direction:column;gap:14px;
+    align-items:center;padding:16px 20px;border-radius:16px;
+    background:linear-gradient(180deg, rgba(40,24,22,.6), rgba(20,12,12,.6));
+    border:1px solid rgba(255,140,70,.14);backdrop-filter:blur(6px);box-shadow:0 10px 30px rgba(0,0,0,.5);}
+  .row{display:flex;align-items:center;gap:14px;width:100%;justify-content:center;}
+  .label{font-size:.62rem;letter-spacing:.34em;text-transform:uppercase;color:rgba(255,190,130,.75);min-width:44px;}
+  .readout{font-variant-numeric:tabular-nums;font-size:.82rem;letter-spacing:.06em;color:#ffd7a8;min-width:78px;text-align:right;}
+  input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:4px;border-radius:4px;
+    background:linear-gradient(90deg, var(--ember), var(--amber));outline:none;cursor:pointer;}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #ffd27a 40%, #ff7a2a 80%);
+    box-shadow:0 0 12px rgba(255,120,40,.8), 0 2px 4px rgba(0,0,0,.5);cursor:pointer;}
+  input[type=range]::-moz-range-thumb{width:18px;height:18px;border:0;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, #ffd27a 40%, #ff7a2a 80%);
+    box-shadow:0 0 12px rgba(255,120,40,.8);cursor:pointer;}
+  button{font-family:inherit;font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;cursor:pointer;
+    color:#ffe0bd;background:rgba(255,120,50,.12);border:1px solid rgba(255,140,70,.4);
+    padding:9px 16px;border-radius:999px;transition:.2s;}
+  button:hover{background:rgba(255,120,50,.26);box-shadow:0 0 16px rgba(255,120,40,.35);}
+  .title-line{font-family:'Georgia',serif;font-style:italic;color:rgba(255,210,170,.55);font-size:.8rem;letter-spacing:.08em;}
+
+  @media(prefers-reduced-motion:reduce){ *{animation:none!important} }
+</style>
+</head>
+<body>
+<div class="room">
+  <div class="lamp">
+    <div class="cap"></div>
+    <div class="neck"></div>
+    <div class="glass" id="glass">
+      <canvas id="lava"></canvas>
+      <div class="sheen"></div>
+      <div class="tint"></div>
+    </div>
+    <div class="base"><div class="foot"></div></div>
+    <div class="glow"></div>
+  </div>
+
+  <div class="controls">
+    <div class="title-line">The Warm Drift</div>
+    <div class="row">
+      <span class="label">Heat</span>
+      <input type="range" id="heat" min="20" max="180" value="100" aria-label="Heat and speed">
+      <span class="readout" id="readout">1.00×</span>
+    </div>
+    <div class="row">
+      <button id="toggle">Pause</button>
+      <span class="label" style="min-width:auto;color:rgba(255,190,130,.5);">tap to pause the flow</span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  var canvas = document.getElementById("lava");
+  var ctx = canvas.getContext("2d");
+  var glass = document.getElementById("glass");
+  var readout = document.getElementById("readout");
+  var heat = document.getElementById("heat");
+  var toggle = document.getElementById("toggle");
+
+  canvas.classList.add("goo");
+
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var W = 0, H = 0, inset = 8, cw = 0, ch = 0, cx0 = 0, cy0 = 0;
+  var speed = 1, running = true, last = performance.now();
+
+  function resize(){
+    var r = glass.getBoundingClientRect();
+    W = Math.max(2, Math.round(r.width));
+    H = Math.max(2, Math.round(r.height));
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + "px";
+    canvas.style.height = H + "px";
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    inset = Math.max(4, Math.round(W * 0.02));
+    cw = W - 2 * inset;
+    ch = H - 2 * inset;
+    cx0 = inset;
+    cy0 = inset;
+  }
+
+  function clamp(v, a, b){ return v < a ? a : v > b ? b : v; }
+
+  // blobs as fractions of the capsule interior
+  var blobs = [
+    { bx: 0.50, by: 0.87, rF: 0.31, temp: 1.00, vy: 0, ph: 0.0 },
+    { bx: 0.44, by: 0.56, rF: 0.16, temp: 0.45, vy: 0, ph: 1.1 },
+    { bx: 0.58, by: 0.40, rF: 0.14, temp: 0.34, vy: 0, ph: 2.2 },
+    { bx: 0.50, by: 0.70, rF: 0.13, temp: 0.52, vy: 0, ph: 3.3 },
+    { bx: 0.47, by: 0.24, rF: 0.11, temp: 0.30, vy: 0, ph: 4.4 },
+    { bx: 0.55, by: 0.62, rF: 0.10, temp: 0.42, vy: 0, ph: 5.5 }
+  ];
+
+  function step(b, dt){
+    // heating near the bottom, cooling near the top
+    b.temp += (b.by - 0.5) * 0.0045 * speed * dt;
+    b.temp = clamp(b.temp, 0, 1);
+    // buoyancy: warm rises, cool sinks
+    b.vy += -(b.temp - 0.5) * 0.000075 * speed * dt;
+    b.vy *= Math.pow(0.985, dt);
+    b.by += b.vy * dt * speed * 60;
+    if (b.by > 0.92){ b.by = 0.92; if (b.vy > 0) b.vy = 0.0005; }
+    if (b.by < 0.07){ b.by = 0.07; if (b.vy < 0) b.vy = -0.0005; }
+    // horizontal wobble
+    b.ph += 0.022 * speed * dt;
+    b.bx += Math.sin(b.ph) * 0.0005 * speed * dt;
+    b.bx = clamp(b.bx, 0.2, 0.8);
+  }
+
+  function capsulePath(){
+    ctx.beginPath();
+    if (ctx.roundRect){
+      ctx.roundRect(cx0, cy0, cw, ch, Math.min(cw / 2, ch / 2));
+    } else {
+      var rr = Math.min(cw / 2, ch / 2);
+      ctx.moveTo(cx0 + rr, cy0);
+      ctx.arcTo(cx0 + cw, cy0, cx0 + cw, cy0 + ch, rr);
+      ctx.arcTo(cx0 + cw, cy0 + ch, cx0, cy0 + ch, rr);
+      ctx.arcTo(cx0, cy0 + ch, cx0, cy0, rr);
+      ctx.arcTo(cx0, cy0, cx0 + cw, cy0, rr);
+    }
+    ctx.closePath();
+  }
+
+  function render(){
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, W, H);
+
+    // deep, near-black crimson "liquid"
+    ctx.save();
+    capsulePath();
+    ctx.clip();
+    var bg = ctx.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, "#2a070b");
+    bg.addColorStop(0.55, "#3d0b10");
+    bg.addColorStop(1, "#5a1016");
+    ctx.fillStyle = bg;
+    ctx.fillRect(cx0, cy0, cw, ch);
+
+    // additive metaball field
+    ctx.globalCompositeOperation = "lighter";
+    for (var i = 0; i < blobs.length; i++){
+      var b = blobs[i];
+      var bx = cx0 + b.bx * cw;
+      var by = cy0 + b.by * ch;
+      var wob = 0.86 + 0.18 * Math.sin(b.ph * 1.3);
+      var R = b.rF * cw * wob;
+      var g = ctx.createRadialGradient(bx, by, 0, bx, by, R);
+      var heatT = b.temp;
+      // hotter blobs lean yellow, cooler ones deep red
+      var c0 = heatT > 0.6 ? "255,236,150" : (heatT > 0.4 ? "255,170,80" : "214,70,36");
+      var c1 = "255," + Math.round(120 + heatT * 70) + ",46";
+      g.addColorStop(0, "rgba(" + c0 + ",1)");
+      g.addColorStop(0.45, "rgba(" + c1 + ",0.85)");
+      g.addColorStop(1, "rgba(150,24,14,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.arc(bx, by, R, 0, 6.2832);
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = "source-over";
+    ctx.restore();
+  }
+
+  function frame(now){
+    if (!last) last = now;
+    var raw = now - last;
+    last = now;
+    var dt = reduce ? 1 : Math.min(raw / 16.667, 3); // normalized to ~60fps, clamped
+
+    if (running && !reduce){
+      for (var i = 0; i < blobs.length; i++) step(blobs[i], dt);
+    }
+    render();
+    requestAnimationFrame(frame);
+  }
+
+  // ---- controls ----
+  function updateReadout(){ readout.textContent = speed.toFixed(2) + "×"; }
+  heat.addEventListener("input", function(){
+    speed = this.value / 100;
+    updateReadout();
+  });
+  toggle.addEventListener("click", function(){
+    running = !running;
+    this.textContent = running ? "Pause" : "Resume";
+  });
+
+  window.addEventListener("resize", resize);
+  resize();
+  updateReadout();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

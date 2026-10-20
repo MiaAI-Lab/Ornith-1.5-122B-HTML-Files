@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wind Farm · Clean Energy</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:ui-sans-serif,-apple-system,'Segoe UI',system-ui,sans-serif;
+    background:linear-gradient(180deg,#62a9e6 0%, #8ec4ec 38%, #bfe0f4 68%, #e9f5fd 100%);
+    overflow:hidden; position:relative; color:#1c3a4a;
+  }
+
+  .scene{position:fixed;inset:0;}
+
+  /* subtle sun glow */
+  .sun{position:absolute;top:9%;left:16%;width:300px;height:300px;border-radius:50%;z-index:1;
+    background:radial-gradient(circle at 50% 50%,#fffdf4 0%,rgba(255,252,232,.95) 18%,
+      rgba(255,244,214,.45) 42%,transparent 70%);filter:blur(3px);}
+  .haze{position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:radial-gradient(120% 80% at 50% 118%,rgba(255,250,235,.55),transparent 55%);}
+
+  /* drifting clouds built from one dot + box-shadow puffs */
+  .clouds{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden;}
+  .cloud{position:absolute;left:0;filter:blur(1.2px);
+    background:rgba(255,255,255,.92);border-radius:50%;
+    box-shadow:
+      26px 5px 0 7px rgba(255,255,255,.9),
+      54px 2px 0 12px rgba(255,255,255,.88),
+      84px 7px 0 6px rgba(255,255,255,.85),
+      -28px 6px 0 8px rgba(255,255,255,.88),
+      -54px 1px 0 10px rgba(255,255,255,.82),
+      12px -10px 0 12px rgba(255,255,255,.8),
+      46px -8px 0 13px rgba(255,255,255,.78);
+    animation:drift var(--dur) linear infinite;animation-delay:var(--dly,-2s);opacity:0;}
+  @keyframes drift{
+    0%{transform:translateX(-32vw);opacity:0;}
+    5%{opacity:.95;}
+    92%{opacity:.95;}
+    100%{transform:translateX(122vw);opacity:0;}
+  }
+
+  .hill{position:absolute;left:0;bottom:0;width:100%;display:block;}
+  .hill.far{z-index:4;height:52%;opacity:.9;}
+  .hill.mid{z-index:6;height:46%;}
+  .hill.front{z-index:8;height:32%;}
+
+  /* CSS wind turbines */
+  .turbines{position:absolute;inset:0;z-index:7;pointer-events:none;}
+  .turbine{position:absolute;bottom:0;--h:150px;--bl:72px;--spd:6s;will-change:transform;}
+  .tower{position:absolute;left:50%;bottom:0;width:9px;height:var(--h);transform:translateX(-50%);
+    background:linear-gradient(90deg,#d4dce7,#ffffff 48%,#c0cade);
+    clip-path:polygon(40% 0,60% 0,100% 100%,0 100%);}
+  .nacelle{position:absolute;left:50%;bottom:var(--h);width:19px;height:8px;transform:translateX(-50%);
+    background:linear-gradient(#f4f7fb,#c9d4e1);border-radius:4px;}
+  .rotor-tilt{position:absolute;left:50%;bottom:calc(var(--h) + 7px);width:0;height:0;z-index:2;
+    transform:translateX(-50%) perspective(1100px) rotateX(34deg);transform-style:preserve-3d;}
+  .rotor{position:absolute;left:0;top:0;width:0;height:0;
+    animation:spin var(--spd) linear infinite;animation-delay:-1.4s;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .blade{position:absolute;left:-5px;top:calc(-1 * var(--bl));width:11px;height:var(--bl);
+    transform-origin:50% 100%;
+    clip-path:polygon(50% 0,88% 72%,100% 100%,0 100%);
+    background:linear-gradient(90deg,#e8eef5,#ffffff 55%,#d2dcea);
+    box-shadow:0 1px 3px rgba(30,50,70,.12);}
+  .b0{transform:rotate(0deg);}
+  .b1{transform:rotate(120deg);}
+  .b2{transform:rotate(240deg);}
+  .rev .rotor{animation-direction:reverse;}
+  .hub{position:absolute;left:-6px;top:-6px;width:12px;height:12px;border-radius:50%;z-index:3;
+    background:radial-gradient(circle at 40% 35%,#ffffff,#c0ccd8);}
+
+  /* minimal label */
+  .label{position:absolute;left:6vw;bottom:5vh;z-index:9;pointer-events:none;}
+  .label h1{font-size:clamp(1.1rem,3vw,1.9rem);font-weight:600;letter-spacing:.01em;color:#173247;
+    text-shadow:0 1px 0 rgba(255,255,255,.5);}
+  .label p{margin-top:.35em;font-size:clamp(.55rem,1.4vw,.78rem);letter-spacing:.34em;
+    text-transform:uppercase;color:rgba(23,50,71,.65);}
+
+  @media (max-width:520px){ .label{bottom:3vh} .sun{width:200px;height:200px} }
+  @media (prefers-reduced-motion:reduce){ .cloud,.rotor{animation:none} }
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="sun"></div>
+    <div class="haze"></div>
+
+    <div class="clouds">
+      <div class="cloud" style="top:12%;--dur:64s;--dly:-4s;width:22px;height:22px;"></div>
+      <div class="cloud" style="top:22%;--dur:86s;--dly:-30s;width:18px;height:18px;"></div>
+      <div class="cloud" style="top:8%;--dur:104s;--dly:-60s;width:26px;height:26px;"></div>
+      <div class="cloud" style="top:31%;--dur:74s;--dly:-18s;width:16px;height:16px;"></div>
+      <div class="cloud" style="top:17%;--dur:94s;--dly:-50s;width:20px;height:20px;"></div>
+    </div>
+
+    <svg class="hill far" viewBox="0 0 1440 600" preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,600 L0,300 C240,210 470,300 720,235 C970,175 1210,300 1440,235 L1440,600 Z"
+            fill="#93bcb0"/>
+    </svg>
+    <svg class="hill mid" viewBox="0 0 1440 600" preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,600 L0,390 C300,300 520,440 780,355 C1030,280 1240,420 1440,360 L1440,600 Z"
+            fill="#76a68a"/>
+    </svg>
+
+    <div class="turbines" id="turbines">
+      <div class="turbine" style="left:9%;bottom:33%;--h:158px;--bl:76px;--spd:6s;"></div>
+      <div class="turbine rev" style="left:23%;bottom:40%;--h:108px;--bl:52px;--spd:8.4s;"></div>
+      <div class="turbine" style="left:41%;bottom:32%;--h:184px;--bl:86px;--spd:5.2s;"></div>
+      <div class="turbine" style="left:59%;bottom:42%;--h:98px;--bl:46px;--spd:9.2s;"></div>
+      <div class="turbine rev" style="left:75%;bottom:34%;--h:164px;--bl:76px;--spd:7s;"></div>
+      <div class="turbine" style="left:90%;bottom:39%;--h:120px;--bl:56px;--spd:7.8s;"></div>
+    </div>
+
+    <svg class="hill front" viewBox="0 0 1440 600" preserveAspectRatio="none"
+         xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,600 L0,430 C360,378 600,478 860,432 C1120,392 1280,472 1440,438 L1440,600 Z"
+            fill="#588a6c"/>
+    </svg>
+
+    <div class="label">
+      <h1>Wind Farm</h1>
+      <p>Clean Energy · 056</p>
+    </div>
+  </div>
+  <script>
+  (function(){
+    "use strict";
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var far = document.querySelector('.hill.far');
+    var mid = document.querySelector('.hill.mid');
+    var front = document.querySelector('.hill.front');
+    var tx=0, ty=0, cx=0, cy=0;
+    window.addEventListener('pointermove', function(e){
+      tx=(e.clientX/window.innerWidth - 0.5);
+      ty=(e.clientY/window.innerHeight - 0.5);
+    });
+    function loop(){
+      cx += (tx-cx)*0.05; cy += (ty-cy)*0.05;
+      if(!reduce){
+        if(far)   far.style.transform   = 'translateX('+(cx*-8).toFixed(2)+'px)';
+        if(mid)   mid.style.transform   = 'translateX('+(cx*-16).toFixed(2)+'px)';
+        if(front) front.style.transform = 'translateX('+(cx*-26).toFixed(2)+'px)';
+      }
+      requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
+  })();
+  </script>
+</body>
+</html>

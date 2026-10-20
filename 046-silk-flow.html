@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SILK · A Drift of Jewel-Toned Ribbons</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#04060d;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  .stage{position:fixed;inset:0;overflow:hidden}
+  #silk{position:absolute;inset:0;display:block}
+
+  /* ambient jewel glow behind the cloth */
+  .amb{position:absolute;inset:0;pointer-events:none;z-index:1;mix-blend-mode:screen;
+    background:
+      radial-gradient(40% 34% at 22% 30%, rgba(47,230,163,.16), transparent 70%),
+      radial-gradient(46% 40% at 80% 66%, rgba(59,123,255,.18), transparent 70%),
+      radial-gradient(60% 60% at 60% 20%, rgba(176,107,255,.13), transparent 70%),
+      radial-gradient(50% 50% at 30% 82%, rgba(255,77,122,.12), transparent 70%);
+    animation:breathe 16s ease-in-out infinite}
+  @keyframes breathe{50%{opacity:.6;transform:scale(1.05)}}
+  .vig{position:absolute;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(120% 100% at 50% 42%, transparent 52%, rgba(3,5,12,.72) 100%)}
+
+  /* type layer */
+  .ui{position:fixed;inset:0;z-index:5;pointer-events:none}
+  .brand{position:fixed;left:clamp(22px,4.4vw,60px);top:clamp(22px,4.4vh,52px)}
+  .brand .k{font-size:.62rem;letter-spacing:.46em;text-transform:uppercase;color:#9fe9cf;opacity:.85}
+  .brand h1{margin:.32em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(2rem,6.4vw,4.2rem);line-height:.96;color:#f4f7ff;letter-spacing:.01em;
+    text-shadow:0 2px 30px rgba(0,0,0,.55)}
+  .brand h1 em{font-style:italic;
+    background:linear-gradient(100deg,#2fe6a3,#3b9dff 40%,#b06bff 70%,#ff4d7a);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .side{position:fixed;right:clamp(20px,3.6vw,48px);top:clamp(22px,4.4vh,52px);text-align:right}
+  .side .lab{font-size:.58rem;letter-spacing:.28em;text-transform:uppercase;color:#8fa6c8}
+  .side .val{display:block;font-size:1.25rem;color:#eaf1ff;letter-spacing:.08em;margin-top:.16em;
+    font-variant-numeric:tabular-nums}
+  .note{position:fixed;left:clamp(22px,4.4vw,60px);bottom:clamp(22px,4.4vh,48px);max-width:min(540px,80vw)}
+  .note p{margin:0;color:#c4d2e8;font-size:clamp(.72rem,1.55vw,.9rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 12px rgba(0,0,0,.7)}
+  .note .hint{margin-top:.7em;font-size:.68em;letter-spacing:.18em;text-transform:uppercase;color:#7fd8b6}
+  .rule{position:fixed;right:clamp(20px,3.6vw,48px);bottom:clamp(22px,4.4vh,48px);width:min(220px,40vw);
+    height:1px;background:linear-gradient(90deg,transparent,rgba(176,107,255,.6));z-index:5}
+  @media (prefers-reduced-motion: reduce){.amb{animation:none}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <canvas id="silk" aria-label="Luminous jewel-toned silk ribbons flowing through deep space"></canvas>
+  <div class="amb"></div>
+  <div class="vig"></div>
+</div>
+
+<div class="ui">
+  <div class="brand">
+    <div class="k">Luxe Motion &middot; No. 046</div>
+    <h1>Threads of<br><em>liquid light.</em></h1>
+  </div>
+  <div class="side">
+    <div class="lab">Warp</div>
+    <span class="val" id="warp">000</span>
+    <div class="lab">Weft</div>
+  </div>
+  <div class="note">
+    <p>Five ribbons of silk drift through the void — each a sum of sine waves, folded so the
+       light runs down its length. Move to part the cloth; the nearer strands parallax ahead of the far ones.</p>
+    <div class="hint">Move to parallax &middot; scroll to change the weave</div>
+  </div>
+  <div class="rule"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("silk");
+  var ctx=canvas.getContext("2d");
+  var warpEl=document.getElementById("warp");
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var W=0,H=0,DPR=1,t=0,last=0;
+  var mouse={x:0,y:0,tx:0,ty:0};
+  var scroll=0,scrollT=0;
+
+  function rgba(c,a){return "rgba("+c[0]+","+c[1]+","+c[2]+","+a+")";}
+
+  var JEWEL=[
+    {deep:[8,72,58],  mid:[28,170,120], bright:[120,255,190]},
+    {deep:[10,32,80], mid:[40,100,230], bright:[150,190,255]},
+    {deep:[88,12,36], mid:[210,45,90],  bright:[255,150,180]},
+    {deep:[44,20,84], mid:[120,70,220], bright:[205,170,255]},
+    {deep:[80,54,12], mid:[210,160,50], bright:[255,225,150]}
+  ];
+
+  var ribbons=[];
+  function makeRibbons(){
+    ribbons=[];
+    var n=5;
+    for(var i=0;i<n;i++){
+      ribbons.push({
+        depth:0.4+i*0.17,
+        baseY:0.16+i*0.15,
+        amp1:H*(0.055+Math.random()*0.05),
+        amp2:H*(0.02+Math.random()*0.03),
+        amp3:H*(0.01+Math.random()*0.02),
+        k1:0.005+Math.random()*0.004,
+        k2:0.013+Math.random()*0.006,
+        k3:0.028+Math.random()*0.012,
+        p1:Math.random()*6.28,
+        p2:Math.random()*6.28,
+        p3:Math.random()*6.28,
+        w1:0.28+Math.random()*0.28,
+        w2:0.55+Math.random()*0.4,
+        baseW:78+i*20,
+        twistK:0.005+Math.random()*0.004,
+        twistP:Math.random()*6.28,
+        twistW:0.22+Math.random()*0.2,
+        phase:Math.random()*6.28,
+        pal:JEWEL[i%JEWEL.length],
+        alpha:0.92
+      });
+    }
+  }
+
+  var motes=[];
+  function makeMotes(){
+    motes=[]; var n=70;
+    for(var i=0;i<n;i++){
+      motes.push({
+        x:Math.random()*W,y:Math.random()*H,
+        r:0.4+Math.random()*1.8,z:Math.random(),
+        s:0.1+Math.random()*0.4,ph:Math.random()*6.28,
+        col: Math.random()<0.5?[120,255,190]:(Math.random()<0.5?[150,190,255]:[205,170,255])
+      });
+    }
+  }
+
+  function drawMotes(dt,front){
+    for(var i=0;i<motes.length;i++){
+      var m=motes[i];
+      if(front && m.z<0.55) continue;
+      if(!front && m.z>=0.55) continue;
+      m.y -= m.s*dt*22*(0.3+m.z);
+      m.x += Math.sin(t*0.5+m.ph)*m.s*dt*10;
+      if(m.y<-10){m.y=H+10;m.x=Math.random()*W;}
+      var px=m.x+mouse.x*m.z*(front?90:60);
+      var py=m.y+mouse.y*m.z*(front?30:24);
+      ctx.globalAlpha=(0.2+0.55*m.z)*(0.55+0.45*Math.sin(t*1.8+m.ph));
+      ctx.fillStyle=rgba(m.col,1);
+      ctx.beginPath();ctx.arc(px,py,m.r*(0.5+m.z),0,6.2832);ctx.fill();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function drawRibbon(rb){
+    var step=5;
+    var x0=-70,x1=W+70;
+    var pts=[];
+    for(var x=x0;x<=x1;x+=step){
+      var s=x-x0;
+      var y=rb.baseY*H
+        + rb.amp1*Math.sin(rb.k1*s+rb.p1+t*rb.w1)
+        + rb.amp2*Math.sin(rb.k2*s+rb.p2+t*rb.w2+rb.phase)
+        + rb.amp3*Math.sin(rb.k3*s+rb.p3-t*rb.w1*0.7)
+        + scroll*40;
+      pts.push({x:x,y:y});
+    }
+    var facingSum=0;
+    for(var i=0;i<pts.length;i++){
+      var prev=pts[i>0?i-1:0], next=pts[i<pts.length-1?i+1:pts.length-1];
+      var dy=next.y-prev.y, dx=step||1;
+      var tl=Math.sqrt(dx*dx+dy*dy)||1;
+      var nx=-dy/tl, ny=dx/tl;
+      var twist=Math.sin(rb.twistK*pts[i].x+rb.twistP+t*rb.twistW);
+      var facing=1-Math.abs(twist);
+      facingSum+=facing;
+      var hw=0.5*(0.26+0.74*Math.abs(twist))*rb.baseW;
+      pts[i].nx=nx;pts[i].ny=ny;pts[i].hw=hw;pts[i].facing=facing;
+    }
+    var L=[],R=[];
+    for(var i=0;i<pts.length;i++){
+      L.push([pts[i].x-pts[i].nx*pts[i].hw, pts[i].y-pts[i].ny*pts[i].hw]);
+      R.push([pts[i].x+pts[i].nx*pts[i].hw, pts[i].y+pts[i].ny*pts[i].hw]);
+    }
+    var mid=pts[(pts.length/2)|0];
+    var gmax=rb.baseW*1.25;
+    var g=ctx.createLinearGradient(mid.x-mid.nx*gmax,mid.y-mid.ny*gmax,
+                                   mid.x+mid.nx*gmax,mid.y+mid.ny*gmax);
+    var deep=rb.pal.deep, midc=rb.pal.mid, br=rb.pal.bright;
+    g.addColorStop(0,  rgba(deep,0.22));
+    g.addColorStop(0.34,rgba(midc,0.92));
+    g.addColorStop(0.5, rgba(br,1));
+    g.addColorStop(0.66,rgba(midc,0.92));
+    g.addColorStop(1,  rgba(deep,0.22));
+
+    ctx.beginPath();
+    ctx.moveTo(L[0][0],L[0][1]);
+    for(var i=1;i<L.length;i++) ctx.lineTo(L[i][0],L[i][1]);
+    for(var i=R.length-1;i>=0;i--) ctx.lineTo(R[i][0],R[i][1]);
+    ctx.closePath();
+    ctx.globalAlpha=rb.alpha;
+    ctx.fillStyle=g; ctx.fill();
+
+    // dark definition along both edges
+    ctx.globalAlpha=rb.alpha*0.5;
+    ctx.lineWidth=Math.max(0.6,rb.baseW*0.012);
+    ctx.strokeStyle=rgba(deep,1);
+    ctx.beginPath();ctx.moveTo(L[0][0],L[0][1]);
+    for(var i=1;i<L.length;i++) ctx.lineTo(L[i][0],L[i][1]);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(R[0][0],R[0][1]);
+    for(var i=1;i<R.length;i++) ctx.lineTo(R[i][0],R[i][1]);ctx.stroke();
+
+    // specular core, brighter when the face catches the light
+    var fa=facingSum/pts.length;
+    ctx.globalAlpha=0.14+0.34*fa;
+    ctx.lineWidth=Math.max(1,rb.baseW*0.045);
+    ctx.lineJoin="round";ctx.lineCap="round";
+    ctx.strokeStyle=rgba(br,1);
+    ctx.beginPath();ctx.moveTo(pts[0].x,pts[0].y);
+    for(var i=1;i<pts.length;i++) ctx.lineTo(pts[i].x,pts[i].y);ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth;H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    makeRibbons();makeMotes();
+  }
+  window.addEventListener("resize",resize);
+
+  window.addEventListener("pointermove",function(e){
+    mouse.tx=(e.clientX/W)*2-1;mouse.ty=(e.clientY/H)*2-1;
+    if(mouse.tx>1)mouse.tx=1;if(mouse.tx<-1)mouse.tx=-1;
+    if(mouse.ty>1)mouse.ty=1;if(mouse.ty<-1)mouse.ty=-1;
+  },{passive:true});
+  window.addEventListener("wheel",function(e){
+    scrollT+=e.deltaY*0.0016;
+    if(scrollT>3)scrollT=3;if(scrollT<-3)scrollT=-3;
+  },{passive:true});
+
+  var warp=0;
+  function frame(ts){
+    if(!last)last=ts;
+    var dt=Math.min((ts-last)/1000,0.05);last=ts;
+    if(reduce)dt*=0.2;
+    t+=dt;
+    mouse.x+=(mouse.tx-mouse.x)*0.06;
+    mouse.y+=(mouse.ty-mouse.y)*0.06;
+    scroll+=(scrollT-scroll)*0.06;
+
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.clearRect(0,0,W,H);
+    drawMotes(dt,false);
+    for(var i=0;i<ribbons.length;i++) drawRibbon(ribbons[i]);
+    drawMotes(dt,true);
+
+    warp=(warp+dt*6)%1000;
+    warpEl.textContent=("0"+Math.floor(warp)).slice(-3);
+    requestAnimationFrame(frame);
+  }
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+PROMPT:
+Build a standalone, fully offline HTML page: a minimal luxury watch landing page.
+Huge serif headline, gold on black, generous whitespace, slow reveal. Palette:
+black, champagne gold, ivory. Signature effects: a CSS-drawn watch (radial +
+conic gradients for the dial ticks and brushed-gold case), a slow fade/scale
+reveal on load, and a shimmer of light sweeping across the gold. One
+self-contained .html file, all CSS in a single <style> block and all JS in a
+single <script> block, zero external dependencies (no CDN, fonts, images or
+libraries), responsive 320px to 4K, valid HTML5, works by double-clicking
+offline.
+
+TITLE:
+MERIDIAN — The Art of Time
+
+DESIGN DESCRIPTION:
+A single, unhurried hero. A black void lit by a soft radial glow holds a giant
+serif wordmark ("MERIDIAN / The Art of Time") rendered in brushed champagne
+gold with a slow light sweeping across the letters, above a fully CSS-drawn
+timepiece — a conic-gradient gold case, a sunburst-grained dial, radial-masked
+hour and minute tick rings, and slender gold hands with a sweeping seconds
+hand. As the visitor scrolls, copy and specifications rise into view one beat
+at a time, and the watch lifts and tilts with a gentle parallax. The whole
+page moves slowly: nothing snaps, everything settles, in the manner of a
+luxury editorial.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS-only watch: conic-gradient brushed-gold case ring; repeating-conic-gradient
+  hour (12) and minute (60) tick rings masked with radial-gradients to form
+  rings; radial-gradient sunburst dial texture.
+- Gold text via -webkit-background-clip:text with an animated multi-stop gold
+  gradient (background-size 250%) for the sweeping shimmer.
+- Masked ring ticks (CSS mask + -webkit-mask radial-gradient "donut").
+- Line-masked headline reveal (overflow:hidden rows, translateY wipe on load).
+- Fixed header using mix-blend-mode: difference so it inverts over light/dark.
+- Film-grain overlay from an inline SVG feTurbulence data-URI.
+- IntersectionObserver staggered scroll-reveal with per-element delay.
+- requestAnimationFrame-smoothed scroll parallax (translateY + rotateX) on the watch.
+- Continuous sweeping "sheen" highlight (mix-blend-mode: screen) over the dial.
+
+INTENDED INTERACTION MODEL:
+Passive cinematic scroll. On load the eyebrow, wordmark, watch and CTA rise and
+scale in sequence on a timer. Hovering a button lifts it and shifts the gold
+gradient. Scrolling drives a subtle parallax tilt of the watch and triggers the
+craft / specifications / edition copy to fade up in staggered steps. The second
+hand ticks continuously. No menus to open, no forms to fill — the visitor is
+guided, not asked to act.

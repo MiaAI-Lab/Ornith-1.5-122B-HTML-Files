@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TESSERAE · A Byzantine Mosaic Reveal</title>
+<style>
+  :root{
+    --grout:#17130c;
+    --ink:#efe3c6;
+  }
+  html,body{margin:0;padding:0;min-height:100%;background:
+    radial-gradient(120% 90% at 50% 8%, #241c12 0%, #14100b 55%, #0c0906 100%);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .page{max-width:1240px;margin:0 auto;padding:clamp(26px,6vh,70px) clamp(18px,4vw,52px) clamp(24px,5vh,56px);
+    display:flex;flex-direction:column;align-items:center;min-height:100vh;box-sizing:border-box}
+
+  .mast{text-align:center;margin-bottom:clamp(14px,2.6vh,26px)}
+  .eyebrow{font-size:.62rem;letter-spacing:.5em;text-transform:uppercase;color:#c59a3e;opacity:.9}
+  .mast h1{margin:.28em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(2.2rem,7vw,4.6rem);line-height:.94;letter-spacing:.01em;color:#f3e7c8;
+    text-shadow:0 2px 24px rgba(0,0,0,.5)}
+  .mast .sub{margin:.5em 0 0;font-family:Georgia,serif;font-style:italic;font-size:clamp(.85rem,2.2vw,1.1rem);
+    color:#c9b182}
+
+  .frame{position:relative;width:min(94vw,1180px);border-radius:6px;
+    padding:clamp(8px,1.4vw,16px);
+    background:linear-gradient(160deg,#2a2113,#171109);
+    box-shadow:0 30px 80px rgba(0,0,0,.55), inset 0 0 0 1px rgba(201,154,52,.18),
+      inset 0 0 60px rgba(0,0,0,.5)}
+  .frame::before{content:"";position:absolute;inset:8px;border-radius:4px;pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(201,154,52,.25)}
+  .mosaic{position:relative;width:100%;display:grid;gap:var(--g,3px)}
+  .tile{aspect-ratio:1/1;border-radius:2px;position:relative;
+    background:var(--grout);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.35),
+      inset 1px 2px 3px rgba(255,240,200,.07),
+      inset -1px -2px 4px rgba(0,0,0,.45);
+    will-change:transform,background;
+    animation:reveal var(--rd) var(--rdly) both,
+              tw var(--td) var(--tdly) infinite}
+  .tile::after{content:"";position:absolute;inset:0;border-radius:2px;
+    background:linear-gradient(135deg,rgba(255,255,255,.3),transparent 46%);
+    mix-blend-mode:screen;opacity:0;animation:twsh var(--td) var(--tdly) infinite}
+  .tile.gold::after{background:linear-gradient(135deg,rgba(255,236,180,.5),transparent 50%)}
+  .tile:hover{filter:brightness(1.22) saturate(1.15);z-index:2}
+
+  @keyframes reveal{
+    0%{background:var(--grout);transform:scale(.42) rotate(9deg);opacity:.15}
+    46%{opacity:1}
+    70%{background:var(--c);transform:scale(1.07) rotate(0);opacity:1}
+    82%{transform:scale(1)}
+    100%{background:var(--c);transform:scale(1);opacity:1}
+  }
+  @keyframes tw{
+    0%,100%{filter:brightness(1)}
+    50%{filter:brightness(1.14)}
+  }
+  @keyframes twsh{
+    0%,100%{opacity:0}
+    45%,58%{opacity:.55}
+  }
+
+  .shimmer{position:absolute;inset:-24% -10%;pointer-events:none;z-index:3;
+    background:linear-gradient(112deg,transparent 41%,rgba(255,238,196,.17) 48%,transparent 55%);
+    mix-blend-mode:screen;animation:sweep 9s ease-in-out infinite}
+  @keyframes sweep{0%{transform:translateX(-52%)}50%{transform:translateX(52%)}100%{transform:translateX(-52%)}}
+
+  .cap{text-align:center;margin-top:clamp(16px,2.8vh,28px);max-width:640px}
+  .cap p{margin:0 0 .7em;color:#c9b182;font-size:clamp(.8rem,1.9vw,.98rem);line-height:1.55;letter-spacing:.01em}
+  .hint{display:inline-block;font-size:.64rem;letter-spacing:.26em;text-transform:uppercase;
+    color:#c59a3e;border:1px solid rgba(201,154,52,.3);border-radius:999px;padding:.5em 1.1em}
+
+  .grain{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:.05;mix-blend-mode:overlay;
+    background-image:radial-gradient(rgba(255,255,255,.6) .5px,transparent .5px);background-size:3px 3px}
+
+  @media (prefers-reduced-motion: reduce){
+    .tile{animation:none!important}
+    .shimmer{animation:none}
+  }
+  @media (max-width:520px){:root{--g:2px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="mast">
+    <div class="eyebrow">Byzantine · Mosaic · No. 047</div>
+    <h1>Tesserae</h1>
+    <p class="sub">gold &middot; lapis &middot; jade &middot; terracotta</p>
+  </div>
+
+  <div class="frame">
+    <div class="mosaic" id="mosaic" role="img"
+         aria-label="A Byzantine mosaic that assembles stone by stone into a radiant medallion"></div>
+    <div class="shimmer"></div>
+  </div>
+
+  <div class="cap">
+    <p>Three hundred hand-cut stones swing into place as a ripple from the centre &mdash; then a band of
+       light walks the field, catching the gold. Tap any stone to relight the whole mosaic from your finger.</p>
+    <span class="hint">Tap the field to relight from that stone</span>
+  </div>
+</div>
+<div class="grain"></div>
+
+<script>
+(function(){
+  "use strict";
+  var mosaic=document.getElementById("mosaic");
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // gold, lapis, jade, terracotta (rgb)
+  var PAL=[[201,154,52],[28,58,134],[28,122,92],[176,84,58]];
+  var GOLD=0;
+  var COLS=0,ROWS=0,tiles=[];
+
+  function shade(idx,f){
+    var c=PAL[idx];
+    return "rgb("+Math.round(c[0]*f)+","+Math.round(c[1]*f)+","+Math.round(c[2]*f)+")";
+  }
+
+  function colorFor(c,r){
+    var midC=(COLS-1)/2, midR=(ROWS-1)/2;
+    var dist=Math.sqrt((c-midC)*(c-midC)+(r-midR)*(r-midR));
+    var frame=(c===0||r===0||c===COLS-1||r===ROWS-1);
+    if(frame) return {idx:GOLD,frame:true};
+    if(dist<1.4) return {idx:GOLD,frame:false};
+    var ring=Math.round(dist/1.5);
+    return {idx:ring%4,frame:false};
+  }
+
+  function build(){
+    tiles=[];
+    var vw=window.innerWidth;
+    var frameW=Math.min(vw*0.94,1180)-32;
+    var target= vw<520?30 : 36;
+    COLS=Math.min(42,Math.max(12,Math.round(frameW/(target+3))));
+    var cellW=frameW/COLS-3;
+    ROWS=Math.min(26,Math.max(8,Math.round((window.innerHeight*0.58)/(cellW+3))));
+    mosaic.style.gridTemplateColumns="repeat("+COLS+",1fr)";
+
+    for(var r=0;r<ROWS;r++){
+      for(var c=0;c<COLS;c++){
+        var info=colorFor(c,r);
+        var f=0.86+Math.random()*0.32;
+        var el=document.createElement("div");
+        el.className="tile"+(info.idx===GOLD?" gold":"");
+        el.dataset.c=c;el.dataset.r=r;
+        el.style.setProperty("--c",shade(info.idx,f));
+        el.style.setProperty("--td",(2.6+Math.random()*3.4).toFixed(3));
+        el.style.setProperty("--tdly",(Math.random()*4).toFixed(3));
+        if(reduce){ el.style.animation="none"; el.style.background=shade(info.idx,f); }
+        mosaic.appendChild(el);
+        tiles.push({el:el,c:c,r:r});
+      }
+    }
+    relight(COLS/2-0.5, ROWS/2-0.5, 0);
+  }
+
+  function relight(cx,cy,seed){
+    if(reduce) return;
+    for(var i=0;i<tiles.length;i++){
+      var t=tiles[i];
+      var d=Math.sqrt((t.c-cx)*(t.c-cx)+(t.r-cy)*(t.r-cy));
+      var dly=(d*0.045 + ((seed+t.c*7+t.r*13)%7)/7*0.5).toFixed(3);
+      t.el.style.setProperty("--rd","0.72");
+      t.el.style.setProperty("--rdly",dly);
+    }
+    // restart the reveal animation for every tile
+    for(var j=0;j<tiles.length;j++){
+      var e=tiles[j].el;
+      e.style.animation="none"; void e.offsetWidth;
+      e.style.animation="reveal var(--rd) var(--rdly) both, tw var(--td) var(--tdly) infinite";
+    }
+  }
+
+  mosaic.addEventListener("pointerdown",function(e){
+    var tile=e.target.closest?e.target.closest(".tile"):null;
+    if(!tile)return;
+    relight(+tile.dataset.c,+tile.dataset.r, tiles.length);
+  });
+
+  var autoTimer=null;
+  if(!reduce){
+    autoTimer=setInterval(function(){
+      var cx=1+Math.random()*(COLS-2), cy=1+Math.random()*(ROWS-2);
+      relight(cx,cy, Date.now());
+    }, 9000);
+  }
+
+  var rt=null;
+  window.addEventListener("resize",function(){
+    if(rt)clearTimeout(rt);
+    rt=setTimeout(build,220);
+  });
+
+  build();
+})();
+</script>
+</body>
+</html>

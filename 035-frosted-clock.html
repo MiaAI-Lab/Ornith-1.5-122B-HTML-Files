@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Frost — Twilight Clock</title>
+<style>
+  :root{
+    --indigo:#161238;
+    --violet:#3a2e6b;
+    --teal:#22c6d6;
+    --rose:#ff6fa8;
+    --lilac:#b9a7ff;
+    --ink:#eaf2ff;
+    --mono:Menlo,Consolas,"Courier New",monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden}
+  body{
+    font-family:var(--sans);color:var(--ink);
+    background:var(--indigo);
+    display:flex;align-items:center;justify-content:center;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* animated twilight gradient */
+  .scene{position:fixed;inset:-15%;z-index:0;
+    background:
+      radial-gradient(40% 46% at 22% 26%, rgba(34,198,214,.30), transparent 60%),
+      radial-gradient(44% 48% at 80% 74%, rgba(255,111,168,.26), transparent 62%),
+      radial-gradient(60% 60% at 50% 12%, rgba(185,167,255,.22), transparent 58%),
+      conic-gradient(from 200deg at 50% 50%, #100c2e, #1b1550, #332a6e, #143a52, #1b1550, #100c2e);
+    background-size:100% 100%,100% 100%,100% 100%,300% 300%;
+    animation:twilight 30s linear infinite;
+    filter:saturate(1.15);
+  }
+  @keyframes twilight{to{background-position:0,0,0,300% 300%}}
+
+  /* drifting orbs behind the glass */
+  .orbs{position:fixed;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+  .orb{position:absolute;border-radius:50%;filter:blur(50px);opacity:.55;mix-blend-mode:screen}
+  .o1{width:46vmax;height:46vmax;left:-8%;top:-6%;background:radial-gradient(circle,#22c6d6,transparent 62%);animation:float1 22s ease-in-out infinite alternate}
+  .o2{width:40vmax;height:40vmax;right:-6%;bottom:-8%;background:radial-gradient(circle,#ff6fa8,transparent 62%);animation:float2 26s ease-in-out infinite alternate}
+  .o3{width:34vmax;height:34vmax;left:44%;top:30%;background:radial-gradient(circle,#b9a7ff,transparent 64%);animation:float3 30s ease-in-out infinite alternate}
+  @keyframes float1{to{transform:translate(14vw,10vh) scale(1.15)}}
+  @keyframes float2{to{transform:translate(-12vw,-8vh) scale(1.1)}}
+  @keyframes float3{to{transform:translate(-6vw,12vh) scale(.9)}}
+
+  /* the frosted glass clock */
+  .stage{position:relative;z-index:2;width:min(92vw,560px);padding:clamp(22px,4vw,40px)}
+  .glass{
+    position:relative;border-radius:34px;padding:clamp(26px,5vw,52px);
+    background:linear-gradient(150deg, rgba(255,255,255,.16), rgba(255,255,255,.05));
+    border:1px solid rgba(255,255,255,.35);
+    box-shadow:0 30px 80px rgba(6,4,24,.55), inset 0 1px 0 rgba(255,255,255,.5), inset 0 -1px 0 rgba(255,255,255,.12);
+    backdrop-filter:blur(18px) saturate(1.5);
+    text-align:center;
+  }
+
+  /* analog face */
+  .clock{position:relative;width:min(64vw,300px);aspect-ratio:1;margin:0 auto clamp(20px,3vw,30px)}
+  .face{
+    position:absolute;inset:0;border-radius:50%;
+    background:radial-gradient(circle at 50% 42%, rgba(255,255,255,.22), rgba(255,255,255,.06) 60%, rgba(255,255,255,.10));
+    border:1px solid rgba(255,255,255,.4);
+    box-shadow:inset 0 2px 20px rgba(255,255,255,.35), inset 0 -8px 24px rgba(20,10,50,.4), 0 8px 30px rgba(6,4,24,.4);
+    backdrop-filter:blur(6px);
+  }
+  .ring{position:absolute;inset:6%;border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(255,255,255,.10), rgba(255,255,255,.02));
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .num{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    font-family:var(--mono);font-size:clamp(.8rem,2.6vw,1.15rem);font-weight:600;
+    color:var(--ink);text-shadow:0 0 10px rgba(34,198,214,.9),0 0 22px rgba(34,198,214,.5);
+    pointer-events:none}
+  .num.n3,.num.n6,.num.n9,.num.n12{color:#fff;text-shadow:0 0 12px rgba(255,111,168,.9),0 0 26px rgba(255,111,168,.55);font-size:clamp(.95rem,3vw,1.4rem)}
+  .tick{position:absolute;left:calc(50% - 0.5px);top:5%;width:1px;height:9px;
+    background:rgba(255,255,255,.55);transform-origin:50% 50%;transform:rotate(0deg)}
+  .tick.m{height:5px;background:rgba(255,255,255,.28);top:6%}
+
+  /* hands */
+  .hand{position:absolute;left:50%;bottom:50%;transform-origin:50% 100%;border-radius:999px;
+    transition: none;}
+  .hour{width:7px;height:27%;margin-left:-3.5px;
+    background:linear-gradient(to top,#fff,#dfe9ff);
+    box-shadow:0 0 12px rgba(255,255,255,.6);z-index:4}
+  .min{width:4.5px;height:37%;margin-left:-2.25px;
+    background:linear-gradient(to top,#eef4ff,#cdd9ff);
+    box-shadow:0 0 10px rgba(220,235,255,.55);z-index:5}
+  .sec{width:2px;height:40%;margin-left:-1px;
+    background:linear-gradient(to top,var(--rose),var(--teal));
+    box-shadow:0 0 12px rgba(34,198,214,.8);z-index:6}
+  .sec::after{content:"";position:absolute;left:50%;bottom:-16%;width:2px;height:16%;
+    margin-left:-1px;background:var(--rose);box-shadow:0 0 8px var(--rose)}
+  .cap{position:absolute;left:50%;top:50%;width:16px;height:16px;border-radius:50%;
+    transform:translate(-50%,-50%);
+    background:radial-gradient(circle,#fff,var(--rose));
+    box-shadow:0 0 14px rgba(255,111,168,.9),0 0 4px #fff;z-index:7}
+
+  /* digital readout */
+  .digital{margin-top:4px}
+  .time{font-family:var(--mono);font-weight:700;letter-spacing:.04em;
+    font-size:clamp(2.2rem,9vw,3.6rem);line-height:1;
+    font-variant-numeric:tabular-nums;
+    color:#fff;text-shadow:0 0 18px rgba(34,198,214,.7),0 0 40px rgba(34,198,214,.35)}
+  .time .sep{opacity:.55;margin:0 .02em}
+  .ampm{font-size:.42em;vertical-align:super;margin-left:.4em;color:var(--lilac);text-shadow:none}
+  .date{margin-top:10px;font-size:clamp(.8rem,2.4vw,1rem);letter-spacing:.14em;text-transform:uppercase;
+    color:#d8e2ff;opacity:.9;text-shadow:0 0 10px rgba(185,167,255,.4)}
+  .tz{margin-top:6px;font-family:var(--mono);font-size:.7rem;letter-spacing:.2em;color:var(--teal);
+    text-shadow:0 0 10px rgba(34,198,214,.6);opacity:.85}
+
+  .caption{position:relative;z-index:2;text-align:center;margin-top:clamp(18px,3vw,28px);
+    font-size:.72rem;letter-spacing:.34em;text-transform:uppercase;color:#c7d2ff;opacity:.72}
+
+  @media (prefers-reduced-motion: reduce){
+    .scene,.orb{animation:none}
+  }
+  @media (max-width:420px){
+    .glass{padding:22px}
+  }
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true"></div>
+
+<div class="orbs" aria-hidden="true">
+  <span class="orb o1"></span>
+  <span class="orb o2"></span>
+  <span class="orb o3"></span>
+</div>
+
+<div class="stage">
+  <div class="glass">
+    <div class="clock">
+      <div class="face" id="face">
+        <div class="ring"></div>
+      </div>
+      <div class="hand hour" id="hour" aria-hidden="true"></div>
+      <div class="hand min" id="minute" aria-hidden="true"></div>
+      <div class="hand sec" id="second" aria-hidden="true"></div>
+      <div class="cap" aria-hidden="true"></div>
+    </div>
+    <div class="digital">
+      <div class="time">
+        <span id="hh">00</span><span class="sep">:</span><span id="mm">00</span><span class="sep">:</span><span id="ss">00</span><span class="ampm" id="ampm">AM</span>
+      </div>
+      <div class="date" id="date">—</div>
+      <div class="tz" id="tz">—</div>
+    </div>
+  </div>
+  <div class="caption">Frost · local time</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var face = document.getElementById("face");
+  var hour = document.getElementById("hour");
+  var minute = document.getElementById("minute");
+  var second = document.getElementById("second");
+  var hh = document.getElementById("hh"), mm = document.getElementById("mm"), ss = document.getElementById("ss"), ampm = document.getElementById("ampm");
+  var dateEl = document.getElementById("date"), tzEl = document.getElementById("tz");
+  if(!face || !hour) return;
+
+  // build ticks (60) and glowing numerals (12)
+  for(var k=0;k<60;k++){
+    var t=document.createElement("div");
+    var isHour=(k%5===0);
+    t.className="tick"+(isHour?"":" m");
+    t.style.transform="rotate("+(k*6)+"deg)";
+    face.appendChild(t);
+  }
+  for(var i=1;i<=12;i++){
+    var a=(i*30-90)*Math.PI/180;
+    var x=50+42*Math.cos(a), y=50+42*Math.sin(a);
+    var n=document.createElement("div");
+    n.className="num n"+i;
+    n.textContent=(i===12?"12":String(i));
+    n.style.left=x.toFixed(2)+"%";
+    n.style.top=y.toFixed(2)+"%";
+    face.appendChild(n);
+  }
+
+  // timezone label
+  try{
+    var tz=Intl.DateTimeFormat().resolvedOptions().timeZone||"";
+    var short=tz?tz.split("/").pop().replace(/_/g," "):"LOCAL";
+    tzEl.textContent="◍ "+short.toUpperCase();
+  }catch(e){ tzEl.textContent="◍ LOCAL"; }
+
+  var lastMin=-1;
+  function tick(){
+    var now=new Date();
+    var h=now.getHours(), m=now.getMinutes(), s=now.getSeconds(), ms=now.getMilliseconds();
+    var h12=((h%12)+12)%12;
+    var secF = reduce ? s : s + ms/1000;
+    var minF = m + secF/60;
+    var hrF  = h12 + minF/60;
+    hour.style.transform   = "rotate("+ (hrF*30) +"deg)";
+    minute.style.transform = "rotate("+ (minF*6) +"deg)";
+    second.style.transform = "rotate("+ (secF*6) +"deg)";
+    hh.textContent = String(h).padStart(2,"0");
+    mm.textContent = String(m).padStart(2,"0");
+    ss.textContent = String(s).padStart(2,"0");
+    ampm.textContent = (h<12?"AM":"PM");
+    if(m!==lastMin){
+      lastMin=m;
+      try{
+        dateEl.textContent = now.toLocaleDateString(undefined,
+          {weekday:"long",day:"numeric",month:"long",year:"numeric"});
+      }catch(e){ dateEl.textContent = now.toDateString(); }
+    }
+    if(!reduce) requestAnimationFrame(tick);
+  }
+
+  tick();
+  if(reduce) setInterval(tick, 1000);
+})();
+</script>
+</body>
+</html>

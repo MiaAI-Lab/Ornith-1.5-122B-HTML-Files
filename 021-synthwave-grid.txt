@@ -1,0 +1,66 @@
+RECREATION PROMPT
+=================
+Create a full-screen, animated "synthwave / outrun" hero scene in a single
+self-contained HTML file (inline <style>, no external assets, no JS required).
+The viewport is a fixed, overflow-hidden landscape with a deep purple-to-
+magenta night sky, a large glowing sun with horizontal dark slats on its lower
+half, a jagged mountain range silhouette on the horizon, and a perspective
+"floor" of glowing cyan-and-magenta grid lines scrolling toward the viewer.
+Layer a twinkling star field above the horizon, a warm horizon glow, a CRT
+scanline overlay and a heavy vignette. Overlay editorial neon type: a large
+flickering wordmark top-left and a small status footer bottom. Use CSS custom
+properties for the neon palette, CSS keyframe animations for all motion,
+CSS perspective for the floor, SVG for the mountains, and mask/gradients for
+the sun slats and grid fade. Respect prefers-reduced-motion.
+
+TITLE
+=====
+NEON DRIFT · Synthwave Horizon
+
+DESIGN DESCRIPTION
+==================
+A retro-futuristic "outrun" title screen that recreates the look of a 1980s
+arcade sunset drive. A vertical gradient sky runs from near-black violet at the
+top through magenta to a hot coral/peach band at the horizon, where a large
+glowing sun sits — its lower half cut by dark horizontal slats and masked so
+they fade in toward the bottom, with a pulsing outer ring and a drop-shadow
+glow. Beneath it a jagged single-path mountain range is outlined in faint cyan.
+The lower portion of the screen is a rotated perspective plane carrying a
+scrolling neon grid (cyan verticals, magenta horizontals) that continuously
+shifts downward to imply forward motion, tinted by a screen-blended glow.
+Star fields (two layered pseudo-elements) twinkle above the horizon, while a
+scanline layer and inset vignette give it a CRT monitor feel. Over this, a
+fixed type overlay presents the wordmark "Neon Drift" in heavy uppercase with a
+magenta/cyan chromatic-aberration text shadow and a stuttering flicker
+animation, a small subtitle line, and a bottom status bar with a blinking
+signal dot and channel/sunset labels.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- CSS perspective + rotateX(72deg) floor plane for the receding grid.
+- Scrolling grid via layered repeating-linear-gradient backgrounds animated
+  with background-position (gridScroll keyframes, 1.6s linear infinite).
+- Sun built from a radial-gradient disc plus a repeating-linear-gradient slat
+  layer masked with linear-gradient to the lower half.
+- Sun/ring pulsing and brightness flicker via @keyframes (sunPulse, ringPulse,
+  flicker).
+- Mountain range as a single SVG <path> with a linearGradient fill and a thin
+  cyan stroke outline, preserveAspectRatio="none" to stretch.
+- Dual-layer star field using ::before/::after with multiple radial-gradient
+  dots and staggered twinkle animations.
+- CRT effect: scanline overlay (repeating-linear-gradient, mix-blend-mode:
+  overlay, scanDrift) and vignette via inset box-shadow.
+- Neon wordmark using layered text-shadow for a magenta/cyan offset glow plus a
+  stepped (steps(1)) flicker.
+- Blinking status dot with steps(2) keyframes.
+- CSS custom property palette (--sky-*, --sun-*, --grid-cyan/magenta, --glow).
+- prefers-reduced-motion disables all animations.
+
+INTENDED INTERACTION MODEL
+==========================
+Purely ambient and non-interactive — a looping, self-animated wallpaper/title
+screen. All motion is automatic CSS animation (sun pulse, scrolling grid,
+twinkling stars, scanline drift, wordmark flicker, blinking signal dot). There
+is no pointer, click, or scroll interaction; the scene is fixed and
+fullscreen (overflow hidden). It degrades gracefully under
+prefers-reduced-motion, which turns off every animation.

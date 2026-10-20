@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UPPER AIR — A Paper Plane Through the Clouds</title>
+<style>
+  :root{
+    --sky-top:#8fd0ff;
+    --sky-mid:#bfe6ff;
+    --sky-low:#eaf6ff;
+    --sun:#ffd58a;
+    --ink:#173a5e;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; overflow:hidden; height:100%;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      radial-gradient(120% 90% at 78% 8%, #fff3d6 0%, rgba(255,243,214,0) 42%),
+      linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 46%, var(--sky-low) 100%);
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+  }
+  #sky{position:fixed; inset:0; width:100%; height:100%; display:block; z-index:0}
+
+  .sun{
+    position:absolute; top:9%; right:11%; width:clamp(96px,15vw,220px); aspect-ratio:1; z-index:1;
+    border-radius:50%;
+    background:radial-gradient(circle at 50% 50%, #fff8ec 0%, #ffe9b0 34%, #ffcf82 60%, rgba(255,190,110,0) 72%);
+    box-shadow:0 0 70px 30px rgba(255,214,140,0.45), 0 0 160px 80px rgba(255,214,140,0.22);
+    animation:breathe 7s ease-in-out infinite;
+  }
+  .sun::after{
+    content:""; position:absolute; inset:-40%; border-radius:50%;
+    background:conic-gradient(from 0deg, rgba(255,255,255,0) 0 45%, rgba(255,240,200,0.18) 50%, rgba(255,255,255,0) 55% 100%);
+    animation:spin 40s linear infinite;
+  }
+  @keyframes breathe{0%,100%{transform:scale(1); filter:brightness(1)}50%{transform:scale(1.04); filter:brightness(1.06)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  .clouds{position:absolute; inset:0; z-index:2; pointer-events:none}
+  .layer{position:absolute; left:-20%; width:140%; display:flex; align-items:center; will-change:transform}
+  .layer.l1{top:14%; height:22%}
+  .layer.l2{top:40%; height:26%}
+  .layer.l3{top:66%; height:24%}
+  .cloud{
+    position:relative; margin:0 4vw; flex:none; background:rgba(255,255,255,0.92);
+    border-radius:50% 50% 46% 46%;
+    box-shadow:inset 0 -12px 30px rgba(150,185,215,0.25), 0 10px 40px rgba(120,160,200,0.28);
+    filter:drop-shadow(0 6px 10px rgba(120,160,200,0.20));
+  }
+  .cloud::before,.cloud::after{content:""; position:absolute; background:inherit; border-radius:50%}
+  .cloud::before{width:60%; height:150%; left:8%; top:-55%}
+  .cloud::after{width:52%; height:130%; right:6%; top:-38%}
+  .l1 .cloud{opacity:.55; filter:blur(2px)}
+  .l2 .cloud{opacity:.85}
+  .l3 .cloud{opacity:.95; transform:scale(1.15)}
+
+  .leaves{position:absolute; inset:0; z-index:4; pointer-events:none; overflow:hidden}
+  .leaf{
+    position:absolute; width:22px; height:14px;
+    background:linear-gradient(120deg,#7bb661,#4f8f43);
+    clip-path:polygon(0 50%, 50% 0, 100% 50%, 50% 100%);
+    box-shadow:0 2px 6px rgba(40,80,40,0.25);
+    animation:fall linear infinite;
+    will-change:transform;
+  }
+  .leaf::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent 48%, rgba(255,255,255,.4) 50%, transparent 52%)}
+  @keyframes fall{
+    0%{transform:translateY(-8vh) translateX(0) rotate(0deg)}
+    50%{transform:translateY(50vh) translateX(40px) rotate(200deg)}
+    100%{transform:translateY(108vh) translateX(-20px) rotate(400deg)}
+  }
+
+  .plane-wrap{position:absolute; z-index:5; width:0; height:0; will-change:transform}
+  .plane{
+    position:absolute; width:120px; height:40px; left:-60px; top:-20px;
+    transform-style:preserve-3d;
+    filter:drop-shadow(0 18px 14px rgba(60,90,120,0.28));
+  }
+  .wing{
+    position:absolute; inset:0;
+    clip-path:polygon(0% 50%, 34% 18%, 100% 50%, 34% 82%);
+    background:linear-gradient(180deg,#ffffff 0%, #f4f8fc 46%, #d7e2ee 54%, #b9c8da 100%);
+    box-shadow:inset 0 0 8px rgba(120,150,180,0.35);
+  }
+  .wing.bottom{ transform:translateZ(-6px) scaleY(0.965); filter:brightness(0.82); }
+  .crease{
+    position:absolute; left:2%; width:96%; height:2px; top:calc(50% - 1px);
+    background:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(120,150,180,0.6) 30%, #ffffff 50%, rgba(120,150,180,0.6) 70%, rgba(255,255,255,0) 100%);
+    transform:translateZ(2px);
+  }
+  .trail{
+    position:absolute; left:-150px; top:calc(50% - 1px); width:150px; height:2px;
+    background:linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.75) 100%);
+    filter:blur(1px); border-radius:2px;
+    animation:draw 1.4s ease-out infinite;
+  }
+  .trail.b{top:calc(50% + 6px); width:110px; opacity:.6; animation-delay:.2s}
+  @keyframes draw{0%{transform:scaleX(.4); opacity:0}30%{opacity:.8}100%{transform:scaleX(1); opacity:0}}
+
+  .wordmark{position:absolute; top:clamp(18px,4vw,48px); left:clamp(18px,4vw,48px); z-index:8; pointer-events:none}
+  .wordmark .kicker{font:600 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.46em;
+    text-transform:uppercase; color:var(--ink); opacity:.6; margin-bottom:14px}
+  .wordmark h1{margin:0; font-family:Georgia,'Times New Roman',serif; font-weight:400;
+    font-size:clamp(30px,6.4vw,74px); line-height:.94; color:#0d2a49;
+    text-shadow:0 2px 0 rgba(255,255,255,.5), 0 8px 30px rgba(20,60,100,.18)}
+  .wordmark h1 em{font-style:italic; color:#0a5fb0}
+  .wordmark .sub{margin-top:14px; max-width:38ch; font-size:13px; line-height:1.5; color:rgba(13,42,73,.72)}
+  .hint{position:absolute; left:clamp(18px,4vw,48px); bottom:clamp(16px,3.4vw,40px); z-index:8;
+    display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:.04em; color:rgba(13,42,73,.7)}
+  .hint .dot{width:9px; height:9px; border-radius:50%; background:var(--sun); flex:none;
+    box-shadow:0 0 12px rgba(255,207,130,.9); animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
+  .credit{position:absolute; right:clamp(16px,3.4vw,40px); bottom:clamp(16px,3.4vw,40px); z-index:8;
+    font:500 11px/1 system-ui,'Segoe UI',sans-serif; letter-spacing:.3em; text-transform:uppercase; color:rgba(13,42,73,.4); text-align:right}
+
+  @media (prefers-reduced-motion: reduce){
+    .sun,.sun::after,.hint .dot,.leaf,.trail,.cloud{animation:none !important}
+  }
+  @media (max-width:560px){ .wordmark .sub,.credit{display:none} }
+</style>
+</head>
+<body>
+<canvas id="sky"></canvas>
+<div class="sun"></div>
+
+<div class="clouds" id="clouds">
+  <div class="layer l1" data-depth="0.25"></div>
+  <div class="layer l2" data-depth="0.55"></div>
+  <div class="layer l3" data-depth="0.95"></div>
+</div>
+
+<div class="leaves" id="leaves"></div>
+
+<div class="plane-wrap" id="planeWrap">
+  <div class="plane" id="plane">
+    <div class="trail b"></div>
+    <div class="trail"></div>
+    <div class="wing bottom"></div>
+    <div class="wing"></div>
+    <div class="crease"></div>
+  </div>
+</div>
+
+<div class="wordmark">
+  <div class="kicker">Upper Air · No. 086</div>
+  <h1>Send it<br><em>skyward.</em></h1>
+  <div class="sub">A folded dart rides a figure-eight current through three parallaxing cloud decks — warm sun overhead, leaves drifting up to meet it, folded-paper shadows pooling beneath each crease.</div>
+</div>
+
+<div class="hint"><span class="dot"></span>Move the pointer to steer the current · click to launch a gust</div>
+<div class="credit">Upper&nbsp;Air<br>Series 086</div>
+
+<script>(function(){
+  "use strict";
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var TAU = Math.PI*2;
+
+  var canvas=document.getElementById('sky'), ctx=canvas.getContext('2d');
+  var wrap=document.getElementById('planeWrap'), plane=document.getElementById('plane');
+  var layers=[].slice.call(document.querySelectorAll('.layer'));
+  var leavesRoot=document.getElementById('leaves');
+  var W=0,H=0,DPR=1, cx=0, cy=0, Rx=0, Ry=0;
+  var theta=reduce?1.1:0, boost=0;
+  var pointer={x:0.5,y:0.5}, target={x:0.5,y:0.5};
+  var birds=[];
+
+  function buildClouds(){
+    layers.forEach(function(layer){
+      layer.innerHTML='';
+      var count = parseFloat(layer.dataset.depth)>0.9?6:(parseFloat(layer.dataset.depth)>0.5?7:6);
+      for(var i=0;i<count;i++){
+        var c=document.createElement('div'); c.className='cloud';
+        var w=70+Math.random()*150, h=w*(0.32+Math.random()*0.14);
+        c.style.width=w+'px'; c.style.height=h+'px';
+        c.style.marginLeft=(Math.random()*6-3)+'vw';
+        c.style.transform='translateY('+(Math.random()*30-15)+'px)';
+        layer.appendChild(c);
+      }
+    });
+  }
+  function buildLeaves(){
+    leavesRoot.innerHTML='';
+    var n=reduce?4:9;
+    for(var i=0;i<n;i++){
+      var l=document.createElement('div'); l.className='leaf';
+      l.style.left=(Math.random()*100)+'vw';
+      var sc=0.6+Math.random()*1.1;
+      l.style.transform='scale('+sc+')';
+      l.style.animationDuration=(9+Math.random()*9)+'s';
+      l.style.animationDelay=(-Math.random()*12)+'s';
+      l.style.opacity=(0.6+Math.random()*0.4).toFixed(2);
+      if(Math.random()>0.5) l.style.background='linear-gradient(120deg,#e0b04a,#c0832a)';
+      leavesRoot.appendChild(l);
+    }
+  }
+  function buildBirds(){
+    birds=[]; var n=reduce?3:6;
+    for(var i=0;i<n;i++){
+      birds.push({x:Math.random()*W, y:H*0.18+Math.random()*H*0.3,
+        v:12+Math.random()*22, s:0.5+Math.random()*0.8, p:Math.random()*TAU, depth:Math.random()});
+    }
+  }
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.round(W*DPR); canvas.height=Math.round(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    cx=W*0.5; cy=H*0.46; Rx=W*0.32; Ry=H*0.24;
+    buildClouds(); buildLeaves(); buildBirds();
+  }
+
+  function pos(e){
+    var r=canvas.getBoundingClientRect();
+    var x=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+    var y=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+    target.x=Math.max(0,Math.min(1,x/W));
+    target.y=Math.max(0,Math.min(1,y/H));
+  }
+  function gust(){ boost=1; }
+  canvas.addEventListener('mousemove',pos);
+  canvas.addEventListener('touchmove',function(e){pos(e);},{passive:true});
+  canvas.addEventListener('click',gust);
+  canvas.addEventListener('touchstart',function(e){pos(e);gust();},{passive:true});
+
+  var last=performance.now();
+  function frame(now){
+    var t=now;
+    if(!reduce){
+      var dt=Math.min(0.05,(now-last)/1000); last=now;
+      pointer.x+=(target.x-pointer.x)*Math.min(1,dt*4);
+      pointer.y+=(target.y-pointer.y)*Math.min(1,dt*4);
+      boost*=Math.pow(0.4,dt);
+      theta += (TAU/20000)*(1 + boost*3.5);
+    }
+    if(theta>TAU) theta-=TAU;
+
+    var den=1+Math.sin(theta)*Math.sin(theta);
+    var nx=Math.cos(theta)/den, ny=Math.sin(theta)*Math.cos(theta)/den;
+    var px=cx+nx*Rx, py=cy+ny*Ry;
+
+    var e=0.01, den2=1+Math.sin(theta+e)*Math.sin(theta+e);
+    var nx2=Math.cos(theta+e)/den2, ny2=Math.sin(theta+e)*Math.cos(theta+e)/den2;
+    var hx=cx+nx2*Rx, hy=cy+ny2*Ry;
+    var ang=Math.atan2(hy-py,hx-px);
+    if(Math.cos(ang)<0){ ang = ang>0? ang-Math.PI : ang+Math.PI; }
+
+    var depthScale=0.72+0.5*(py-cy+Ry)/(2*Ry);
+    depthScale*= (0.9+boost*0.4);
+
+    wrap.style.transform='translate('+px.toFixed(1)+'px,'+py.toFixed(1)+'px) rotate('+ang.toFixed(3)+'rad) scale('+depthScale.toFixed(3)+')';
+
+    var planeNdx=nx;
+    layers.forEach(function(layer){
+      var d=parseFloat(layer.dataset.depth);
+      var sway= reduce?0:Math.sin(t*0.00009*(0.6+d))* (16+d*26);
+      var par = -planeNdx*d*48;
+      var bob = reduce?0:Math.sin(t*0.00013*(0.5+d)+d*3)* (4+d*8);
+      layer.style.transform='translateX('+(sway+par).toFixed(1)+'px) translateY('+bob.toFixed(1)+'px)';
+    });
+
+    ctx.clearRect(0,0,W,H);
+    var hz=ctx.createLinearGradient(0,H*0.6,0,H);
+    hz.addColorStop(0,'rgba(234,246,255,0)');
+    hz.addColorStop(1,'rgba(234,246,255,0.5)');
+    ctx.fillStyle=hz; ctx.fillRect(0,H*0.6,W,H*0.4);
+
+    ctx.strokeStyle='rgba(30,60,95,0.5)'; ctx.lineWidth=2; ctx.lineCap='round';
+    for(var i=0;i<birds.length;i++){
+      var b=birds[i];
+      if(!reduce) b.x += b.v*(1+boost*2)*0.016;
+      if(b.x>W+30) b.x=-30;
+      var flap=Math.sin(t*0.006*b.s+b.p)*4;
+      var bx=b.x + planeNdx*b.depth*-20;
+      ctx.globalAlpha=0.5*b.s+0.2;
+      ctx.beginPath();
+      ctx.moveTo(bx-9,b.y+flap*0.4);
+      ctx.quadraticCurveTo(bx-4,b.y-6-Math.abs(flap),bx,b.y);
+      ctx.quadraticCurveTo(bx+4,b.y-6-Math.abs(flap),bx+9,b.y+flap*0.4);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+    requestAnimationFrame(frame);
+  }
+
+  window.addEventListener('resize',resize);
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 079-wave-interference.html + 079-wave-interference.txt — A wave-interference / two-source ripple physics visualization with controls. Palette: deep blue water, white/cyan interference. Signature: canvas two-source interference field color-mapped, sliders for frequency/spacing, live ripple pattern.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+RIPPLE — A Field of Two Voices
+
+DESIGN DESCRIPTION:
+Over a deep-water gradient that falls from midnight blue to near-black, two coherent point sources pulse in opposition and throw concentric ripples that cross, reinforce and cancel across the whole field. The interference is computed pixel-by-pixel as the sum of two sinusoids (amplitude fall-off 1/√r) and color-mapped through a cold palette — abyssal navy in the nodes, teal and cyan on the rising crests, glacial white at the anti-nodes — so the classic hyperbolic pattern of constructive and destructive bands glows like sonar. Two pulsing source markers sit at the heart of the field, a faint grain and vignette add depth, and a glass control panel lets you reshape the physics live: frequency, source spacing, a phase toggle between in-phase and anti-phase (which rotates the entire nodal pattern), and a speed dial. The whole thing reads as a scientific instrument rendered as fine art.
+
+MAJOR VISUAL TECHNIQUES:
+- Per-pixel interference computed by summing two distance-based sinusoids (A = sin(k·r1 − ωt)/√r1 + sin(k·r2 − ωt + φ)/√r2) over an offscreen low-resolution buffer, then ImageData-set for speed.
+- Cold color-map built as a 256-entry gradient through navy → deep blue → teal → cyan → pale cyan → near-white, applied by mapping normalized amplitude to a palette index.
+- Live animation via a requestAnimationFrame delta-time loop; the field re-solves each frame so the ripples visibly travel outward and the bands breathe.
+- Optional static (reduce-motion) mode that solves the field once and freezes it, plus a low-DPR cap so the pixel pass stays cheap on 4K.
+- Pulsing source markers drawn as layered radial gradients (glow halo + bright core) with a shared sine phase, and a subtle per-frame radial vignette plus a one-shot grain overlay for a water-texture feel.
+- Glassmorphic control panel (backdrop-filter blur, translucent fill, fine border) with a three-stop colour legend and live readouts of the current parameters.
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven. Drag anywhere on the field to reposition the interference pattern (both sources translate together, keeping their spacing), or drag directly on a source marker to move it. Three sliders reshape the physics in real time — Frequency (wave number, how tightly the bands are packed), Spacing (distance between the two sources, which sets the band angular density) and Speed (temporal rate), with a Speed dial that also carries an anti-phase toggle that flips the phase difference by π and rotates the nodal hyperbolas. Everything animates continuously; prefers-reduced-motion solves a single static frame so the pattern is still fully legible without motion.

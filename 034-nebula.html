@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nebula — Carina Drift</title>
+<style>
+  :root{
+    --space:#04040c;
+    --space2:#080715;
+    --magenta:#ff2fb5;
+    --teal:#2ff2e0;
+    --violet:#9a5cff;
+    --rose:#ff6f9c;
+    --glow:#bfeaff;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--space);color:#eaf0ff;overflow:hidden}
+  body{font-family:var(--sans);-webkit-font-smoothing:antialiased}
+
+  /* deep-space base wash */
+  .space{
+    position:fixed;inset:-6%;z-index:0;
+    background:
+      radial-gradient(60% 60% at 20% 20%, rgba(20,12,48,.9), transparent 60%),
+      radial-gradient(55% 55% at 82% 78%, rgba(8,26,52,.9), transparent 62%),
+      radial-gradient(100% 100% at 50% 50%, #0a0a20 0%, #050511 45%, #020208 100%);
+  }
+
+  /* the gas — layered, blurred, screen-blended radial gradients */
+  .nebula{
+    position:fixed;inset:-12%;z-index:1;pointer-events:none;
+    filter:blur(2px);
+    animation:zoom 34s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  @keyframes zoom{
+    from{transform:scale(1.0) translate(0,0)}
+    to{transform:scale(1.14) translate(-2%,-1.4%)}
+  }
+  .gas{position:absolute;border-radius:50%;mix-blend-mode:screen;will-change:transform,opacity}
+  .g1{left:8%;top:6%;width:64%;height:64%;
+    background:radial-gradient(circle at 40% 40%, rgba(255,47,181,.85) 0%, rgba(255,47,181,.35) 26%, rgba(154,92,255,.18) 50%, transparent 72%);
+    filter:blur(46px);animation:drift1 26s ease-in-out infinite alternate}
+  .g2{left:30%;top:22%;width:70%;height:70%;
+    background:radial-gradient(circle at 62% 42%, rgba(47,242,224,.8) 0%, rgba(47,242,224,.32) 28%, rgba(20,80,160,.16) 52%, transparent 74%);
+    filter:blur(60px);animation:drift2 32s ease-in-out infinite alternate}
+  .g3{left:46%;top:30%;width:58%;height:58%;
+    background:radial-gradient(ellipse at 50% 46%, rgba(154,92,255,.78) 0%, rgba(154,92,255,.3) 32%, transparent 70%);
+    filter:blur(54px);animation:drift3 29s ease-in-out infinite alternate}
+  .g4{left:52%;top:8%;width:46%;height:46%;
+    background:radial-gradient(circle at 50% 50%, rgba(255,111,156,.6) 0%, rgba(255,111,156,.2) 34%, transparent 66%);
+    filter:blur(40px);animation:drift1 38s ease-in-out infinite alternate-reverse}
+  .g5{left:10%;top:46%;width:52%;height:52%;
+    background:radial-gradient(circle at 46% 46%, rgba(47,242,224,.5) 0%, rgba(47,242,224,.16) 36%, transparent 68%);
+    filter:blur(66px);animation:drift2 40s ease-in-out infinite alternate}
+  .g6{left:60%;top:44%;width:44%;height:44%;
+    background:radial-gradient(circle at 50% 50%, rgba(255,47,181,.55) 0%, rgba(255,47,181,.16) 34%, transparent 68%);
+    filter:blur(48px);animation:drift3 36s ease-in-out infinite alternate-reverse}
+  /* swirling conic thread of gas */
+  .swirl{position:absolute;left:20%;top:16%;width:66%;height:66%;border-radius:50%;
+    background:conic-gradient(from 210deg at 52% 50%,
+      transparent 0deg, rgba(47,242,224,.10) 60deg, transparent 120deg,
+      rgba(255,47,181,.12) 200deg, transparent 260deg,
+      rgba(154,92,255,.10) 320deg, transparent 360deg);
+    filter:blur(30px);mix-blend-mode:screen;transform-origin:52% 50%;
+    animation:spin 60s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes drift1{from{transform:translate(0,0) scale(1)}to{transform:translate(6%,-5%) scale(1.12)}}
+  @keyframes drift2{from{transform:translate(0,0) scale(1.05)}to{transform:translate(-7%,5%) scale(.94)}}
+  @keyframes drift3{from{transform:translate(2%,1%) scale(.96)}to{transform:translate(-5%,-4%) scale(1.1)}}
+
+  /* bright nebula core */
+  .core{position:fixed;left:50%;top:46%;transform:translate(-50%,-50%);
+    width:38%;aspect-ratio:1;border-radius:50%;z-index:2;pointer-events:none;
+    background:radial-gradient(circle at 50% 50%, rgba(220,245,255,.9) 0%, rgba(120,200,255,.35) 18%, rgba(154,92,255,.14) 40%, transparent 66%);
+    filter:blur(10px);mix-blend-mode:screen;animation:pulse 9s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.85;transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}}
+
+  /* star canvas */
+  canvas#stars{position:fixed;inset:0;z-index:3;pointer-events:none}
+
+  /* faint scan vignette for depth */
+  .vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+    box-shadow:inset 0 0 30vw rgba(0,0,0,.6), inset 0 0 8vw rgba(0,0,0,.4)}
+
+  /* overlay text */
+  .overlay{position:fixed;inset:0;z-index:6;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(20px,4vw,52px) clamp(22px,5vw,64px)}
+  .ov-top{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;
+    font-size:clamp(.6rem,1.1vw,.78rem);letter-spacing:.34em;text-transform:uppercase;color:#bcd0ff;opacity:.85}
+  .ov-top .coord{font-variant-numeric:tabular-nums;text-align:right;line-height:1.9;opacity:.7}
+  .ov-bottom{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap}
+  .title{font-family:var(--serif);font-weight:400;line-height:.92;
+    font-size:clamp(2.6rem,9vw,8rem);letter-spacing:-.01em;
+    text-shadow:0 4px 40px rgba(154,92,255,.5)}
+  .title em{font-style:italic;color:var(--teal);
+    text-shadow:0 0 30px rgba(47,242,224,.6)}
+  .subtitle{max-width:34ch;font-size:clamp(.8rem,1.4vw,1rem);line-height:1.6;color:#c9d8ff;
+    text-align:right;opacity:.85;text-shadow:0 2px 20px rgba(0,0,0,.6)}
+  .badge{pointer-events:auto;display:inline-flex;align-items:center;gap:.6em;
+    margin-top:16px;font-size:.62rem;letter-spacing:.28em;text-transform:uppercase;color:#dff;
+    border:1px solid rgba(191,234,255,.4);border-radius:999px;padding:.7em 1.1em;
+    backdrop-filter:blur(6px);background:rgba(20,24,60,.35);cursor:pointer;
+    transition:background .4s,border-color .4s,color .4s,transform .4s}
+  .badge:hover{background:rgba(47,242,224,.16);border-color:var(--teal);color:#fff;transform:translateY(-2px)}
+  .badge .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);
+    box-shadow:0 0 10px var(--teal);animation:blink 2.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+  @media (max-width:640px){
+    .ov-top{flex-direction:column;gap:8px}
+    .ov-top .coord{text-align:left}
+    .subtitle{text-align:left}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .nebula,.gas,.core,.swirl{animation:none}
+    .gas,.core{opacity:1}
+  }
+</style>
+</head>
+<body>
+<div class="space"></div>
+
+<div class="nebula" aria-hidden="true">
+  <div class="swirl"></div>
+  <div class="gas g1"></div>
+  <div class="gas g3"></div>
+  <div class="gas g2"></div>
+  <div class="gas g4"></div>
+  <div class="gas g6"></div>
+  <div class="gas g5"></div>
+</div>
+
+<div class="core" aria-hidden="true"></div>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="overlay">
+  <div class="ov-top">
+    <span class="field">Deep Field Survey · Sector <b>Carina-North</b></span>
+    <span class="coord">RA 10h 45m 08s<br>DEC −62° 45′ 32″<br>λ 034 · 14.6 kly</span>
+  </div>
+  <div class="ov-bottom">
+    <h1 class="title">Carina<br><em>Drift</em></h1>
+    <div class="subtitle">
+      A stellar nursery 14,600 light-years out — ionised hydrogen glowing rose and
+      violet where newborn stars carve the dust. Hover to drift through the field.
+      <button class="badge" id="pulse"><span class="dot"></span><span id="pulselbl">Live field · streaming</span></button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var canvas = document.getElementById("stars");
+  if(!canvas || !canvas.getContext) return;
+  var ctx = canvas.getContext("2d");
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W=0, H=0, stars=[], shooters=[];
+  var hx=0, hy=0, tx=0, ty=0;
+  var TINTS=[[235,245,255],[150,205,255],[255,232,190],[255,190,210],[200,255,240]];
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width = Math.floor(W*DPR); canvas.height = Math.floor(H*DPR);
+    canvas.style.width = W+"px"; canvas.style.height = H+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    build();
+  }
+  function build(){
+    var area = W*H;
+    var n = Math.round(Math.max(120, Math.min(680, area/4200)));
+    stars = [];
+    for(var i=0;i<n;i++){
+      stars.push({
+        x:Math.random(), y:Math.random(),
+        r:0.4 + Math.random()*1.5,
+        depth:0.25 + Math.random()*1.1,
+        base:0.35 + Math.random()*0.65,
+        ph:Math.random()*6.283,
+        sp:0.6 + Math.random()*2.2,
+        tint:TINTS[(Math.random()*TINTS.length)|0],
+        big:Math.random()<0.06
+      });
+    }
+  }
+  function spawnShooter(){
+    var fromLeft = Math.random()<0.5;
+    shooters.push({
+      x: fromLeft ? -0.05 : 1.05,
+      y: Math.random()*0.5,
+      vx: (fromLeft?1:-1)*(0.012+Math.random()*0.01),
+      vy: 0.004+Math.random()*0.006,
+      life:0, max:1.1+Math.random()*0.6,
+      len:0.16+Math.random()*0.14
+    });
+  }
+  var lastShoot=0;
+
+  function frame(t){
+    var time = t/1000;
+    ctx.clearRect(0,0,W,H);
+
+    // slow auto-drift (the "slow zoom")
+    var ax = Math.sin(time*0.03)*0.02 + time*0.0015;
+    var ay = Math.cos(time*0.023)*0.016 + time*0.0010;
+
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      var px = (hx*2)*s.depth*0.06 + ax*s.depth;
+      var py = (hy*2)*s.depth*0.06 + ay*s.depth;
+      var sx = ((s.x+px)%1+1)%1 * W;
+      var sy = ((s.y+py)%1+1)%1 * H;
+      var tw = s.base*(0.55 + 0.45*Math.sin(time*s.sp + s.ph));
+      var c = s.tint;
+      if(s.big){
+        ctx.beginPath();
+        var gr = ctx.createRadialGradient(sx,sy,0,sx,sy,s.r*6);
+        gr.addColorStop(0,"rgba("+c[0]+","+c[1]+","+c[2]+","+tw.toFixed(3)+")");
+        gr.addColorStop(1,"rgba("+c[0]+","+c[1]+","+c[2]+",0)");
+        ctx.fillStyle=gr; ctx.arc(sx,sy,s.r*6,0,6.283); ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.fillStyle="rgba("+c[0]+","+c[1]+","+c[2]+","+tw.toFixed(3)+")";
+      ctx.arc(sx,sy,s.r,0,6.283); ctx.fill();
+    }
+
+    // shooting stars
+    if(!reduce && time-lastShoot>2.4+Math.random()*3){ spawnShooter(); lastShoot=time; }
+    for(var j=shooters.length-1;j>=0;j--){
+      var sh=shooters[j]; sh.life+=1/60;
+      if(sh.life>=sh.max){ shooters.splice(j,1); continue; }
+      var lx = ((sh.x)%1+1)%1*W, ly = ((sh.y)%1+1)*H;
+      var bx = lx - sh.vx*sh.len*W, by = ly - sh.vy*sh.len*H;
+      var a = Math.sin((sh.life/sh.max)*Math.PI);
+      var g=ctx.createLinearGradient(bx,by,lx,ly);
+      g.addColorStop(0,"rgba(255,255,255,0)");
+      g.addColorStop(0.6,"rgba(210,235,255,"+(a*0.7).toFixed(3)+")");
+      g.addColorStop(1,"rgba(255,255,255,"+(a).toFixed(3)+")");
+      ctx.strokeStyle=g; ctx.lineWidth=1.4; ctx.lineCap="round";
+      ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(lx,ly); ctx.stroke();
+      // head glow
+      ctx.beginPath(); ctx.fillStyle="rgba(255,255,255,"+(a).toFixed(3)+")";
+      ctx.arc(lx,ly,1.6,0,6.283); ctx.fill();
+    }
+
+    // ease pointer
+    tx += (hx-tx)*0.06; ty += (hy-ty)*0.06;
+    requestAnimationFrame(frame);
+  }
+
+  function onMove(e){
+    var p = e.touches ? e.touches[0] : e;
+    if(!p) return;
+    hx = p.clientX/window.innerWidth - 0.5;
+    hy = p.clientY/window.innerHeight - 0.5;
+  }
+  function onLeave(){ hx=0; hy=0; }
+
+  window.addEventListener("resize", resize);
+  if(!reduce){
+    window.addEventListener("pointermove", onMove, {passive:true});
+    window.addEventListener("pointerleave", onLeave);
+  }
+
+  var btn = document.getElementById("pulse");
+  var lbl = document.getElementById("pulselbl");
+  if(btn && lbl){
+    var on = true;
+    btn.addEventListener("click", function(){
+      on = !on;
+      document.querySelector(".nebula").style.animationPlayState = on ? "running":"paused";
+      document.querySelectorAll(".gas,.core,.swirl").forEach(function(g){ g.style.animationPlayState = on?"running":"paused"; });
+      canvas.style.opacity = on ? "1" : "0.35";
+      lbl.textContent = on ? "Live field · streaming" : "Field paused";
+    });
+  }
+
+  resize();
+  if(reduce){
+    // static starfield for reduced motion
+    hx=hy=0;
+    (function drawStatic(){
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<stars.length;i++){
+        var s=stars[i], c=s.tint;
+        var sx=((s.x)%1+1)%1*W, sy=((s.y)%1+1)%1*H;
+        ctx.beginPath(); ctx.fillStyle="rgba("+c[0]+","+c[1]+","+c[2]+","+(s.base).toFixed(3)+")";
+        ctx.arc(sx,sy,s.r,0,6.283); ctx.fill();
+      }
+    })();
+  } else {
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
+</body>
+</html>

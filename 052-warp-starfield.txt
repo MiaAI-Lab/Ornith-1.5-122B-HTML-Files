@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page — hyperspace starfield warp tunnel zooming. Palette: deep space, white/blue streaks. Signature: canvas pseudo-3D star projection stretching into streaks, speed control. One self-contained .html file, all CSS in a single <style> block, all JS in a single <script> block, no external dependencies (no CDN, fonts, images or libraries), responsive 320px–4K, valid HTML5. WOW quality bar: genuinely stunning, premium, Awwwards/SiteInspire-caliber, distinctive art direction, curated palette, refined typography, real motion, one signature effect.
+
+TITLE:
+"Warp — Hyperspace Transit"
+
+DESIGN DESCRIPTION:
+A cockpit view of a starship tearing through hyperspace. Stars live in true pseudo-3D space: each has an (x, y, z) position and is projected from a central vanishing point, so as it rushes toward the camera it accelerates outward and stretches into a radial streak — the classic warp effect. The field is additive-glowing white and pale-blue streaks fanning from a luminous central core that brightens with speed. Behind it, a static deep-space backdrop of nebula clouds and far dim stars smears and blue-shifts as velocity climbs. A minimal sci-fi HUD frames the view — corner brackets, a rotating reticle, live warp-factor and distance readouts, and a scanline overlay — all rendered in cool ice-blue on near-black.
+
+MAJOR VISUAL TECHNIQUES:
+- Pseudo-3D star projection: screen = center + (x, y) * (focal / z), with z decreasing each frame so stars accelerate toward the viewer.
+- Streaking: each star is drawn as a line from its position at z to its position at z + streak, where streak length scales with speed, producing radial warp lines that lengthen near the center.
+- Additive ("lighter") compositing and per-star brightness that ramps up as z shrinks, plus a bright head dot on each streak.
+- A central hyperspace core glow (radial gradient) that intensifies with speed, and a background canvas that smears via CSS scale + blur tied to velocity.
+- Parallax steering: pointer / touch shifts the vanishing point and drifts the nebula backdrop.
+- Sci-fi HUD chrome in pure CSS (corner brackets, animated rotating reticle, scanlines, tabular warp readouts) for a premium cockpit feel.
+- Fully responsive full-viewport canvas with devicePixelRatio-aware sizing.
+
+INTENDED INTERACTION MODEL:
+A speed-first flight deck. The "Warp" slider (0–10) sets cruise velocity; the field stretches and the HUD updates live. A big "Engage Hyperspace" button triggers a ramp-up to warp 10 with a blue flash and a brief hold, then eases back to cruise. Moving the pointer / touching the screen steers the tunnel (parallax). Everything respects prefers-reduced-motion by holding a calm, slow drift.

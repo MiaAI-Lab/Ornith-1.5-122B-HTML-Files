@@ -1,0 +1,67 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: a layered paper-cut parallax
+landscape (mountains, fog, sun) drifting. Palette: dusk teal, sage, cream.
+Signature: stacked SVG silhouettes with auto parallax drift + mouse parallax.
+Hard constraints: one self-contained .html, all CSS in one <style>, all JS in
+one <script>, zero external dependencies (system fonts only, no CDN, no external
+images/SVG files), responsive 320px→4K, valid HTML5, must run by double-click
+with no network requests. WOW bar: Awwwards/SiteInspire-caliber, distinctive art
+direction, real motion, one signature effect. A matching .txt with the same base
+name must accompany it.
+
+
+TITLE
+-----
+Twilight Ridge — a paper-cut diorama that breathes as you move.
+
+
+DESIGN DESCRIPTION
+------------------
+A dusk scene built like stacked sheets of cut card. A warm-to-cool sky gradient
+runs from deep teal at the zenith down through sage to a cream horizon, where a
+soft golden sun glows and slowly pulses. Five receding mountain ridges — each a
+hand-shaped SVG silhouette in progressively deeper teals — sit one behind the
+other, drifting sideways at their own pace so nearer ranges race past farther
+ones. Wispy fog bands weave between the ridges, and a small flock of hand-drawn
+birds drifts across the sky, wrapping gently. Everything reacts to the pointer:
+moving or dragging the mouse slides the layers at different depths, giving a true
+sense of looking through a cut-paper window. A subtle vignette, faint film grain
+and twinkling star-dust near the top complete the mood, while a serif caption
+anchors the piece.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Stacked SVG ridge silhouettes generated procedurally from layered sine waves
+  (two harmonics + a detail term) for organic, non-repeating mountain profiles.
+- Seamless auto parallax: each ridge is drawn twice across a 2×-width SVG and the
+  group is translated by (time × speed) modulo one tile width, so the drift loops
+  perfectly with no visible jump.
+- Depth-scaled mouse parallax: pointer position (-1..1) offsets every layer by a
+  fraction of its depth, with near ranges moving more than far ones for real
+  three-dimensional feel; pointer motion is eased (lerped) for smoothness.
+- Distinct per-layer speed/depth/colour/height/phase values create convincing
+  atmospheric perspective (lighter, slower, hazier in the distance).
+- Blurred radial-gradient fog bands and a screen-ish vignette + dotted grain
+  overlay add atmosphere and paper-cut texture without any external assets.
+- A glowing radial-gradient sun with dual drop-shadow bloom that shifts slightly
+  with the pointer and breathes over time.
+- Procedural SVG flock of birds that traverse and wrap the sky with a soft bob.
+- devicePixelRatio-independent vector SVG that rebuilds its paths on resize/
+  orientation, keeping the ridgelines crisp from 320px to 4K.
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Move the mouse (or drag on touch) anywhere to look left/right through the
+  scene; each layer responds at its own depth for a parallax "peek" effect.
+- The landscape also drifts continuously on its own (auto parallax), so it feels
+  alive even with no input, and a tap nudges the viewpoint.
+- A caption invites interaction; the hint fades out on the first move.
+- Fully responsive: all geometry (ridge widths, bird spacing, tile widths) is
+  recomputed from the live viewport on resize and orientation change, and layers
+  are rebuilt so nothing distorts or clips at any width.
+- No controls or menus — the interaction is purely embodied (look through the
+  window), keeping the composition clean and gallery-like.
+- Runs entirely offline with zero network requests; every visual is CSS/SVG/JS.

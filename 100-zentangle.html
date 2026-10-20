@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Zentangle — Ink Meditation</title>
+<style>
+  :root{
+    --paper:#f3ecdb;
+    --paper2:#ece2cc;
+    --ink:#161310;
+    --ink-soft:rgba(22,19,16,.55);
+  }
+  html,body{height:100%;margin:0;overflow:hidden;background:var(--paper);}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    touch-action:none;
+  }
+  .scene{position:fixed;inset:0;}
+  canvas#page{position:absolute;inset:0;width:100%;height:100%;display:block;
+    /* faint paper grain */
+    background:
+      radial-gradient(120% 120% at 30% 10%, var(--paper), var(--paper2));
+  }
+
+  .ui{position:absolute;inset:0;pointer-events:none;z-index:5;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(14px,3vw,32px) clamp(18px,4vw,48px);}
+  .top,.bot{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+  h1{margin:0;font-weight:600;font-size:clamp(18px,2.8vw,38px);letter-spacing:.06em;
+    text-transform:uppercase;}
+  .sub{margin:7px 0 0;font-size:10px;letter-spacing:.4em;text-transform:uppercase;
+    color:var(--ink-soft);}
+  .tag{font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+    border:1px solid rgba(22,19,16,.35);border-radius:999px;padding:7px 14px;
+    background:rgba(243,236,219,.6);backdrop-filter:blur(4px);}
+
+  .regenerate{
+    pointer-events:auto;cursor:pointer;
+    font-family:inherit;font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--paper);background:var(--ink);
+    border:1px solid var(--ink);border-radius:999px;
+    padding:12px 20px;display:inline-flex;align-items:center;gap:10px;
+    transition:transform .25s ease, box-shadow .25s ease, background .25s ease;
+    box-shadow:0 6px 22px rgba(22,19,16,.22);
+  }
+  .regenerate:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(22,19,16,.32);}
+  .regenerate:active{transform:translateY(0);}
+  .regenerate svg{width:15px;height:15px;}
+  .bot .hint{font-size:10px;letter-spacing:.26em;text-transform:uppercase;
+    color:var(--ink-soft);align-self:flex-end;max-width:52%;}
+  @media (max-width:640px){.tag,.bot .hint{max-width:none;}}
+  @media (prefers-reduced-motion:reduce){}
+</style>
+</head>
+<body>
+<div class="scene"><canvas id="page"></canvas></div>
+<div class="ui">
+  <div class="top">
+    <div>
+      <h1>Zentangle</h1>
+      <p class="sub">Ink Meditation · Patterns Draw Themselves</p>
+    </div>
+    <span class="tag">Study №100</span>
+  </div>
+  <div class="bot">
+    <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;justify-content:flex-end;">
+      <p class="hint">Tap any tile to redraw it — or begin a new composition</p>
+      <button class="regenerate" id="regen" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M20 12a8 8 0 1 1-3-6.2"/><path d="M20 4v4h-4"/></svg>
+        Regenerate
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("page");
+  var ctx=canvas.getContext("2d");
+  var regen=document.getElementById("regen");
+  var W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+  var TILE=96;
+  var tiles=[];
+  var DUR=4400;
+  var ink="#161310";
+
+  function rng(seed){
+    var s=(seed>>>0)||1;
+    return function(){ s=(s*1664525+1013904223)>>>0; return s/4294967296; };
+  }
+  function ease(x){return x<0?0:x>1?1:x*x*(3-2*x);}
+
+  function build(){
+    tiles=[];
+    var cols=Math.ceil(W/TILE)+1;
+    var rows=Math.ceil(H/TILE)+1;
+    var id=0;
+    for(var r=0;r<rows;r++){
+      for(var c=0;c<cols;c++){
+        tiles.push({
+          col:c,row:r,
+          motif:Math.floor(Math.random()*9),
+          seed:(Math.random()*1e9)>>>0,
+          rot:(Math.floor(Math.random()*4))*Math.PI/2,
+          start:performance.now()+((c+r)*90)
+        });
+        id++;
+      }
+    }
+  }
+
+  function regenerate(){
+    var now=performance.now();
+    for(var i=0;i<tiles.length;i++){
+      var t=tiles[i];
+      t.motif=Math.floor(Math.random()*9);
+      t.seed=(Math.random()*1e9)>>>0;
+      t.rot=(Math.floor(Math.random()*4))*Math.PI/2;
+      t.start=now+((t.col+t.row)*90);
+    }
+  }
+
+  function drawFrame(cx,cy,s,p){
+    var h=s/2;
+    ctx.strokeStyle=ink;ctx.lineWidth=1.6;
+    var edges=[[ -h,-h, h,-h],[ h,-h, h,h ],[ h,h, -h,h ],[-h,h, -h,-h]];
+    for(var i=0;i<4;i++){
+      var thr=i*0.14;
+      if(p<=thr)continue;
+      var fp=Math.min(1,(p-thr)/0.22);
+      ctx.globalAlpha=ease(fp);
+      ctx.beginPath();
+      ctx.moveTo(edges[i][0],edges[i][1]);
+      ctx.lineTo(edges[i][0]+(edges[i][2]-edges[i][0])*fp,
+                 edges[i][1]+(edges[i][3]-edges[i][1])*fp);
+      ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+
+  function poly(pts,upto){
+    ctx.beginPath();
+    ctx.moveTo(pts[0][0],pts[0][1]);
+    for(var i=1;i<upto;i++)ctx.lineTo(pts[i][0],pts[i][1]);
+    ctx.stroke();
+  }
+
+  // ---- motifs, local coords centered at 0,0 ----
+  function mPetal(L,w){
+    ctx.beginPath();
+    ctx.moveTo(0,0);
+    ctx.quadraticCurveTo(w,-L*0.55,0,-L);
+    ctx.quadraticCurveTo(-w,-L*0.55,0,0);
+    ctx.stroke();
+  }
+  function mMandala(p,s,rnd){
+    var N=8,full=Math.floor(p*N),frac=p*N-full;
+    var L=s*0.42;
+    for(var i=0;i<full;i++){
+      ctx.save();ctx.rotate(i/N*6.2832);mPetal(L,L*0.42);ctx.restore();
+    }
+    if(frac>0){ctx.save();ctx.rotate(full/N*6.2832);mPetal(L*(0.35+0.65*frac),L*0.42*frac);ctx.restore();}
+    ctx.beginPath();ctx.arc(0,0,s*0.055,0,6.2832);ctx.stroke();
+  }
+  function mRings(p,s){
+    var R=s*0.44,rings=7,full=Math.floor(p*rings),frac=p*rings-full;
+    for(var i=1;i<=full;i++){ctx.beginPath();ctx.arc(0,0,R*i/rings,0,6.2832);ctx.stroke();}
+    if(frac>0){ctx.beginPath();ctx.arc(0,0,R*(full+frac)/rings,0,6.2832);ctx.stroke();}
+  }
+  function mSpiral(p,s){
+    var steps=200,turns=5.5,n=Math.max(1,Math.floor(p*steps));
+    var pts=[];
+    for(var i=0;i<=steps;i++){
+      var a=i/steps*turns*6.2832;
+      var rr=s*0.02+a*s*0.0115;
+      pts.push([Math.cos(a)*rr,Math.sin(a)*rr]);
+    }
+    poly(pts,n+1);
+  }
+  function mCrosshatch(p,s,rnd){
+    var h=s*0.44,cnt=9,full=Math.floor(p*cnt);
+    ctx.lineWidth=1;
+    for(var i=0;i<full;i++){
+      var t=-h+2*h*i/(cnt-1);
+      ctx.beginPath();ctx.moveTo(t,-h);ctx.lineTo(h,t);ctx.stroke();
+    }
+    if(p>=1){for(var j=0;j<cnt;j++){var u=-h+2*h*j/(cnt-1);ctx.beginPath();ctx.moveTo(-h,u);ctx.lineTo(u,h);ctx.stroke();}}
+  }
+  function mScales(p,s){
+    var r=s*0.11,rows=7,full=Math.floor(p*rows);
+    for(var row=0;row<full;row++){
+      var y=-s*0.4+row*r*0.62;
+      var off=(row%2)*r*0.5;
+      for(var col=-2;col<=3;col++){
+        var x=col*r*1.05+off;
+        ctx.beginPath();ctx.arc(x,y,r,Math.PI,0,false);ctx.stroke();
+      }
+    }
+  }
+  function mDots(p,s,rnd){
+    var cols=8,total=cols*cols,n=Math.floor(p*total);
+    var sp=s*0.9/(cols-1),off=s*0.45;
+    for(var k=0;k<n;k++){
+      var i=k%cols,j=Math.floor(k/cols);
+      var jx=(rnd()-0.5)*sp*0.18,jy=(rnd()-0.5)*sp*0.18;
+      ctx.beginPath();ctx.arc(-off+i*sp+jx,-off+j*sp+jy,s*0.012,0,6.2832);ctx.fill();
+    }
+  }
+  function mWaves(p,s){
+    var rows=6,full=Math.floor(p*rows);
+    var sp=s*0.9/(rows-1),off=s*0.45;
+    for(var row=0;row<full;row++){
+      var y=-off+row*sp;
+      ctx.beginPath();
+      for(var x=-s*0.46;x<=s*0.46;x+=6){
+        var yy=y+Math.sin(x*0.06+row)*s*0.03;
+        if(x===-s*0.46)ctx.moveTo(x,yy);else ctx.lineTo(x,yy);
+      }
+      ctx.stroke();
+    }
+  }
+  function mRosette(p,s){
+    var N=6,full=Math.floor(p*N*2),half=N*2;
+    var L=s*0.4;
+    for(var i=0;i<full&&i<half;i++){ctx.save();ctx.rotate(i/N*6.2832);mPetal(L,L*0.34);ctx.restore();}
+    if(full>=half){
+      var L2=s*0.26,fr=(p*N*2-half);
+      for(var j=0;j<N;j++){ctx.save();ctx.rotate(j/N*6.2832+Math.PI/N);mPetal(L2,L2*0.34);ctx.restore();}
+    }
+    ctx.beginPath();ctx.arc(0,0,s*0.045,0,6.2832);ctx.fill();
+  }
+  function mChevron(p,s){
+    var layers=7,full=Math.floor(p*layers),frac=p*layers-full;
+    for(var i=1;i<=full;i++){
+      var d=s*0.4*i/layers;
+      ctx.beginPath();
+      ctx.moveTo(-d,-d*0.7);ctx.lineTo(0,d*0.5);ctx.lineTo(d,-d*0.7);
+      ctx.stroke();
+    }
+    if(frac>0){
+      var d=s*0.4*(full+frac)/layers;
+      ctx.globalAlpha=frac;
+      ctx.beginPath();ctx.moveTo(-d,-d*0.7);ctx.lineTo(0,d*0.5);ctx.lineTo(d,-d*0.7);ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+  }
+
+  var MOTIFS=[mMandala,mRings,mSpiral,mCrosshatch,mScales,mDots,mWaves,mRosette,mChevron];
+
+  function drawTile(t,now){
+    var cx=t.col*TILE+TILE/2, cy=t.row*TILE+TILE/2;
+    var p=ease((now-t.start)/DUR);
+    ctx.save();
+    ctx.translate(cx,cy);
+    ctx.rotate(t.rot);
+    // ink
+    ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=1.5;
+    ctx.lineJoin="round";ctx.lineCap="round";
+    // frame first (animated), motif on top
+    drawFrame(t.col,t.row,TILE,p);
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(-TILE/2+3,-TILE/2+3,TILE-6,TILE-6);
+    ctx.clip();
+    MOTIFS[t.motif](p,TILE,rng(t.seed));
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function frame(now){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<tiles.length;i++)drawTile(tiles[i],now);
+    requestAnimationFrame(frame);
+  }
+
+  function resize(){
+    W=window.innerWidth;H=window.innerHeight;
+    canvas.width=Math.floor(W*DPR);canvas.height=Math.floor(H*DPR);
+    canvas.style.width=W+"px";canvas.style.height=H+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    build();
+  }
+
+  canvas.addEventListener("pointerdown",function(e){
+    var rect=canvas.getBoundingClientRect();
+    var x=e.clientX-rect.left, y=e.clientY-rect.top;
+    var c=Math.floor(x/TILE), r=Math.floor(y/TILE);
+    for(var i=0;i<tiles.length;i++){
+      if(tiles[i].col===c&&tiles[i].row===r){
+        tiles[i].motif=Math.floor(Math.random()*9);
+        tiles[i].seed=(Math.random()*1e9)>>>0;
+        tiles[i].start=performance.now();
+        break;
+      }
+    }
+  });
+  regen.addEventListener("click",regenerate);
+  window.addEventListener("resize",resize);
+
+  resize();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

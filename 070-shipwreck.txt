@@ -1,0 +1,53 @@
+========================================================================
+PROMPT (exact, as issued):
+------------------------------------------------------------------------
+Build a standalone, self-contained HTML page: an underwater shipwreck
+with god-rays, drifting marine snow, swaying seaweed and fish. Palette:
+deep teal, murky green, pale light shafts. Signature: canvas volumetric
+light shafts (gradients), drifting particles, swaying seaweed, a school
+of fish passing, vignette.
+Constraints: one self-contained .html, ALL CSS in one <style> and ALL JS
+in one <script> (inline everything), ZERO external dependencies (no
+CDN, no external fonts — system stacks only, no external images/SVG
+files/libraries), works fully offline by double-clicking with no network
+requests, responsive 320px->4K, valid HTML5, Awwwards-caliber original
+art direction.
+
+------------------------------------------------------------------------
+TITLE:
+------------------------------------------------------------------------
+ABYSS · The Wreck at Dusk
+
+------------------------------------------------------------------------
+DESIGN DESCRIPTION:
+------------------------------------------------------------------------
+A ruined hull lies slumped on the seabed in deep teal and murky green,
+while pale god-rays spear down from the distant surface and scatter
+through the water column. Marine snow drifts endlessly past, strands of
+seaweed sway with the current, and a school of fish parts and reforms as
+it passes through the light. The scene is quiet, heavy and vast — a
+place of slow motion and filtered, sacred light.
+
+------------------------------------------------------------------------
+MAJOR VISUAL TECHNIQUES:
+------------------------------------------------------------------------
+- Canvas volumetric god-rays: overlapping translucent gradient polygons
+  that rotate slowly and shimmer to read as shafts of light in water.
+- Particle field of drifting marine snow rendered on canvas with parallax
+  depth (near/far layers at different speeds and opacities).
+- Seaweed drawn as layered bezier fronds with a sine-driven sway
+  animation anchored at the base and amplifying toward the tips.
+- A school of fish as small lens-flare-shaped sprites that follow a
+  curved path, spawn and despawn off-screen, and drift through the rays.
+- Radial vignette and a deep teal->green vertical gradient for depth.
+- Foreground silhouette props (coral, hull fragments, a drifting jelly)
+  to frame the composition and add foreground/mid/background layers.
+
+------------------------------------------------------------------------
+INTENDED INTERACTION MODEL:
+------------------------------------------------------------------------
+Ambient and self-running — the wreck breathes on its own with rays
+shifting, snow drifting and seaweed swaying. The pointer acts as a gentle
+current: moving it nudges the snow and fish away from the cursor and
+bends the light, and a click releases a rising bubble. Interaction is
+soft and non-destructive, preserving the meditative underwater mood.

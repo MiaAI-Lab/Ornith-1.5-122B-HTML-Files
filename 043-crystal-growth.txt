@@ -1,0 +1,31 @@
+PROMPT:
+Build the following standalone HTML page(s) as files in the current working directory.
+GLOBAL CONSTRAINTS (non-negotiable):
+- One self-contained .html file per page. ALL CSS in a single <style> block, ALL JS in a single <script> block. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (only system stacks), no external images, no external SVG files, no libraries/frameworks. Create all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Must work fully offline by double-clicking the file. No network requests whatsoever.
+- Responsive from ~320px to 4K. Include <meta name="viewport" content="width=device-width, initial-scale=1">.
+- Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic structure where sensible.
+WOW QUALITY BAR (this is the point):
+- Genuinely stunning, premium, Awwwards/SiteInspire-caliber. NOT generic. Distinctive art direction, curated palette, refined typography, real motion, delightful details, one signature effect. Take real design risks.
+For this page: 043-crystal-growth.html + 043-crystal-growth.txt — Faceted crystal/gem growth simulation expanding outward from a seed. Palette: amethyst violet, rose quartz, cyan highlights, deep indigo bg. Signature: canvas hexagonal crystal prisms that branch and grow, faceted linear-gradient shading, sparkle glints, slow rotation.
+Also create a matching .txt with the SAME base name containing: the exact full prompt you used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+Numbering: three-digit prefix.
+
+TITLE:
+CRYSTALLINE — A Gem Growing From a Single Seed
+
+DESIGN DESCRIPTION:
+On a deep indigo void layered with violet and rose radial glows, a single bright seed blooms into a faceted crystal cluster that grows outward, branch by branch, in real time. Each crystal is a hexagonal prism drawn in local coordinates with three longitudinal faces (a shadowed base facet, a wide center facet catching the light, and a medium top facet) plus a converging pyramid termination, every face filled with an axis-aligned linear gradient whose lightness is modulated per-frame by a rotating light direction so the whole gem shimmers as if tilted under a lamp. Amethyst violets and rose-quartz pinks dominate the older, thicker prisms while higher-order branches trend brighter and flash cyan at their tips; soft additive shaft glows, four-point cyan sparkle glints, a pulsing central seed bloom and drifting luminous dust give the scene depth and life. The entire cluster slowly rotates and breathes, framed by a serif wordmark with a slow gradient shimmer, a monospace live readout of crystal count / generation / growth percent and a palette swatch strip, and a fading interaction hint.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas growth simulation: crystals are objects with position, angle, length, width, generation and a normalized growth progress; each crystal, on maturing, spawns 2–3 shorter children at its tip (forward fan) and along its shaft (lateral branches), recursively up to gen 5 and a 300-crystal cap.
+- Hexagonal-prism faceting: three visible faces built from four projected edge offsets (−w, −w/2, +w/2, +w) so the center facet reads twice as wide — the classic side-view of a hexagonal column — each face a quad plus a converging triangle termination forming the crystal point.
+- Faceted linear-gradient shading: createLinearGradient along each face's axis from a darker base stop to a brighter tip stop, with a per-face brightness factor (shadow/highlight/mid) multiplied by a cosine "shimmer" driven by a rotating light angle for the tilting-gem effect.
+- Cyan tip highlights: termination triangles and occasional high-generation tip hues shift to cyan (hue 189), reinforced by additive radial specular glints at mature tips.
+- Additive glow & sparkles: radial-gradient shaft glows (globalCompositeOperation 'lighter') on large prisms, plus twinkling four-point star sparkles with bloom halos attached along grown crystals; a pulsing central seed bloom anchors the cluster.
+- Ambient dust field with per-mote parallax and twinkle, a CSS vignette overlay, and a slow background-position gradient shimmer on the serif headline.
+- requestAnimationFrame loop with eased pointer, slow auto-rotation, a subtle breathing scale, back-to-front draw order by generation, DPR-aware scaling, and prefers-reduced-motion support (auto-rotation and shimmer disabled, growth still plays).
+
+INTENDED INTERACTION MODEL:
+Pointer / touch driven, no buttons. Moving the cursor tilts the whole cluster slightly toward it (parallax + a small rotation) and sweeps the light direction so facet shading glides across the crystals like a gem under a moving lamp. Dragging rotates the cluster freely. Clicking / tapping on empty space seeds a new burst of nine primary crystals from that point, letting the viewer grow additional clusters across the void. Pressing Space reseeds the entire scene from scratch and re-triggers the growth animation. After ~7 s the interaction hint fades; a live readout top-right continuously shows crystal count, maximum generation reached and overall growth percentage above a three-chip amethyst / rose / cyan palette strip.

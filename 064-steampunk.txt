@@ -1,0 +1,20 @@
+TITLE
+ENGINE No. 064 — "Clockwork" (Steampunk clockwork panel: meshing brass gears, pressure gauge and steam puffs)
+
+RECREATION PROMPT
+Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL. Files to create: 064-steampunk.html + 064-steampunk.txt — Steampunk clockwork panel of meshing brass gears with a pressure gauge and steam puffs. Palette: brass, copper, sepia, warm glow. Signature: CSS gears rotating at meshing ratios, animated gauge needle, periodic steam puffs, riveted plate frame.
+
+DESIGN DESCRIPTION
+A pressure plant behind a riveted brass plate. Five gears of differing tooth-counts form two meshing chains across the panel, each wheel drawn with a real trapezoidal tooth profile, a radial brass gradient, spokes, a hub and a glowing axle, and every gear turning at a ratio inversely proportional to its tooth count so the trains mesh believably. A large pressure gauge sits top-right with a cream face, tick marks, colored danger zones and a red needle that trembles with the boiler pressure; below it a brass PSI readout ticks up and down. Riveted tubes run through the background, a warm radial glow pools behind the train, and periodic puffs of soft steam rise from a vent. A riveted plate frame with domed rivets around all four edges and an italic-serif editorial overlay complete the look.
+
+MAJOR VISUAL TECHNIQUES
+- Meshing gears drawn on canvas with a true tooth profile (root→tip→root per tooth), radial brass/copper gradients, spokes, hubs and axle holes.
+- Meshing ratios: each gear's angular speed is set to base × (driverTeeth / itsTeeth) with alternating direction, so the chain turns at believable relative rates.
+- A detailed pressure gauge: radial plate, cream face gradient, tick marks with danger coloring, a colored danger arc, printed numerals and a red needle driven by an oscillating pressure value.
+- Periodic steam puffs on a separate canvas — soft radial-gradient blobs that rise, expand, fade and recycle on a timer.
+- A riveted plate frame built from CSS: a rounded inset plate with layered box-shadows plus DOM rivets placed around all four edges.
+- Background riveted pipes with a brass linear gradient for depth.
+- Brass/copper/sepia palette with a warm ambient glow and tabular-nums PSI readout; click to release a burst of steam.
+
+INTENDED INTERACTION MODEL
+Passive: the gear trains rotate continuously at their meshing ratios, the needle trembles as boiler pressure oscillates, and the boiler exhales a soft steam puff at intervals. Click anywhere to release a burst of steam at the center. Everything slows but keeps running under prefers-reduced-motion.

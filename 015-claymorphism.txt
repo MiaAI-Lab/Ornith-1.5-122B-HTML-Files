@@ -1,0 +1,18 @@
+PROMPT:
+Build a standalone, fully offline HTML page (single self-contained .html, all CSS in one <style>, all JS in one <script>, no external dependencies/fonts/images/CDN). Responsive 320px–4K, valid HTML5. WOW bar: Awwwards/SiteInspire-caliber, distinctive art direction. Theme: Claymorphism — a playful mini-app (a "mood selector") with squishy 3D soft buttons. Palette: pastel mint, peach, lavender, butter. Signature: soft inner + outer shadows for clay extrusion, squish hover/active transforms.
+
+TITLE: Clay — Mood Selector
+
+DESIGN DESCRIPTION:
+A soft, pillowy "How are you feeling?" mood board rendered entirely in claymorphism. A rounded pastel card floats on a warm off-white backdrop, its surface extruded with dual inner/outer shadows so every element looks molded from soft clay. Five blobby mood chips (Great, Good, Okay, Tired, Awful), each a different pastel, sit in a responsive grid; clicking one squishes it inward, lifts it into a glowing ring, and updates a friendly status line plus an empathetic little message. Butter-yellow, mint, peach and lavender accents keep the palette gentle and tactile, with a soft gradient glow behind the card giving it depth.
+
+MAJOR VISUAL TECHNIQUES:
+- Clay extrusion: layered double drop-shadows (a light top-left outer + a dark bottom-right outer) combined with inset highlights and shadows to fake soft 3D clay.
+- Squish interaction: `transform: scale()` + reduced shadow on :active and a springy hover lift, using cubic-bezier easing for a tactile "press".
+- Selected-state glow: an inner ring + colored outer halo on the active mood chip.
+- Fully CSS-drawn blobby chips (border-radius, no images) with pastel gradient fills.
+- Warm ambient gradient glow + soft page background for depth.
+- Responsive grid (auto-fit minmax) and fluid clamp() typography; prefers-reduced-motion support.
+
+INTENDED INTERACTION MODEL:
+Single-screen tap/click app. The user selects exactly one mood by clicking a chip; the chosen chip squishes and highlights while the others relax, and the message area animates to a context-specific response. A "reset" affordance (re-clicking or a clear button) returns to the neutral state. No navigation, no scroll — a focused, delightful micro-interaction.

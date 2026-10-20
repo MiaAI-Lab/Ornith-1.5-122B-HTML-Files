@@ -1,0 +1,40 @@
+PROMPT:
+High-fashion magazine editorial spread; oversized serif, asymmetric, model silhouette.
+Palette: monochrome + one bold accent. Signature: big serif display, asymmetric grid,
+CSS figure silhouette, kinetic type.
+
+TITLE:
+Lumière — "The Silhouette of the Night" (Autumn MMXXVI, No. 033)
+
+DESIGN DESCRIPTION:
+A print-editorial spread translated to the screen. A warm paper-white ground and ink-black
+type carry a strict but asymmetric two-column grid: a left "running" column bleeds a giant
+Georgia issue number "033" off the edge and stacks a miniature table of contents, while the
+main column opens with an oversized serif display headline — "The Silhouette / of the /
+Night" — where an italic vermilion "of" and a stroked (outline) "Night" break the monochrome.
+A single CSS-built haute-couture figure — an elongated silhouette with a wide-brim hat, a
+slash of crimson sash and a flowing train — stands inside a rounded plate against a soft
+spotlight and a vermilion disc that bleeds off the frame. Fine SVG film grain, a vignette and
+a dual-direction kinetic marquee band in the brand's italic serif round out a restrained,
+gallery-like composition whose only colour is one deliberate, unblinking red.
+
+MAJOR VISUAL TECHNIQUES:
+- Oversized Georgia serif display type with per-word, per-line kinetic reveal (overflow +
+  translateY clip, staggered delays).
+- Asymmetric CSS Grid (1fr / 2.15fr) with a bleeding issue number and vertical running text.
+- A model silhouette built entirely from CSS: layered border-radius head, ellipse hat brim +
+  crown, clip-path gown/body, train and a soft-light cheek glow — no images.
+- One bold accent (vermilion) used sparingly against monochrome ink/paper; outline
+  (-webkit-text-stroke) and italic treatments for typographic hierarchy.
+- SVG fractal-noise film grain (data URI) + inset vignette for a printed, filmic finish.
+- Dual-direction kinetic type marquee in the brand serif with accent "✦" separators.
+- Pointer-driven parallax: the plate, disc, model and issue number shift at different depths
+  on a smoothed requestAnimationFrame loop, with full prefers-reduced-motion fallback.
+- Responsive from 320px (single column) to 4K (clamped type + spacing).
+
+INTENDED INTERACTION MODEL:
+Quiet and editorial. On load the headline lines rise into place, the plate settles in and the
+issue number fades up; the marquee bands scroll continuously in opposite directions. Moving
+the pointer (or finger) drifts the figure and headline at layered depths for a subtle
+3D parallax that eases back toward centre; the "Read the spread" button lifts and swaps to
+the accent red on hover. Everything kinetic is disabled for users who prefer reduced motion.

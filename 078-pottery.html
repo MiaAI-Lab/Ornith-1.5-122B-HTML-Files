@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TERRA · The Potter's Wheel</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;background:#140d08;overflow:hidden;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none;user-select:none}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%;cursor:grab}
+  #c:active{cursor:grabbing}
+  .haze{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:radial-gradient(120% 110% at 34% 30%, rgba(255,206,150,.10), transparent 46%),
+               radial-gradient(140% 130% at 50% 120%, rgba(0,0,0,.6), transparent 60%);}
+  .wordmark{position:fixed;left:clamp(20px,4vw,56px);top:clamp(20px,4vh,48px);z-index:5;pointer-events:none}
+  .wordmark .k{font-size:clamp(.58rem,1.4vw,.76rem);letter-spacing:.44em;text-transform:uppercase;color:#d99a6a}
+  .wordmark h1{margin:.34em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.7rem,5.4vw,3.4rem);line-height:.98;color:#f3e4d6}
+  .wordmark h1 em{font-style:italic;font-weight:300;color:#e7a877}
+  .foot{position:fixed;left:clamp(20px,4vw,56px);bottom:clamp(18px,4vh,42px);z-index:5;max-width:min(500px,80vw)}
+  .foot p{margin:0;color:#c3a88f;font-size:clamp(.72rem,1.5vw,.88rem);line-height:1.55;letter-spacing:.02em}
+  .foot .hint{margin-top:.75em;font-size:.7em;letter-spacing:.14em;text-transform:uppercase;color:#8f7257}
+  .gauge{position:fixed;right:clamp(18px,3.4vw,46px);bottom:clamp(18px,4vh,42px);z-index:5;
+    width:clamp(150px,20vw,220px);font-variant-numeric:tabular-nums}
+  .gauge .lab{display:flex;justify-content:space-between;font-size:.6rem;letter-spacing:.22em;
+    text-transform:uppercase;color:#8f7257;margin-bottom:.35em}
+  .gauge .lab b{color:#f0d8bf;font-weight:400}
+  .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.08);margin-bottom:.7em;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:3px;
+    background:linear-gradient(90deg,#7a4425,#e7a877);box-shadow:0 0 10px rgba(231,168,119,.5);width:50%}
+  @media (prefers-reduced-motion: reduce){
+    .foot .hint::after{content:" · hands at rest"}
+  }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="A terracotta pottery wheel throwing a spinning vase from clay; drag left-right to spin the wheel, up-down to shape the belly of the vessel"></canvas>
+<div class="haze"></div>
+
+<div class="wordmark">
+  <div class="k">TERRA · No. 078</div>
+  <h1>Thrown on<br><em>the turning wheel</em>.</h1>
+</div>
+
+<div class="gauge">
+  <div class="lab"><span>Spin</span><b id="spinVal">60</b></div>
+  <div class="bar"><i id="spinBar"></i></div>
+  <div class="lab"><span>Form</span><b id="formVal">60</b></div>
+  <div class="bar"><i id="formBar"></i></div>
+</div>
+
+<div class="foot">
+  <p>Wet clay between the palms, the wheel humming beneath. Centrifugal force
+     lifts the mound into a wall; the thumbs find the centre and the vessel breathes
+     outward. Drag across the clay to set the wheel spinning, or up and down to pull
+     its belly full or thin.</p>
+  <div class="hint">Drag sideways to spin · drag up/down to shape</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("c");
+  var ctx=canvas.getContext("2d");
+  var spinVal=document.getElementById("spinVal"),
+      spinBar=document.getElementById("spinBar"),
+      formVal=document.getElementById("formVal"),
+      formBar=document.getElementById("formBar");
+
+  var W=0,H=0,DPR=1, reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",resize); resize();
+
+  // ---- lathe profile (t: 0 = rim, 1 = foot) ----
+  var KEYS=[
+    {t:0.00,r:0.74},{t:0.10,r:0.98},{t:0.30,r:0.70},{t:0.52,r:0.55},
+    {t:0.74,r:1.00},{t:0.90,r:0.62},{t:1.00,r:0.34}
+  ];
+  function cmr(p0,p1,p2,p3,t){
+    var t2=t*t,t3=t2*t;
+    return 0.5*((2*p1)+(-p0+p2)*t+(2*p0-5*p1+4*p2-p3)*t2+(-p0+3*p1-3*p2+p3)*t3);
+  }
+  function profileAt(t){
+    t=Math.max(0,Math.min(1,t));
+    var n=KEYS.length,i=0;
+    for(;i<n-1;i++){ if(t<=KEYS[i+1].t) break; }
+    var t0=KEYS[Math.max(0,i-1)],t1=KEYS[i],t2=KEYS[i+1],t3=KEYS[Math.min(n-1,i+2)];
+    var lt=(t-t1.t)/(t2.t-t1.t||1);
+    return cmr(t0.r,t1.r,t2.r,t3.r,lt);
+  }
+
+  var spin=0.7, targetSpin=0.7, wheelAngle=0, form=0.6, time=0, last=0;
+  var drag=null;
+
+  function pointer(e){
+    var p=e.touches?e.touches[0]:e; if(!p) return;
+    if(e.type==="pointerdown") drag={x:p.clientX,y:p.clientY};
+    if(drag){
+      var dx=p.clientX-drag.x, dy=p.clientY-drag.y;
+      targetSpin += dx*0.006;
+      form = clamp(0.6 + dy*0.0045, 0.05, 1);
+      drag.x=p.clientX; drag.y=p.clientY;
+    }
+  }
+  function clamp(v,a,b){return v<a?a:(v>b?b:v);}
+  window.addEventListener("pointerdown",pointer);
+  window.addEventListener("pointermove",function(e){ if(e.buttons) pointer(e); });
+  window.addEventListener("pointerup",function(){
+    if(drag){ var burst=Math.abs(targetSpin); drag=null; }
+  });
+  canvas.addEventListener("click",function(e){ if(!drag) targetSpin += 1.3; });
+
+  // clay palette (rgb)
+  var CL=[181,104,66], CL_HI=[236,170,120], CL_LO=[76,38,24];
+  var Lx=-0.5, Lz=0.86, Ln=Math.hypot(Lx,Lz), aLight=Math.atan2(Lx,Lz);
+
+  function shadeRGB(sinA,spiral,specStr){
+    var a=Math.asin(sinA), cosA=Math.cos(a);
+    var diff=0.36+0.92*Math.max(0,(sinA*Lx+cosA*Lz)/Ln);
+    var g=Math.pow(Math.max(0,Math.cos(a-(aLight+spiral))),22)*specStr;
+    var r=CL[0]*diff+CL_HI[0]*g, gg=CL[1]*diff+CL_HI[1]*g, b=CL[2]*diff+CL_HI[2]*g;
+    // deep core shadow on the far edge
+    if(sinA>0.55){ var k=(sinA-0.55)/0.45; r=r*(1-k*0.55)+CL_LO[0]*(k*0.55);
+                    gg=gg*(1-k*0.55)+CL_LO[1]*(k*0.55); b=b*(1-k*0.55)+CL_LO[2]*(k*0.55);}
+    return "rgb("+((r<0?0:r>255?255:r)|0)+","+((gg<0?0:gg>255?255:gg)|0)+","+((b<0?0:b>255?255:b)|0)+")";
+  }
+
+  function drawVase(cx,baseY,halfH,scale,fullness,angle,pinch){
+    var N=64, topY=baseY-halfH;
+    // pre-sample radii
+    var R=[]; for(var i=0;i<=N;i++){
+      var t=i/N, r=profileAt(t)*scale*fullness;
+      if(t>0.42&&t<0.6){ var w=1-Math.min(1,pinch*0.34)*Math.sin((t-0.42)/0.18*Math.PI*0.5); r*=w; }
+      R.push(r);
+    }
+    // horizontal lathe bands with per-row shaded gradient (the spinning surface)
+    for(var i=0;i<N;i++){
+      var t0=i/N, t1=(i+1)/N;
+      var y=topY+(t0)*halfH, h=(t1-t0)*halfH+1;
+      var r0=R[i], r1=R[i+1];
+      var rMax=Math.max(r0,r1); if(rMax<0.5) continue;
+      var left=cx-r0, right=cx+r0;
+      var grad=ctx.createLinearGradient(left,0,right,0);
+      var STOPS=7;
+      var spiral=angle*0.6 + t0*2*Math.PI*0.55; // thrown spiral groove
+      for(var s=0;s<=STOPS;s++){
+        var u=s/STOPS;
+        var off=clamp(u*2-1,-1,1);
+        grad.addColorStop(u, shadeRGB(off,spiral,0.92));
+      }
+      ctx.fillStyle=grad;
+      ctx.beginPath();
+      ctx.moveTo(left,y); ctx.lineTo(right,y);
+      ctx.lineTo(cx+r1,y+h); ctx.lineTo(cx-r1,y+h); ctx.closePath();
+      ctx.fill();
+    }
+    // latitude throwing-lines (structural rings)
+    ctx.save();
+    for(var k=1;k<9;k++){
+      var t=0.06+k*0.11, rr=R[Math.floor(t*N)]; if(!rr)continue;
+      var yy=topY+t*halfH;
+      ctx.strokeStyle="rgba(55,27,16,"+(0.10+0.05*Math.sin(k))+")";
+      ctx.lineWidth=1;
+      ctx.beginPath(); ctx.ellipse(cx,yy,rr,rr*0.16,0,0,Math.PI); ctx.stroke();
+    }
+    ctx.restore();
+    // rim + hollow mouth
+    var rRim=R[0], rimY=topY;
+    ctx.save();
+    ctx.beginPath(); ctx.ellipse(cx,rimY,rRim,rRim*0.30,0,0,6.2832);
+    var ig=ctx.createRadialGradient(cx-rRim*0.2,rimY,0,cx,rimY,rRim*1.05);
+    ig.addColorStop(0,"#2a160d"); ig.addColorStop(0.6,"#1a0d07"); ig.addColorStop(1,"#4a2818");
+    ctx.fillStyle=ig; ctx.fill();
+    // lit rim edge
+    ctx.lineWidth=2.2;
+    var rg=ctx.createLinearGradient(cx-rRim,0,cx+rRim,0);
+    rg.addColorStop(0,"rgba(255,204,160,.9)");
+    rg.addColorStop(0.4,"rgba(255,226,196,.35)");
+    rg.addColorStop(1,"rgba(90,46,26,.5)");
+    ctx.strokeStyle=rg; ctx.stroke();
+    ctx.restore();
+    // a single bright wet glint sweeping with the spin (the "aha" rotation cue)
+    var ga=((aLight + angle*0.9)%(Math.PI*2)); if(ga>Math.PI) ga-=6.2832;
+    if(Math.abs(ga)<1.35){
+      var gsin=Math.sin(ga), yy=topY+0.34*halfH, gr=R[22]*gsin;
+      var gg2=ctx.createRadialGradient(cx+gr,yy,0,cx+gr,yy,16);
+      gg2.addColorStop(0,"rgba(255,241,224,.85)");
+      gg2.addColorStop(1,"rgba(255,241,224,0)");
+      ctx.fillStyle=gg2; ctx.beginPath(); ctx.arc(cx+gr,yy,16,0,6.2832); ctx.fill();
+    }
+  }
+
+  function drawWheel(cx,baseY,rx,ry,angle){
+    ctx.save();
+    // cast shadow of vessel
+    ctx.beginPath(); ctx.ellipse(cx,baseY+6,rx*0.92,ry*0.5,0,0,6.2832);
+    var sg=ctx.createRadialGradient(cx,baseY,0,cx,baseY,rx);
+    sg.addColorStop(0,"rgba(0,0,0,.42)"); sg.addColorStop(0.6,"rgba(0,0,0,.20)"); sg.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=sg; ctx.fill();
+    // wheel head disc
+    ctx.beginPath(); ctx.ellipse(cx,baseY,rx,ry,0,0,6.2832);
+    var dg=ctx.createRadialGradient(cx-rx*0.3,baseY-ry*0.3,0,cx,baseY,rx);
+    dg.addColorStop(0,"#5a3d28"); dg.addColorStop(0.55,"#3d2617"); dg.addColorStop(1,"#22130b");
+    ctx.fillStyle=dg; ctx.fill();
+    // motion-blurred spokes (streaked by drawing angular smears)
+    ctx.save(); ctx.beginPath(); ctx.ellipse(cx,baseY,rx,ry,0,0,6.2832); ctx.clip();
+    var spokes=14, blur=6;
+    for(var s=0;s<spokes;s++){
+      var base=angle + s*(6.2832/spokes);
+      for(var j=-blur;j<=blur;j++){
+        var a=base + j*0.02;
+        var al=(1-Math.abs(j)/blur)*0.28;
+        var x1=cx+Math.cos(a)*rx*1.05, y1=baseY+Math.sin(a)*ry*1.05;
+        var x2=cx+Math.cos(a)*rx*0.28, y2=baseY+Math.sin(a)*ry*0.28;
+        ctx.strokeStyle="rgba(232,197,158,"+al+")";
+        ctx.lineWidth=2.4;
+        ctx.beginPath(); ctx.moveTo(x2,y2); ctx.lineTo(x1,y1); ctx.stroke();
+      }
+    }
+    // wet clay sling on the rim
+    ctx.beginPath(); ctx.ellipse(cx,baseY,rx*0.98,ry*0.98,0,0,6.2832);
+    ctx.strokeStyle="rgba(120,120,120,.12)"; ctx.lineWidth=rx*0.05; ctx.stroke();
+    ctx.restore();
+    // raised rim
+    ctx.beginPath(); ctx.ellipse(cx,baseY,rx,ry,0,0,6.2832);
+    ctx.strokeStyle="#6b4528"; ctx.lineWidth=3; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(cx,baseY,rx-2,ry-0.6,0,0,6.2832);
+    ctx.strokeStyle="rgba(255,214,168,.28)"; ctx.lineWidth=1.4; ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawHand(side,cx,topY,halfH,scale,fullness,waistT,pinch){
+    var t=waistT, r=profileAt(t)*scale*fullness*(1-Math.min(1,pinch*0.34)*0.34);
+    var y=topY+t*halfH, surfX=cx+side*r;
+    var palmX=cx+side*(r+26), palmY=y+10;
+    ctx.save();
+    ctx.translate(palmX,palmY); ctx.rotate(side*-0.5);
+    // forearm
+    ctx.beginPath();
+    ctx.moveTo(side*70,34); ctx.lineTo(side*14,-6);
+    ctx.quadraticCurveTo(side*4,-18,side*-6,-6);
+    ctx.lineTo(side*-4,40); ctx.lineTo(side*70,60); ctx.closePath();
+    var ag=ctx.createLinearGradient(side*70,0,side*-6,0);
+    ag.addColorStop(0,"#a86a44"); ag.addColorStop(0.6,"#c68a5e"); ag.addColorStop(1,"#8a5233");
+    ctx.fillStyle=ag; ctx.fill();
+    // palm
+    ctx.beginPath(); ctx.ellipse(0,0,26,30,0,0,6.2832);
+    var pg=ctx.createRadialGradient(side*-6,-8,0,0,0,30);
+    pg.addColorStop(0,"#dca074"); pg.addColorStop(0.7,"#c07c52"); pg.addColorStop(1,"#7f4a2e");
+    ctx.fillStyle=pg; ctx.fill();
+    // fingers reaching onto the clay
+    ctx.lineCap="round";
+    for(var f=0;f<3;f++){
+      var fy=-14+f*12;
+      ctx.beginPath();
+      ctx.moveTo(side*-4,fy);
+      ctx.quadraticCurveTo(side*-18,fy+2, side*-28,fy-2);
+      ctx.strokeStyle=(f===1)?"#dca074":"#c68a5e";
+      ctx.lineWidth=9; ctx.stroke();
+      ctx.strokeStyle="rgba(60,30,16,.35)"; ctx.lineWidth=1.4; ctx.stroke();
+    }
+    // thumb
+    ctx.beginPath(); ctx.moveTo(side*-2,-16);
+    ctx.quadraticCurveTo(side*-20,-26, side*-30,-18);
+    ctx.strokeStyle="#dca074"; ctx.lineWidth=10; ctx.stroke();
+    // clay smear where the hand meets the vessel
+    ctx.beginPath(); ctx.ellipse(side*-26,2,12,18,side*0.3,0,6.2832);
+    var cg=ctx.createRadialGradient(side*-26,0,0,side*-26,2,18);
+    cg.addColorStop(0,"rgba(214,150,104,.9)"); cg.addColorStop(1,"rgba(214,150,104,0)");
+    ctx.fillStyle=cg; ctx.fill();
+    ctx.restore();
+  }
+
+  function frame(ts){
+    if(!last) last=ts; var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.35;
+    time+=dt;
+    // spin physics
+    targetSpin = clamp(targetSpin,-3.2,3.2);
+    spin += (targetSpin-spin)*0.06;
+    wheelAngle += spin*dt*2.2;
+    var pinch = 0.5+0.5*Math.sin(time*0.9);
+
+    // studio background on canvas (under the haze overlay)
+    ctx.clearRect(0,0,W,H);
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"#241610"); bg.addColorStop(0.55,"#170e09"); bg.addColorStop(1,"#0c0704");
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+    // warm key light cone from upper-left
+    var kl=ctx.createRadialGradient(W*0.30,H*0.20,0,W*0.30,H*0.20,W*0.6);
+    kl.addColorStop(0,"rgba(255,200,140,.10)"); kl.addColorStop(1,"rgba(255,200,140,0)");
+    ctx.fillStyle=kl; ctx.fillRect(0,0,W,H);
+
+    var scale=Math.min(W,H)*0.0016;
+    var halfH=H*0.30, baseY=H*0.70;
+    var cx=W*0.5;
+    var fullness=0.55+form*0.95;
+    var waistT=0.5;
+
+    drawWheel(cx,baseY, Math.min(W,H)*0.26, halfH*0.26, wheelAngle);
+    drawVase(cx,baseY,halfH, scale*92, fullness, wheelAngle, pinch);
+    drawHand(-1,cx,baseY,halfH, scale*92, fullness, waistT, pinch);
+    drawHand(1, cx,baseY,halfH, scale*92, fullness, waistT, pinch);
+
+    // gauges
+    var sp=Math.round(clamp((spin+1.5)/4.7,0,1)*100);
+    spinVal.textContent=sp; spinBar.style.width=sp+"%";
+    var fm=Math.round(form*100);
+    formVal.textContent=fm; formBar.style.width=fm+"%";
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

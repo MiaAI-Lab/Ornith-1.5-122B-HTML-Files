@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ATOMIC AGE — A Mid-Century Space-Race Poster</title>
+<style>
+  :root{
+    --cream:#f0e0bd; --cream2:#e9d3a4;
+    --teal:#0c3b3e; --teal2:#158a8c;
+    --orange:#e8622a; --mustard:#e0a83a;
+    --ink:#103a3c;
+  }
+  html,body{margin:0;padding:0;height:100%;
+    background:radial-gradient(120% 120% at 50% 20%, #2a3a34, #12201f 70%, #0a1413);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;overflow:hidden}
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:clamp(12px,3vw,40px);box-sizing:border-box}
+  .frame{position:relative;width:min(100%, 66vh);aspect-ratio:1000/1400;
+    box-shadow:0 30px 90px rgba(0,0,0,.55), 0 0 0 1px rgba(0,0,0,.3);
+    border-radius:6px;overflow:hidden}
+  .poster-svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+  .spin{transform-box:fill-box;transform-origin:center;animation:spin 80s linear infinite}
+  .spin-r{transform-box:fill-box;transform-origin:center;animation:spinR 120s linear infinite}
+  .float{transform-box:fill-box;transform-origin:center;animation:float 6s ease-in-out infinite}
+  .float2{transform-box:fill-box;transform-origin:center;animation:float 8s ease-in-out infinite}
+  .flick{transform-box:fill-box;transform-origin:center;animation:flick .18s ease-in-out infinite}
+  .flick2{transform-box:fill-box;transform-origin:center;animation:flick .26s ease-in-out infinite}
+  .blink{animation:blink 1.6s steps(2,end) infinite}
+  .pulseN{transform-box:fill-box;transform-origin:center;animation:pulseN 3.2s ease-in-out infinite}
+  .tw{animation:tw 3s ease-in-out infinite}
+  @media (prefers-reduced-motion: reduce){
+    .spin,.spin-r,.float,.float2,.flick,.flick2,.blink,.pulseN,.tw{animation:none!important}
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinR{to{transform:rotate(-360deg)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+  @keyframes flick{0%,100%{opacity:.8;transform:scaleY(1)}50%{opacity:1;transform:scaleY(1.2)}}
+  @keyframes blink{0%,45%{opacity:1}50%,100%{opacity:.15}}
+  @keyframes pulseN{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+  @keyframes tw{0%,100%{opacity:.15}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="frame">
+    <svg class="poster-svg" viewBox="0 0 1000 1400" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Retro-futurist 1950s atomic-age space-race poster">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f4e6c6"/><stop offset="1" stop-color="#e7cf9f"/>
+        </linearGradient>
+        <radialGradient id="planet" cx="38%" cy="34%" r="75%">
+          <stop offset="0" stop-color="#3fb6b2"/><stop offset="0.55" stop-color="#158a8c"/><stop offset="1" stop-color="#0a5557"/>
+        </radialGradient>
+        <linearGradient id="flameA" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#ffe08a"/><stop offset="0.5" stop-color="#f2a52b"/><stop offset="1" stop-color="#e8622a"/>
+        </linearGradient>
+        <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#f7f2e6"/><stop offset="0.5" stop-color="#dfe6dd"/><stop offset="1" stop-color="#b9c6bd"/>
+        </linearGradient>
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#ffe6a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffe6a8" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <!-- background -->
+      <rect x="0" y="0" width="1000" height="1400" fill="url(#sky)"/>
+
+      <!-- parallax layers -->
+      <g class="layer" data-depth="0.35" id="sunburstLayer"></g>
+      <g class="layer" data-depth="0.18" id="starLayer"></g>
+
+      <g class="scene" data-depth="0.8" id="scene">
+
+        <!-- headline -->
+        <g id="headline">
+          <text x="500" y="112" text-anchor="middle" fill="#b5751f"
+            font-family="system-ui,sans-serif" font-weight="700" font-size="34" letter-spacing="16">WELCOME TO THE</text>
+          <text x="506" y="236" text-anchor="middle" fill="#e8622a" opacity=".55"
+            font-family="system-ui,sans-serif" font-weight="900" font-size="150" letter-spacing="4">ATOMIC</text>
+          <text x="500" y="232" text-anchor="middle" fill="#0c3b3e"
+            font-family="system-ui,sans-serif" font-weight="900" font-size="150" letter-spacing="4">ATOMIC</text>
+          <text x="506" y="356" text-anchor="middle" fill="#e8622a" opacity=".55"
+            font-family="system-ui,sans-serif" font-weight="900" font-size="150" letter-spacing="4">AGE</text>
+          <text x="500" y="352" text-anchor="middle" fill="#0c3b3e"
+            font-family="system-ui,sans-serif" font-weight="900" font-size="150" letter-spacing="4">AGE</text>
+          <line x1="250" y1="384" x2="410" y2="384" stroke="#e0a83a" stroke-width="4"/>
+          <circle cx="500" cy="384" r="7" fill="#e8622a"/>
+          <line x1="590" y1="384" x2="750" y2="384" stroke="#e0a83a" stroke-width="4"/>
+        </g>
+
+        <!-- atomic planet: nucleus + orbiting electrons -->
+        <g id="atom" transform="translate(500 660)">
+          <circle cx="0" cy="0" r="230" fill="url(#glow)" opacity=".5"/>
+          <!-- orbit rings (rotating) -->
+          <g class="spin">
+            <ellipse cx="0" cy="0" rx="250" ry="90" fill="none" stroke="#0c3b3e" stroke-width="3" stroke-opacity=".55" transform="rotate(-24)"/>
+            <ellipse cx="0" cy="0" rx="250" ry="90" fill="none" stroke="#e0a83a" stroke-width="3" stroke-opacity=".7" transform="rotate(24)"/>
+            <ellipse cx="0" cy="0" rx="250" ry="90" fill="none" stroke="#2fd6c9" stroke-width="3" stroke-opacity=".7" transform="rotate(90)"/>
+          </g>
+          <!-- electrons travelling the orbits -->
+          <g transform="rotate(-24)">
+            <circle r="13" fill="#e8622a"><animateMotion dur="6.5s" repeatCount="indefinite"><mpath href="#o1"/></animateMotion></circle>
+          </g>
+          <g transform="rotate(24)">
+            <circle r="13" fill="#e0a83a"><animateMotion dur="8.5s" repeatCount="indefinite"><mpath href="#o2"/></animateMotion></circle>
+          </g>
+          <g transform="rotate(90)">
+            <circle r="13" fill="#2fd6c9"><animateMotion dur="5.2s" repeatCount="indefinite"><mpath href="#o3"/></animateMotion></circle>
+          </g>
+          <!-- hidden motion paths -->
+          <path id="o1" d="M250,0 A250,90 0 1 1 -250,0 A250,90 0 1 1 250,0" display="none"/>
+          <path id="o2" d="M250,0 A250,90 0 1 1 -250,0 A250,90 0 1 1 250,0" display="none"/>
+          <path id="o3" d="M250,0 A250,90 0 1 1 -250,0 A250,90 0 1 1 250,0" display="none"/>
+          <!-- planet sphere (behind nucleus) -->
+          <circle cx="0" cy="0" r="120" fill="url(#planet)"/>
+          <path d="M-120,0 A120,120 0 0 0 120,0" fill="#0a5557" opacity=".35"/>
+          <ellipse cx="-38" cy="-40" rx="46" ry="30" fill="#6fd0cb" opacity=".4"/>
+          <!-- nucleus -->
+          <g class="pulseN">
+            <circle cx="-26" cy="-20" r="34" fill="#e8622a"/>
+            <circle cx="30" cy="-14" r="32" fill="#e0a83a"/>
+            <circle cx="-4" cy="30" r="33" fill="#f2b84b"/>
+            <circle cx="-26" cy="-20" r="34" fill="none" stroke="#b8481c" stroke-width="2" opacity=".5"/>
+          </g>
+        </g>
+
+        <!-- rocket launching -->
+        <g transform="translate(255 1030) rotate(-34)">
+          <g class="float">
+            <!-- exhaust -->
+            <g transform="translate(0 150)">
+              <path class="flick" d="M-26,0 Q0,88 26,0 Q0,30 -26,0 Z" fill="url(#flameA)"/>
+              <path class="flick2" d="M-14,0 Q0,52 14,0 Q0,18 -14,0 Z" fill="#fff2c2"/>
+            </g>
+            <!-- fins -->
+            <path d="M-42,96 L-70,150 L-38,128 Z" fill="#e8622a"/>
+            <path d="M42,96 L70,150 L38,128 Z" fill="#e8622a"/>
+            <path d="M-8,104 L0,150 L8,104 Z" fill="#0c3b3e"/>
+            <!-- body -->
+            <path d="M0,-120 C52,-70 52,60 36,110 L-36,110 C-52,60 -52,-70 0,-120 Z" fill="url(#body)"/>
+            <rect x="-36" y="70" width="72" height="42" fill="#0c3b3e"/>
+            <rect x="-36" y="70" width="72" height="10" fill="#e0a83a"/>
+            <!-- nose cone -->
+            <path d="M0,-120 C30,-86 40,-60 42,-44 L-42,-44 C-40,-60 -30,-86 0,-120 Z" fill="#e8622a"/>
+            <!-- porthole -->
+            <circle cx="0" cy="-8" r="24" fill="#0c3b3e"/>
+            <circle cx="0" cy="-8" r="16" fill="#2fd6c9"/>
+            <circle cx="-6" cy="-14" r="5" fill="#eafffb"/>
+          </g>
+        </g>
+
+        <!-- flying saucer -->
+        <g transform="translate(790 300)">
+          <g class="float2">
+            <ellipse cx="0" cy="26" rx="96" ry="20" fill="#0c3b3e" opacity=".25"/>
+            <path d="M-96,20 Q0,74 96,20 Q0,46 -96,20 Z" fill="#158a8c"/>
+            <path d="M-96,20 Q0,-6 96,20 Q0,30 -96,20 Z" fill="#dfe6dd"/>
+            <path d="M-52,14 Q0,-30 52,14 Z" fill="#2fd6c9"/>
+            <path d="M-52,14 Q0,-30 52,14" fill="none" stroke="#0c3b3e" stroke-width="3"/>
+            <circle class="blink" cx="-60" cy="24" r="5" fill="#e8622a"/>
+            <circle class="blink" cx="0" cy="30" r="5" fill="#e8622a" style="animation-delay:.5s"/>
+            <circle class="blink" cx="60" cy="24" r="5" fill="#e8622a" style="animation-delay:1s"/>
+          </g>
+        </g>
+
+        <!-- atomic sparkles (filled by JS) -->
+        <g id="sparkLayer"></g>
+
+        <!-- bottom banner -->
+        <g id="banner">
+          <rect x="0" y="1238" width="1000" height="162" fill="#0c3b3e"/>
+          <rect x="0" y="1238" width="1000" height="8" fill="#e0a83a"/>
+          <text x="500" y="1312" text-anchor="middle" fill="#f0e0bd"
+            font-family="system-ui,sans-serif" font-weight="800" font-size="46" letter-spacing="10">SPACE&nbsp;RACE</text>
+          <text x="500" y="1358" text-anchor="middle" fill="#e0a83a"
+            font-family="Georgia,serif" font-style="italic" font-size="30" letter-spacing="6">— Est. MCMLV · America ∙ Russia ∙ Tomorrow</text>
+          <circle cx="150" cy="1310" r="9" fill="#e8622a"/>
+          <circle cx="850" cy="1310" r="9" fill="#e8622a"/>
+        </g>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  function el(tag,attrs){
+    var e=document.createElementNS(NS,tag);
+    for(var k in attrs) e.setAttribute(k,attrs[k]);
+    return e;
+  }
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // --- sunburst rays ---
+  var sun=document.getElementById("sunburstLayer");
+  var cx=500, cy=700, R=760, N=28;
+  var rayG=el("g",{"class":"spin"});
+  for(var i=0;i<N;i++){
+    var a=(i/N)*Math.PI*2;
+    var half=(Math.PI/N)*0.72;
+    var p1=[cx,cy];
+    var p2=[cx+R*Math.cos(a-half), cy+R*Math.sin(a-half)];
+    var p3=[cx+R*Math.cos(a+half), cy+R*Math.sin(a+half)];
+    var col=(i%2===0)?"#e0a83a":"#e8622a";
+    rayG.appendChild(el("polygon",{
+      points:p1.join(",")+" "+p2.join(",")+" "+p3.join(","),
+      fill:col, opacity:(i%2===0)?"0.16":"0.10"
+    }));
+  }
+  sun.appendChild(rayG);
+
+  // --- twinkling stars ---
+  var starLayer=document.getElementById("starLayer");
+  var starN=46;
+  for(var s=0;s<starN;s++){
+    var x=Math.random()*1000, y=Math.random()*1000;
+    if(Math.hypot(x-500,y-700)<150) continue; // keep clear of the atom
+    var c=el("circle",{cx:x.toFixed(1),cy:y.toFixed(1),
+      r:(Math.random()*1.7+0.6).toFixed(2),
+      fill:(Math.random()<0.3?"#e8622a":"#f4e6c6")});
+    if(Math.random()<0.6) c.setAttribute("class","tw");
+    c.setAttribute("style","animation-delay:"+((Math.random()*3).toFixed(2))+"s");
+    starLayer.appendChild(c);
+  }
+
+  // --- atomic sparkles (4-point stars) ---
+  var sparkLayer=document.getElementById("sparkLayer");
+  var spots=[[140,470,26],[860,560,30],[120,900,22],[880,940,24],[690,1090,20],[300,560,18]];
+  for(var t=0;t<spots.length;t++){
+    var sx=spots[t][0], sy=spots[t][1], sr=spots[t][2];
+    var sp=el("polygon",{
+      points:(sx)+","+((sy-sr))+" "+((sx-sr*0.28))+","+((sy-sr*0.28))+" "+((sx-sr))+","+sy+" "+
+             ((sx-sr*0.28))+","+((sy+sr*0.28))+" "+sx+","+(sy+sr)+" "+((sx+sr*0.28))+","+((sy+sr*0.28))+" "+
+             (sx+sr)+","+sy+" "+((sx+sr*0.28))+","+((sy-sr*0.28)),
+      fill:(t%2===0?"#e0a83a":"#e8622a"), opacity:"0.9"
+    });
+    sp.setAttribute("class","tw");
+    sp.setAttribute("style","transform-box:fill-box;transform-origin:center;animation-delay:"+((Math.random()*3).toFixed(2))+"s");
+    sparkLayer.appendChild(sp);
+  }
+
+  // --- parallax ---
+  var layers=document.querySelectorAll(".layer, .scene");
+  var tx={}, ty={}, cx_=0, cy_=0, ready=false;
+  function onMove(ex,ey){
+    var rect=document.querySelector(".frame").getBoundingClientRect();
+    cx_=(ex-(rect.left+rect.width/2))/rect.width;
+    cy_=(ey-(rect.top+rect.height/2))/rect.height;
+    if(!ready){ ready=true; requestAnimationFrame(animate); }
+  }
+  window.addEventListener("pointermove",function(e){ onMove(e.clientX,e.clientY); },{passive:true});
+  window.addEventListener("touchmove",function(e){ if(e.touches[0]) onMove(e.touches[0].clientX,e.touches[0].clientY); },{passive:true});
+
+  function animate(){
+    for(var i=0;i<layers.length;i++){
+      var d=parseFloat(layers[i].getAttribute("data-depth"))||0;
+      var amt=reduce?0:24;
+      var px=-cx_*d*amt, py=-cy_*d*amt;
+      layers[i].setAttribute("transform","translate("+px.toFixed(2)+","+py.toFixed(2)+")");
+    }
+    if(!reduce) requestAnimationFrame(animate);
+  }
+  // idle drift when untouched
+  if(!reduce){
+    var t0=performance.now();
+    (function idle(now){
+      var t=(now-t0)/1000;
+      cx_=Math.sin(t*0.15)*0.4; cy_=Math.cos(t*0.11)*0.3;
+      for(var i=0;i<layers.length;i++){
+        var d=parseFloat(layers[i].getAttribute("data-depth"))||0;
+        var px=-cx_*d*18, py=-cy_*d*18;
+        layers[i].setAttribute("transform","translate("+px.toFixed(2)+","+py.toFixed(2)+")");
+      }
+      requestAnimationFrame(idle);
+    })(t0);
+  }
+})();
+
+</script>
+</body>
+</html>

@@ -1,0 +1,65 @@
+PROMPT USED
+-----------
+Build a standalone, fully offline HTML5 page: an "Aurora borealis glassmorphism
+dashboard hero" — floating glass panels over animated northern lights.
+Palette: deep midnight blue, emerald, violet, soft cyan glow.
+Signature: layered animated gradient aurora behind frosted-glass
+(backdrop-filter) cards with subtle mouse parallax.
+Hard constraints: one self-contained .html, all CSS in one <style>, all JS in
+one <script>, zero external dependencies (system fonts only, no CDN, no external
+images/SVG files), responsive 320px→4K, valid HTML5, must run by double-click
+with no network requests. WOW bar: Awwwards/SiteInspire-caliber, distinctive art
+direction, real motion, one signature effect. A matching .txt with the same base
+name must accompany it.
+
+
+TITLE
+-----
+Aurora Ops — a luminous glass command surface over shifting northern lights.
+
+
+DESIGN DESCRIPTION
+------------------
+A midnight-blue night sky hosts a living aurora: three soft, screen-blended
+radial blobs (emerald, violet, cyan) drift and morph their organic
+border-radius on long staggered loops, while a masked repeating-gradient
+creates rising "curtain" bands and a sparse canvas starfield twinkle-fills the
+dark. Over this, a two-column hero sits: left is a headline with a
+cyan→emerald→violet gradient clip, a live status pill, count-up metrics and
+dual CTAs; right is a floating stack of frosted-glass panels (throughput with a
+live animated sparkline, an accuracy donut, a revenue card, and a channel-mix
+bar list). Every panel has a real backdrop-filter frost, an inset light edge, a
+cursor-following specular highlight, and reacts to the mouse with 3D tilt +
+depth parallax. Scroll-reveal fades and a subtle film grain complete the polish.
+
+
+MAJOR VISUAL TECHNIQUES
+-----------------------
+- Layered, screen-blended, blurred radial gradients animated with morphing
+  border-radius for the aurora (no images).
+- backdrop-filter: blur() saturate() frosted-glass panels with inset light
+  strokes and soft drop shadows.
+- Canvas-drawn starfield (devicePixelRatio-aware) and a live, continuously
+  animated sparkline with gradient fill + glowing endpoint.
+- Mouse-driven 3D tilt parallax (rotateX/rotateY + translate3d) keyed off a
+  per-panel data-depth attribute, plus a cursor-tracked specular "shine".
+- Gradient text-clip headline, conic-gradient spinning brand orb, animated
+  donut ring, pulse dot, floating keyframes, and IntersectionObserver
+  scroll-reveal with count-up number animation.
+- prefers-reduced-motion respected (parallax disabled).
+
+
+INTENDED INTERACTION MODEL
+--------------------------
+- Pointer over the panel board: panels tilt and shift in opposite direction to
+  the cursor with depth proportional to data-depth; a highlight follows the
+  pointer. On touch, the same parallax tracks the finger; on leave/end, panels
+  reset.
+- Hover on buttons: lift (translateY) + glow intensifies.
+- On scroll into view: hero/nav/footnote fade+rise; metrics animate from 0 to
+  their value.
+- Continuous ambient motion: aurora drift, curtain scan, starfield, spinning
+  orb, pulsing status dot, and the ever-shifting sparkline — all loop forever
+  so the page feels alive even when idle.
+- Responsive: hero collapses to a single column under 900px; nav links hide
+  under 640px; grid2 stacks under 520px; fluid clamp() type throughout.

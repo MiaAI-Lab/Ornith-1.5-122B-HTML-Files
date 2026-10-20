@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page: an origami paper crane that folds and unfolds, with a washi-paper texture and a Japanese minimalist feel. Palette: rice-paper cream, vermilion, indigo. Signature: CSS 3D transforms folding paper panels, soft drop shadows, and a sequential fold animation. One self-contained .html file, all CSS in a single <style> block and all JS in a single <script> block, zero external dependencies (no CDN, fonts, images or libraries), responsive 320px→4K, valid HTML5, and a genuinely premium Awwwards-caliber look with real motion.
+
+TITLE:
+折り鶴 · Orizuru — The Folded Crane
+
+DESIGN DESCRIPTION:
+A single serene stage holds a sheet of washi paper under a slow, tilted 3D camera that gently sways. The crane assembles itself through a choreographed sequence of CSS 3D panel folds: a vermilion diamond body lifts first, then the two cream wings swing up and out on a central spine, the indigo neck rises and its head kinks, and finally the tail sweeps back — each fold staggered so the paper appears to fold itself in mid-air. Every panel is double-sided (vermilion/cream/indigo front and cream/vermilion back via backface-visibility) so the reverse of each crease reads as a different paper tone, with soft blurred ground shadows that breathe as the model lifts. A faint washi fiber texture overlays the whole page, a vertical kanji caption and a small romaji wordmark keep the composition minimal, and a FOLD / UNFOLD control lets you freeze the crane flat or let it fold again.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS 3D folding panels: absolutely-positioned divs with clip-path polygon shapes, transform-style:preserve-3d and rotateY/translateZ folds about per-panel transform-origins.
+- Sequential fold animation: a shared 6.4s timeline with staggered keyframe starts (body → wings → neck → head → tail) for a self-folding effect, reversible via a paused class.
+- Two-sided "paper": front/back face elements with backface-visibility:hidden, each face a different palette tone so reverse creases look authentic.
+- Washi texture built purely from layered repeating-linear-gradients (fine fibers) at low opacity over a cream radial page.
+- Soft drop shadows: a blurred radial ground shadow that scales/fades ("breathes") as the crane lifts, plus gentle translateZ lift on the body.
+- A slow perspective sway on the camera (rotateX/rotateZ keyframes) and a vertical-rl kanji caption for Japanese minimalist framing.
+- Zero external assets; fully responsive via clamp()/min()/vw sizing.
+
+INTENDED INTERACTION MODEL:
+The crane auto-plays a fold cycle on load. A single FOLD / UNFOLD button toggles a paused state that freezes the model flat on the paper (unfolded) or resumes the fold — letting the viewer pause the transformation at the flat sheet or watch it assemble. Beyond that toggle the experience is a gentle ambient loop (the camera sways continuously), so it reads as a meditative, slow-moving object rather than a fast interaction.

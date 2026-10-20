@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>THE WRECK · Beneath the Light</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#03110f;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  #c{position:fixed;inset:0;display:block;width:100%;height:100%}
+  .grade{position:fixed;inset:0;pointer-events:none;z-index:2;
+    background:
+      radial-gradient(130% 90% at 50% -10%, rgba(120,180,170,.18), transparent 45%),
+      radial-gradient(120% 120% at 50% 120%, rgba(2,20,18,.85), transparent 60%),
+      linear-gradient(180deg, rgba(30,80,72,.25), rgba(4,26,22,.1) 40%, rgba(2,14,12,.6));}
+  .vign{position:fixed;inset:0;pointer-events:none;z-index:3;
+    background:radial-gradient(120% 100% at 50% 42%, transparent 48%, rgba(1,10,9,.75) 100%);}
+  .wordmark{position:fixed;left:clamp(20px,4vw,52px);top:clamp(20px,4vh,44px);z-index:5;pointer-events:none}
+  .wordmark .k{font-size:clamp(.58rem,1.4vw,.74rem);letter-spacing:.42em;text-transform:uppercase;color:#5f9a90}
+  .wordmark h1{margin:.34em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.6rem,5vw,3.1rem);line-height:.98;color:#dff3ee;letter-spacing:.02em;
+    text-shadow:0 0 26px rgba(60,160,140,.35)}
+  .wordmark h1 em{font-style:italic;color:#8fd6c4;font-weight:300}
+  .foot{position:fixed;left:clamp(20px,4vw,52px);bottom:clamp(18px,4vh,40px);z-index:5;max-width:min(520px,80vw)}
+  .foot p{margin:0;color:#7faeaa;font-size:clamp(.7rem,1.5vw,.86rem);line-height:1.55;letter-spacing:.02em;
+    text-shadow:0 1px 6px rgba(0,0,0,.6)}
+  .foot .hint{margin-top:.7em;font-size:.7em;letter-spacing:.16em;text-transform:uppercase;color:#5c8f88}
+  @media (prefers-reduced-motion: reduce){ .foot .hint::after{content:" · reduced motion"} }
+</style>
+</head>
+<body>
+<canvas id="c" aria-label="An underwater shipwreck bathed in god-rays with drifting marine snow, swaying seaweed and a school of fish"></canvas>
+<div class="grade"></div>
+<div class="vign"></div>
+
+<div class="wordmark">
+  <div class="k">The Wreck · No. 070</div>
+  <h1>Where the light<br>reaches the <em>silent hull</em>.</h1>
+</div>
+<div class="foot">
+  <p>Resting on the silt for a century, the hull still catches the shafts that fall from the surface. Marine snow drifts through the teal gloom; kelp sways in a tide with no wind; and now and then a silver school sweeps across the ruin like a thought.</p>
+  <div class="hint">Move to shift the light · click to send a school passing · scroll to sink</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var canvas=document.getElementById("c");
+  var ctx=canvas.getContext("2d");
+  var W=0,H=0,DPR=1;
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var mouse={x:0.5,y:0.4,active:false};
+  var depth=0, depthTarget=0;
+
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.clientWidth; H=canvas.clientHeight;
+    canvas.width=Math.floor(W*DPR); canvas.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener("resize",resize);
+
+  /* ---------- marine snow particles ---------- */
+  var snow=[];
+  function makeSnow(){
+    return {x:Math.random(), y:Math.random(), r:Math.random()*1.7+0.3,
+      vx:(Math.random()-0.5)*0.004, vy:Math.random()*0.002+0.0008,
+      ph:Math.random()*6.28, sp:Math.random()*0.6+0.2, a:Math.random()*0.4+0.15};
+  }
+
+  /* ---------- seaweed strands ---------- */
+  var weeds=[];
+  function makeWeed(x){
+    var segs=8+Math.floor(Math.random()*6);
+    return {x:x, segs:segs, h:Math.random()*0.28+0.18, phase:Math.random()*6.28,
+      spd:Math.random()*0.6+0.4, hue:150+Math.random()*40, width:Math.random()*4+5};
+  }
+
+  /* ---------- schools of fish ---------- */
+  var schools=[];
+  function spawnSchool(fromLeft){
+    var y=H*(0.3+Math.random()*0.4);
+    var dir=fromLeft?1:-1;
+    var fish=[];
+    var n=10+Math.floor(Math.random()*10);
+    for(var i=0;i<n;i++){
+      fish.push({ox:(Math.random()-0.5)*70, oy:(Math.random()-0.5)*34,
+        sp:Math.random()*0.4+0.9, ph:Math.random()*6.28});
+    }
+    schools.push({x:fromLeft?-80:W+80, y:y, dir:dir, speed:(Math.random()*0.7+0.8), fish:fish, life:0});
+  }
+
+  function init(){
+    resize();
+    var t=Math.min(180, Math.round(W*H/6000));
+    for(var i=0;i<t;i++) snow.push(makeSnow());
+    var wc=Math.min(14, Math.max(5, Math.round(W/90)));
+    for(var j=0;j<wc;j++) weeds.push(makeWeed(Math.random()*W));
+  }
+
+  window.addEventListener("pointermove",function(e){
+    mouse.x=e.clientX/W; mouse.y=e.clientY/H; mouse.active=true;
+  },{passive:true});
+  window.addEventListener("pointerdown",function(e){
+    mouse.x=(e.clientX||0)/W; mouse.y=(e.clientY||0)/H;
+    spawnSchool(Math.random()<0.5);
+  });
+  window.addEventListener("wheel",function(e){
+    depthTarget+=e.deltaY*0.4; depthTarget=Math.max(0,Math.min(4000,depthTarget));
+  },{passive:true});
+
+  var time=0,last=0;
+
+  function drawShafts(t){
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    var n=5;
+    var shift=(mouse.active?(mouse.x-0.5)*0.12:0);
+    for(var i=0;i<n;i++){
+      var base = (i/n + t*0.012 + shift); 
+      var x = ((base%1)+1)%1 * W*1.4 - W*0.2;
+      var w = W*(0.06+0.05*Math.sin(t*0.3+i));
+      var topA = 0.10 + 0.05*Math.sin(t*0.5+i*1.3);
+      var g=ctx.createLinearGradient(x,0,x+W*0.28,H);
+      g.addColorStop(0,"rgba(150,210,200,"+topA.toFixed(3)+")");
+      g.addColorStop(0.4,"rgba(90,170,160,"+(topA*0.4).toFixed(3)+")");
+      g.addColorStop(1,"rgba(20,70,65,0)");
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(x-w,0); ctx.lineTo(x+w,0);
+      ctx.lineTo(x+W*0.28+w*1.6,H); ctx.lineTo(x+W*0.28-w*1.6,H);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawWreck(t){
+    var gy = H*0.72 + depth*0.02;   // hull sits on the silt
+    ctx.save();
+    ctx.translate(0, depth*0.02);
+    // silt floor
+    var floor=ctx.createLinearGradient(0,gy-10,0,H);
+    floor.addColorStop(0,"rgba(20,55,48,0)");
+    floor.addColorStop(0.3,"rgba(24,58,50,.9)");
+    floor.addColorStop(1,"rgba(6,26,22,1)");
+    ctx.fillStyle=floor;
+    ctx.beginPath();
+    ctx.moveTo(0,H); ctx.lineTo(0,gy);
+    for(var x=0;x<=W;x+=40){ ctx.lineTo(x, gy + Math.sin(x*0.01+t*0.2)*8 + Math.sin(x*0.03)*5);}
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+
+    // hull silhouette
+    ctx.fillStyle="#08140f";
+    ctx.strokeStyle="rgba(40,90,78,.35)";
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    var hx=W*0.2, hy=gy, hl=W*0.6;
+    ctx.moveTo(hx, hy);
+    ctx.quadraticCurveTo(hx+hl*0.1, hy-70, hx+hl*0.35, hy-88);
+    ctx.quadraticCurveTo(hx+hl*0.6, hy-100, hx+hl*0.85, hy-40);
+    ctx.quadraticCurveTo(hx+hl, hy-10, hx+hl*0.95, hy+20);
+    ctx.quadraticCurveTo(hx+hl*0.5, hy+30, hx, hy+18);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    // broken mast / funnel
+    ctx.fillRect(hx+hl*0.42, hy-150, 12, 70);
+    ctx.fillRect(hx+hl*0.4, hy-150, 70, 12);
+    // portholes with faint glow
+    ctx.globalCompositeOperation="lighter";
+    for(var p=0;p<5;p++){
+      var px=hx+hl*(0.15+p*0.15), py=hy-30+Math.sin(p)*4;
+      var pg=ctx.createRadialGradient(px,py,0,px,py,10);
+      pg.addColorStop(0,"rgba(120,220,200,"+(0.18+0.1*Math.sin(t+p))+")");
+      pg.addColorStop(1,"rgba(120,220,200,0)");
+      ctx.fillStyle=pg; ctx.beginPath(); ctx.arc(px,py,10,0,6.2832); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawWeeds(t){
+    for(var i=0;i<weeds.length;i++){
+      var wd=weeds[i];
+      var baseY=H*0.74 + depth*0.02;
+      var segLen=(baseY-(baseY-wd.h*H))/wd.segs;
+      ctx.beginPath();
+      ctx.moveTo(wd.x, baseY);
+      ctx.lineWidth=wd.width;
+      ctx.lineCap="round";
+      for(var s=1;s<=wd.segs;s++){
+        var yy=baseY - s*segLen;
+        var sway=Math.sin(t*wd.spd+wd.phase+s*0.5)*(3+s*1.4)
+               + Math.sin(t*0.9+wd.x)*2;
+        var xx=wd.x + sway + (mouse.active?(mouse.x*W-wd.x)*0.0006*s*s:0);
+        ctx.lineTo(xx, yy);
+      }
+      var grad=ctx.createLinearGradient(wd.x,baseY,wd.x,baseY-wd.h*H);
+      grad.addColorStop(0,"rgba(10,50,38,.9)");
+      grad.addColorStop(1,"rgba("+Math.round(30+wd.hue*0.4)+","+Math.round(120+wd.hue)+",80,.5)");
+      ctx.strokeStyle=grad;
+      ctx.stroke();
+    }
+  }
+
+  function drawSnow(t){
+    ctx.save();
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<snow.length;i++){
+      var m=snow[i];
+      m.x+=m.vx+Math.sin(t*m.sp+m.ph)*0.0004;
+      m.y+=m.vy - depth*0.00002;
+      if(m.y>1.05){m.y=-0.05;m.x=Math.random();}
+      if(m.y<-0.05){m.y=1.05;}
+      if(m.x<-0.05)m.x=1.05; else if(m.x>1.05)m.x=-0.05;
+      var px=m.x*W, py=m.y*H;
+      var a=m.a*(0.6+0.4*Math.sin(t*m.sp+m.ph));
+      var g=ctx.createRadialGradient(px,py,0,px,py,m.r*3);
+      g.addColorStop(0,"rgba(210,240,230,"+a.toFixed(3)+")");
+      g.addColorStop(1,"rgba(210,240,230,0)");
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(px,py,m.r*3,0,6.2832); ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function drawFish(t,dt){
+    for(var k=schools.length-1;k>=0;k--){
+      var sc=schools[k];
+      sc.life+=dt;
+      sc.x += sc.dir*sc.speed*120*dt* (0.6+ (mouse.active?0.4:0));
+      ctx.save();
+      ctx.globalCompositeOperation="lighter";
+      for(var f=0;f<sc.fish.length;f++){
+        var fl=sc.fish[f];
+        var fx=sc.x + fl.ox*sc.dir;
+        var fy=sc.y + fl.oy + Math.sin(t*3+fl.ph)*4;
+        var tail=Math.sin(t*10+fl.ph)*4;
+        ctx.fillStyle="rgba(180,225,215,"+(0.5+0.3*Math.sin(t+fl.ph)).toFixed(3)+")";
+        ctx.beginPath();
+        ctx.moveTo(fx+8*sc.dir, fy);
+        ctx.lineTo(fx-4*sc.dir, fy+4+tail);
+        ctx.lineTo(fx-4*sc.dir, fy-4+tail);
+        ctx.closePath();
+        ctx.moveTo(fx+8*sc.dir, fy);
+        ctx.lineTo(fx-2*sc.dir, fy);
+        ctx.stroke?ctx.stroke():0;
+        ctx.fill();
+      }
+      ctx.restore();
+      if((sc.dir>0 && sc.x>W+140)||(sc.dir<0 && sc.x<-140)) schools.splice(k,1);
+    }
+  }
+
+  function loop(ts){
+    if(!last)last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.25;
+    time+=dt;
+    depth += (depthTarget-depth)*0.06;
+
+    ctx.clearRect(0,0,W,H);
+    // deep base wash
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"rgba(24,78,68,.0)");
+    bg.addColorStop(1,"rgba(3,18,15,.0)");
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    drawShafts(time);
+    drawWreck(time);
+    drawWeeds(time);
+    drawSnow(time);
+    drawFish(time,dt);
+
+    // occasional spontaneous school
+    if(Math.random()<0.004 && schools.length<2) spawnSchool(Math.random()<0.5);
+
+    requestAnimationFrame(loop);
+  }
+
+  init();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

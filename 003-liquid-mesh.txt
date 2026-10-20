@@ -1,0 +1,25 @@
+PROMPT:
+Build a standalone, fully offline HTML page: a soft morphing mesh-gradient product page with pastel liquid blobs drifting. Palette: peach, lilac, mint, sky. Signature: multiple blurred radial gradients animated with border-radius morph + scroll reveal. One self-contained .html file, all CSS in a single <style>, all JS in a single <script>, zero external dependencies (system fonts only, no CDN, no external images), responsive 320px→4K, valid HTML5.
+
+TITLE:
+Lumière — Daily Glow Serum
+
+DESIGN DESCRIPTION:
+A soft, airy beauty product page. A fixed full-bleed mesh sits behind everything: five large, heavily-blurred radial-gradient blobs (peach, lilac, mint, sky, warm cream) that continuously morph their border-radius and drift/rotate on staggered infinite animations, bleeding into one another like a pastel liquid mesh. A faint dotted grain sits above the mesh. Over it floats a sticky frosted nav (conic-gradient logo dot), a two-column hero (gradient headline "Soft light for your skin." + a CSS/SVG serum bottle hovering on a glowing disc with a dashed orbit ring and three floating ingredient chips), then a benefits section (three glassy cards), a stats grid, a gradient CTA band and a footer. Every block scrolls in with a fade+rise via IntersectionObserver.
+
+MAJOR VISUAL TECHNIQUES:
+- Morphing mesh background: five .blob divs, each a radial gradient fading to transparent, absolutely positioned and animated on a @keyframes morph that tweens the 8-value border-radius (blobby organic shape) plus translate/rotate; mix-blend-mode:multiply + heavy body blur (filter:blur(10px)) blend them into a smooth gradient field. Staggered durations/delays keep it non-uniform.
+- Pastel palette via :root custom properties (--peach/--lilac/--mint/--sky) reused in gradients, text-clip headings (background-clip:text) and card icons.
+- Product visual built purely in inline SVG: a dropper-cap + glass body path filled with a peach linear gradient, a highlight streak, a white label with LUMIÈRE wordmark; sits on a radial "disc" glow with a spinning dashed orbit ring and a gentle bob (translateY) animation.
+- Frosted glass: nav and cards use backdrop-filter:blur + translucent white backgrounds + soft inset shadows.
+- Micro-motion: pulsing eyebrow dot (box-shadow ring pulse), floating ingredient chips, hover lift on buttons/cards.
+- Scroll reveal: a single .reveal class (opacity/transform) flipped to .in by an IntersectionObserver at threshold .12; staggered naturally by observe order.
+- Faint dotted grain overlay (radial-gradient background-size) for tactile print feel.
+- Full prefers-reduced-motion fallback stops every animation; responsive collapses hero/cards to one column and hides nav links under 860px.
+
+INTENDED INTERACTION MODEL:
+- Passive/ambient: mesh blobs morph and drift forever, disc bobs, orbit ring spins, eyebrow dot pulses — all CSS keyframes, no input.
+- Hover: nav links brighten to ink; primary/ghost buttons lift (translateY) and deepen their glow; benefit cards rise and cast a longer shadow.
+- Scroll: as each .reveal element crosses ~12% of the viewport it fades+slides up once (IntersectionObserver, unobserved after first hit); reduced-motion or no-IO shows everything immediately.
+- Click: nav links and CTA buttons are anchor/button triggers (#benefits/#science/#love, "Shop the Glow") — presentational in this demo.
+- Accessibility: reduced-motion disables all animation; SVG bottle has an aria-label; decorative layers are aria-hidden.

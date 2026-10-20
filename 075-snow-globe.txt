@@ -1,0 +1,79 @@
+RECREATION PROMPT
+=================
+Build these standalone HTML page(s) as files in the current working directory.
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one
+  <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only),
+  no external images, no external SVG files, no libraries. Build all visuals
+  with CSS, HTML, inline SVG, or <canvas>.
+- Works fully offline by double-clicking. No network requests. Responsive
+  320px->4K; include <meta name="viewport" content="width=device-width,
+  initial-scale=1">. Valid HTML5.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic.
+  Distinctive art direction, curated palette, refined typography, deliberate
+  composition, real intentional motion, delightful details, one signature
+  effect. Handcrafted, unique, take design risks.
+- For each page also create a matching .txt with the SAME base name.
+
+PROMPT FOR THIS PAGE
+--------------------
+An interactive snow globe: shake it (click/drag) and snow swirls, then gently
+settles. Palette: winter blue-white snow, warm wooden base, soft glow.
+Signature: canvas snow particles with gravity and a shake impulse, glass globe
+refraction rim, drifting glitter.
+
+TITLE
+=====
+A WINTER IN GLASS — Interactive Snow Globe
+
+DESIGN DESCRIPTION
+==================
+A hand-crafted snow globe centred on a full-canvas particle scene, framed by a
+warm radial night-sky backdrop and a sculpted wooden base built from layered
+CSS gradients (brass collar, banded wood, plinth). Inside the globe a soft
+snow-lit diorama rises: a gradient sky, a distant pine-tree silhouette, a
+chapel with a glowing window, a small snow-dusted mound, a lone tree and a
+frozen pond, all drawn procedurally. A hundred snowflakes obey a real velocity
+model — gravity, air resistance, a gentle ambient drift, and a circular
+containment so snow naturally piles along the lower arc of the glass. When you
+shake the globe, an "energy" value is injected: the flakes get a strong
+tangential swirl plus an updraft and turbulence, then the energy decays and the
+flakes settle back into the pile. Drifting glitter motes orbit the inner rim,
+the glass dome is suggested by a refraction rim highlight, a soft top glow and
+an inset vignette. Over it sits a serif italic gradient wordmark ("A Winter in
+Glass") and a mono meta panel showing live energy, shake state and flake count.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- Velocity-based snow physics: per-flake gravity + air resistance (exponential
+  damping), a sinusoidal ambient drift, and circular containment that reflects
+  velocity off the inner glass so snow accumulates along the bottom arc.
+- Shake energy model: pointer drag injects energy proportional to pointer
+  speed; energy drives a tangential swirl force, an updraft and turbulence,
+  then decays exponentially toward rest — the swirl-then-settle signature.
+- Refill trickle: flakes resting slowly in the deep pile occasionally lift back
+  to the top so a calm globe never fully freezes into a static pile.
+- Procedural diorama on a clip circle: gradient sky, pine silhouette, chapel
+  with a lit window, snow mound, lone tree, frozen pond — all canvas, all
+  redrawn behind the falling snow.
+- Glass effect: a refraction rim (soft inner highlight), a top arc sheen, a
+  soft outer glow and an inset vignette sell the sphere without any image.
+- Glitter motes orbiting the inner rim with per-mote twinkle phase; additive
+  glow on the snow-lit sky and chapel window.
+- DPR-aware canvas, responsive re-layout on resize, live energy readout.
+- Editorial serif italic gradient wordmark + mono meta panel.
+- prefers-reduced-motion freezes the loop; touch support included.
+
+INTENDED INTERACTION MODEL
+==========================
+Tactile interactive object. Move the pointer over the globe and drag — the
+faster you flick, the more "energy" you pour in, and the snow roils: it swirls
+around the globe in a vortex, lifts on an updraft and scatters with turbulence.
+Release and the energy bleeds away through air resistance; the flakes slow,
+drift down and pile gently along the bottom of the glass, exactly like a real
+snow globe. Clicking/tapping gives a quick jolt of the same swirl. A live
+"energy" bar and shake-state readout track the disturbance. A custom glassy
+cursor follows fine-pointing devices and hides on touch. Fully responsive,
+offline, and motion-sensitive friendly (animation halts under
+prefers-reduced-motion).

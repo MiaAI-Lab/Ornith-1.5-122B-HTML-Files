@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Lumière — The Silhouette of the Night · No. 033 · Autumn MMXXVI</title>
+<style>
+:root{
+  --paper:#efe8d8;--ink:#15120e;--accent:#ff2a1d;--accent-ink:#8f1109;
+  --muted:#8a8275;--serif:Georgia,'Times New Roman',serif;
+  --sans:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{
+  margin:0;min-height:100vh;overflow-x:hidden;
+  background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:16px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  background-image:radial-gradient(130% 95% at 50% -10%,rgba(255,255,255,.5),transparent 55%);
+}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:31;opacity:.06;
+  background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='140'%20height='140'%3E%3Cfilter%20id='n'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.85'%20numOctaves='2'%20stitchTiles='stitch'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:32;
+  background:radial-gradient(125% 105% at 50% 38%,transparent 52%,rgba(12,9,7,.32) 100%);
+  mix-blend-mode:multiply}
+::selection{background:var(--accent);color:var(--paper)}
+.skip{position:absolute;left:-9999px;top:0;z-index:100;background:var(--accent);color:var(--paper);
+  padding:10px 16px;text-decoration:none;font-size:.66rem;letter-spacing:.16em;text-transform:uppercase}
+.skip:focus{left:12px;top:12px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+
+/* ---------- masthead ---------- */
+.masthead{position:sticky;top:0;z-index:40;display:flex;flex-direction:column;gap:9px;
+  padding:14px clamp(16px,4vw,48px);background:var(--paper);border-bottom:1px solid rgba(21,18,14,.16)}
+.m-bar{display:flex;align-items:baseline;flex-wrap:wrap;gap:12px clamp(14px,2.4vw,26px)}
+.m-name{font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(1.1rem,2.4vw,1.55rem);letter-spacing:.01em;text-transform:none}
+.m-eyebrow,.m-price{font-size:.62rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.m-price{margin-left:auto}
+.m-rule{border:0;border-top:1px solid rgba(21,18,14,.16);margin:0}
+.m-rule.thin{border-top-style:solid;border-top-width:1px;opacity:.5}
+
+/* ---------- spread grid (asymmetric 1fr / 2.15fr) ---------- */
+.spread{display:grid;grid-template-columns:1fr 2.15fr;align-items:start;
+  gap:clamp(22px,4.5vw,72px);max-width:1680px;margin:0 auto;
+  padding:clamp(28px,5vw,76px) clamp(18px,4vw,52px) clamp(44px,6vw,96px)}
+.side{position:relative;grid-column:1;grid-row:1;align-self:stretch;
+  display:flex;flex-direction:column;gap:22px;padding-top:6px}
+.issue{font-family:var(--serif);font-weight:400;line-height:.8;letter-spacing:-.035em;
+  font-size:clamp(6.5rem,17vw,16rem);color:var(--ink);margin:0 0 -.06em -.05em;display:block}
+.issue .accent{color:var(--accent)}
+.issue-x{align-self:flex-start;writing-mode:vertical-rl;transform:rotate(180deg);
+  max-height:min(60vh,340px);font-size:.7rem;letter-spacing:.24em;text-transform:uppercase;
+  color:var(--muted);text-orientation:mixed}
+.toc{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;font-size:.74rem;
+  letter-spacing:.03em;color:var(--ink)}
+.toc li{display:flex;justify-content:space-between;align-items:baseline;gap:14px;
+  padding:9px 0;border-top:1px solid rgba(21,18,14,.14)}
+.toc li:first-child{border-top:0}
+.toc b{font-weight:600}
+.toc .n{font-family:var(--serif);font-style:italic;color:var(--muted)}
+
+.main{position:relative;grid-column:2;grid-row:1;min-width:0;z-index:1}
+.plate-wrap{position:relative;grid-column:2;grid-row:1;justify-self:end;width:min(46vw,480px);
+  align-self:stretch;z-index:4}
+
+/* ---------- kicker + oversized display ---------- */
+.kicker{display:flex;align-items:center;gap:12px;margin-bottom:clamp(18px,3vw,36px);
+  font-size:.64rem;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+.kicker .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:none}
+.kicker .line{flex:1;height:1px;background:rgba(21,18,14,.22)}
+.display{font-family:var(--serif);font-weight:400;line-height:.9;letter-spacing:-.015em;
+  margin:0;font-size:clamp(3.1rem,12.5vw,11.5rem)}
+.display .ln{display:block}
+.display .word,.display .kin{display:inline-block}
+.display .word{overflow:hidden}
+.display .kin{transform:translateY(110%)}
+.display .kin.em-d{color:var(--accent);font-style:italic;font-size:.44em}
+.display .kin.out{-webkit-text-stroke:1.6px var(--ink);color:transparent;font-style:italic}
+
+/* ---------- lede ---------- */
+.lede{position:relative;z-index:2;max-width:48ch;
+  font-family:var(--serif);font-size:clamp(1.02rem,1.55vw,1.28rem);line-height:1.6;color:var(--ink);
+  margin:0 0 clamp(26px,4vw,44px)}
+.lede .drop{float:left;font-family:var(--serif);font-style:italic;font-weight:400;
+  font-size:clamp(3.2rem,7vw,4.8rem);line-height:.72;padding:8px 13px 0 0;color:var(--accent)}
+
+/* ---------- meta + button ---------- */
+.meta-row{display:flex;flex-wrap:wrap;align-items:center;gap:16px 36px}
+.blk{display:flex;flex-direction:column;gap:4px}
+.lab{font-size:.6rem;letter-spacing:.24em;text-transform:uppercase;color:var(--muted)}
+.val{font-family:var(--serif);font-size:1.05rem;color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:10px;margin-left:auto;text-decoration:none;
+  padding:13px 24px;border:1px solid var(--ink);border-radius:999px;
+  font-size:.66rem;letter-spacing:.2em;text-transform:uppercase;color:var(--ink);
+  transition:background .45s var(--ease),color .45s var(--ease),border-color .45s var(--ease),transform .45s var(--ease)}
+.btn:hover{background:var(--accent);color:var(--paper);border-color:var(--accent);transform:translateY(-2px)}
+.btn .arw{transition:transform .45s var(--ease)}
+.btn:hover .arw{transform:translateX(5px)}
+
+/* ---------- base responsive ---------- */
+@media (max-width:900px){
+  .spread{grid-template-columns:1fr;gap:30px}
+  .side{grid-column:1;grid-row:1}
+  .main{grid-column:1;grid-row:2}
+  .plate-wrap{grid-column:1;grid-row:3}
+}
+@media (max-width:560px){
+  .m-price{margin-left:0}
+  .meta-row .btn{margin-left:0}
+}
+
+  /* ---------- figure plate ---------- */
+  .plate-wrap{position:relative;justify-self:end;width:min(46vw,480px);align-self:stretch}
+  @media (max-width:860px){.plate-wrap{width:min(76vw,420px)}}
+  .plate{
+    position:relative;width:100%;aspect-ratio:3/4.1;
+    border-radius:2px;overflow:hidden;will-change:transform;
+    background:
+      radial-gradient(125% 95% at 50% 8%, #fbf6ec 0%, #f4ecdd 34%, #e7dcc7 66%, #d8cbaF 100%);
+    box-shadow:0 30px 70px -30px rgba(20,16,12,.55),0 2px 0 rgba(17,16,16,.12);
+  }
+  /* big accent disc bleeding off the plate */
+  .plate .disc{
+    position:absolute;left:50%;top:30%;transform:translate(-50%,-50%);
+    width:78%;aspect-ratio:1;border-radius:50%;
+    background:radial-gradient(circle at 42% 38%,var(--accent) 0%,var(--accent-ink) 70%,#9c150b 100%);
+    mix-blend-mode:multiply;filter:saturate(1.05);
+    box-shadow:inset 0 0 60px rgba(80,4,0,.5);
+  }
+  .plate .frame{position:absolute;inset:12px;border:1px solid rgba(17,16,16,.35);pointer-events:none}
+  .plate .tag{
+    position:absolute;left:16px;top:14px;z-index:12;
+    font-size:.56rem;letter-spacing:.34em;text-transform:uppercase;color:var(--ink);
+    writing-mode:vertical-rl;transform:rotate(180deg);
+  }
+  .plate .tag.t-r{left:auto;right:16px;top:auto;bottom:14px;transform:rotate(0)}
+
+  /* the CSS model silhouette */
+  .model{position:absolute;inset:0;z-index:6;filter:drop-shadow(0 22px 30px rgba(15,10,8,.4))}
+  .m-head{
+    position:absolute;left:50%;top:5.4%;transform:translateX(-50%);
+    width:17.5%;aspect-ratio:1/1.18;border-radius:50%;
+    background:linear-gradient(150deg,#2a2826,#0b0b0b 70%);
+  }
+  .m-cheek{position:absolute;left:50%;top:5.4%;transform:translateX(-50%);
+    width:17.5%;aspect-ratio:1/1.18;border-radius:50%;
+    background:radial-gradient(circle at 62% 40%,rgba(255,43,30,.28),transparent 55%);mix-blend-mode:soft-light}
+  .m-hatbrim{
+    position:absolute;left:50%;top:3.5%;transform:translateX(-50%);
+    width:60%;aspect-ratio:1/0.42;border-radius:50%;
+    background:linear-gradient(160deg,#34312e,#0a0a0a);
+    box-shadow:0 3px 0 rgba(0,0,0,.4);
+  }
+  .m-hatcrown{
+    position:absolute;left:50%;top:0.2%;transform:translateX(-50%);
+    width:30%;aspect-ratio:1/0.82;border-radius:50% 50% 42% 42%/60% 60% 40% 40%;
+    background:linear-gradient(160deg,#3a3633,#101010);
+  }
+  .m-hatband{
+    position:absolute;left:50%;top:3.1%;transform:translateX(-50%);
+    width:31%;height:2.4%;background:var(--accent);
+    box-shadow:0 0 8px rgba(255,43,30,.5);
+  }
+  .m-neck{
+    position:absolute;left:50%;top:31%;transform:translateX(-50%);
+    width:8.5%;aspect-ratio:1/2.1;border-radius:0 0 40% 40%;
+    background:linear-gradient(160deg,#242220,#0a0a0a);
+  }
+  .m-body{
+    position:absolute;left:50%;top:41%;transform:translateX(-50%);
+    width:62%;height:60%;
+    background:linear-gradient(150deg,#262422 0%,#101010 55%,#080808 100%);
+    clip-path:polygon(50% 0,33% 4%,26% 12%,20% 30%,16% 60%,12% 100%,88% 100%,84% 60%,80% 30%,74% 12%,67% 4%);
+  }
+  .m-body::before{ /* shoulder highlight */
+    content:"";position:absolute;inset:0;
+    background:radial-gradient(60% 40% at 40% 6%,rgba(255,255,255,.14),transparent 70%);
+    clip-path:inherit;
+  }
+  .m-sash{
+    position:absolute;left:50%;top:45%;transform:translateX(-50%) rotate(2deg);
+    width:24%;height:56%;
+    background:linear-gradient(180deg,var(--accent),var(--accent-ink));
+    clip-path:polygon(40% 0,60% 0,78% 100%,22% 100%);
+    opacity:.92;mix-blend-mode:normal;
+    box-shadow:0 0 22px rgba(255,43,30,.35);
+  }
+  .m-train{
+    position:absolute;left:50%;top:78%;transform:translateX(-50%);
+    width:84%;height:30%;
+    background:linear-gradient(180deg,#0c0c0c,rgba(10,10,10,.2));
+    clip-path:polygon(30% 0,70% 0,100% 100%,0 100%);
+    filter:blur(.3px);
+  }
+  .m-gleam{
+    position:absolute;left:50%;top:41%;transform:translateX(-50%);
+    width:62%;height:60%;pointer-events:none;mix-blend-mode:overlay;
+    background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.5) 50%,transparent 60%);
+    clip-path:polygon(50% 0,33% 4%,26% 12%,20% 30%,16% 60%,12% 100%,88% 100%,84% 60%,80% 30%,74% 12%,67% 4%);
+    opacity:0;animation:gleam 6.5s var(--ease) 1.4s infinite;
+  }
+  @keyframes gleam{0%,62%{opacity:0;transform:translateX(-50%) translateY(-8%)}
+    78%{opacity:.9}100%{opacity:0;transform:translateX(-50%) translateY(12%)}}
+
+  /* ---------- kinetic type band ---------- */
+  .band{position:relative;z-index:3;background:var(--ink);color:var(--paper);
+    overflow:hidden;border-top:1px solid var(--ink)}
+  .band .row{display:flex;white-space:nowrap;will-change:transform;
+    animation:marq 26s linear infinite}
+  .band .row.rev{animation-duration:34s;animation-direction:reverse}
+  .band .cell{font-family:var(--serif);font-style:italic;
+    font-size:clamp(1.6rem,5.4vw,4rem);line-height:1;padding:.7em 0;
+    display:inline-flex;align-items:center;gap:1.4em}
+  .band .cell .star{font-family:var(--sans);font-style:normal;color:var(--accent);
+    font-size:.6em;letter-spacing:0}
+  .band .row.rev .cell .star{color:#ff5a45}
+  @keyframes marq{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  /* ---------- footer ---------- */
+  .foot{
+    position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:space-between;
+    gap:16px;padding:clamp(16px,3vw,30px) clamp(16px,4vw,56px);
+    font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);
+    border-top:1px solid rgba(17,16,16,.25);
+  }
+  .foot .wordmark{font-family:var(--serif);letter-spacing:.4em;color:var(--ink);
+    text-transform:uppercase;font-size:.9rem}
+
+  /* ---------- reveal / kinetic entrance ---------- */
+  @media (prefers-reduced-motion: no-preference){
+    .kin{animation:rise 1.15s var(--ease) forwards}
+    .display .ln:nth-child(2) .kin{animation-delay:.12s}
+    .display .ln:nth-child(3) .kin{animation-delay:.24s}
+    .plate-wrap{animation:plateIn 1.4s var(--ease) .15s both}
+    .side .issue{animation:fadeR 1s var(--ease) .05s both}
+  }
+  @keyframes rise{from{transform:translateY(110%)}to{transform:translateY(0)}}
+  @keyframes plateIn{from{opacity:0;transform:translateY(40px) scale(.985)}to{opacity:1;transform:none}}
+  @keyframes fadeR{from{opacity:0;transform:translateX(-16px)}to{opacity:1;transform:none}}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+      transition-duration:.001ms !important}
+    .kin{transform:none !important}
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to editorial</a>
+
+<header class="masthead">
+  <div class="m-bar">
+    <span class="m-eyebrow">No. 033 · Autumn MMXXVI</span>
+    <span class="m-name">Lumière</span>
+    <span class="m-price">Paris — New York — Tokyo</span>
+  </div>
+  <hr class="m-rule">
+  <hr class="m-rule thin">
+</header>
+
+<main class="spread" id="main">
+  <!-- left running column -->
+  <aside class="side">
+    <div class="issue" data-par="0.04">03<span class="accent">3</span></div>
+    <div class="issue-x">The Noir Collection · Haute Couture</div>
+    <div>
+      <ul class="toc">
+        <li><span><b>Ink &amp; Silk</b> — the shoot</span><span class="n">04</span></li>
+        <li><span>On the <b>wide-brim</b> revival</span><span class="n">12</span></li>
+        <li><span>Portrait: <b>A. Marchetti</b></span><span class="n">19</span></li>
+        <li><span>Beauty — the <b>crimson</b> lip</span><span class="n">24</span></li>
+      </ul>
+    </div>
+  </aside>
+
+  <!-- main column -->
+  <section class="main">
+    <div class="kicker"><span class="dot"></span><span>Autumn Editorial</span><span class="line"></span></div>
+
+    <h1 class="display" data-kin>
+      <span class="ln"><span class="word"><span class="kin">The</span></span> <span class="word"><span class="kin">Silhouette</span></span></span>
+      <span class="ln"><span class="word"><span class="kin em-d">of</span></span> <span class="word"><span class="kin">the</span></span></span>
+      <span class="ln"><span class="word"><span class="kin out">Night</span></span></span>
+    </h1>
+
+    <p class="lede">
+      <span class="drop">S</span>ilenced colour, amplified form. On the last runway of the season,
+      ink black was not a shade but a stance — a single, unbroken line drawn from the
+      brim of a hat to the hem of a train, cut only by a slash of vermilion. This is
+      couture as restraint: the body remembered through shadow, the eye led by one
+      deliberate, unblinking red.
+    </p>
+
+    <div class="meta-row">
+      <div class="blk"><div class="lab">Photography</div><div class="val">A. Marchetti</div></div>
+      <div class="blk"><div class="lab">Styling</div><div class="val">Nadia Fournier</div></div>
+      <div class="blk"><div class="lab">Set</div><div class="val">Studio 7, Le Marais</div></div>
+      <a class="btn" href="#main"><span>Read the spread</span><span class="arw" aria-hidden="true">→</span></a>
+    </div>
+  </section>
+
+  <!-- figure plate -->
+  <div class="plate-wrap">
+    <div class="plate" data-par="0.09">
+      <div class="disc" data-par="-0.05"></div>
+      <div class="frame"></div>
+      <div class="tag">Lumière · Plate 033</div>
+      <div class="tag t-r">Autumn / Winter</div>
+      <div class="model" data-par="0.14">
+        <div class="m-hatcrown"></div>
+        <div class="m-hatband"></div>
+        <div class="m-hatbrim"></div>
+        <div class="m-cheek"></div>
+        <div class="m-head"></div>
+        <div class="m-neck"></div>
+        <div class="m-body"></div>
+        <div class="m-sash"></div>
+        <div class="m-train"></div>
+        <div class="m-gleam"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="band" aria-hidden="true">
+  <div class="row">
+    <span class="cell">Haute Couture <span class="star">✦</span> The Noir Collection <span class="star">✦</span> Ink &amp; Silk <span class="star">✦</span> Autumn MMXXVI <span class="star">✦</span> </span>
+    <span class="cell">Haute Couture <span class="star">✦</span> The Noir Collection <span class="star">✦</span> Ink &amp; Silk <span class="star">✦</span> Autumn MMXXVI <span class="star">✦</span> </span>
+  </div>
+  <div class="row rev">
+    <span class="cell">Lumière <span class="star">✦</span> Paris · New York · Tokyo <span class="star">✦</span> No. 033 <span class="star">✦</span> Restrained Colour <span class="star">✦</span> </span>
+    <span class="cell">Lumière <span class="star">✦</span> Paris · New York · Tokyo <span class="star">✦</span> No. 033 <span class="star">✦</span> Restrained Colour <span class="star">✦</span> </span>
+  </div>
+</div>
+
+<footer class="foot">
+  <span class="wordmark">Lumière</span>
+  <span>Maison de Couture · Established MCMXLVIII</span>
+  <span>© MMXXVI — All rights reserved</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var parts = document.querySelectorAll("[data-par]");
+  var hx=0,hy=0,cx=0,cy=0,active=false;
+
+  function onMove(e){
+    var p = e.touches ? e.touches[0] : e;
+    if(!p) return;
+    var W = window.innerWidth, H = window.innerHeight;
+    hx = (p.clientX/W - 0.5); hy = (p.clientY/H - 0.5);
+    active = true;
+  }
+  function onLeave(){ active = false; }
+
+  if(!reduce){
+    window.addEventListener("pointermove", onMove, {passive:true});
+    window.addEventListener("pointerleave", onLeave);
+    window.addEventListener("blur", onLeave);
+    (function tick(){
+      cx += (hx - cx)*0.06; cy += (hy - cy)*0.06;
+      for(var i=0;i<parts.length;i++){
+        var el = parts[i];
+        var depth = parseFloat(el.getAttribute("data-par"))||0;
+        var px = -cx*depth*1000;
+        var py = -cy*depth*1000;
+        el.style.transform = "translate3d("+px.toFixed(2)+"px,"+py.toFixed(2)+"px,0)";
+      }
+      requestAnimationFrame(tick);
+    })();
+  }
+})();
+</script>
+</body>
+</html>

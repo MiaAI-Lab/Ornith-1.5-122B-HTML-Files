@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Twilight Ridge — Paper-Cut Parallax</title>
+<style>
+  :root{ --ink:#0d2c2b; }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;background:var(--ink);overflow:hidden;
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;}
+
+  .scene{position:fixed;inset:0;overflow:hidden;
+    background:linear-gradient(to bottom,
+      #0e3433 0%, #1b4843 26%, #336056 46%, #6f9686 64%,
+      #b9c2a8 78%, #dccba6 90%, #ecdcbb 100%);}
+
+  /* --- sun --- */
+  .sun{position:absolute;left:50%;top:61%;width:240px;height:240px;
+    transform:translate(-50%,-50%);border-radius:50%;pointer-events:none;
+    background:radial-gradient(circle at 50% 50%,
+      rgba(255,244,220,1) 0%, rgba(250,205,135,0.85) 30%,
+      rgba(243,168,92,0.4) 54%, rgba(243,168,92,0) 72%);
+    filter:drop-shadow(0 0 46px rgba(250,200,120,0.65))
+           drop-shadow(0 0 120px rgba(240,150,90,0.35));
+    will-change:transform;}
+
+  /* --- star dust near the zenith --- */
+  .stars{position:absolute;inset:0;pointer-events:none;opacity:0.5;}
+  .star{position:absolute;width:2px;height:2px;border-radius:50%;
+    background:#eaf3ee;box-shadow:0 0 6px 1px rgba(234,243,238,0.5);
+    animation:tw 4s ease-in-out infinite;}
+  @keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+
+  /* --- mountain / ridge layers --- */
+  .mtn{position:absolute;left:0;right:0;bottom:0;height:100%;
+    will-change:transform;filter:drop-shadow(0 -1px 0 rgba(0,0,0,0.15));}
+  .mtn svg{display:block;height:100%;width:auto;}
+
+  /* --- fog bands --- */
+  .fog{position:absolute;left:-15%;right:-15%;height:220px;
+    background:radial-gradient(ellipse 60% 100% at 50% 50%,
+      rgba(233,226,208,0.55) 0%, rgba(233,226,208,0.12) 60%,
+      rgba(233,226,208,0) 78%);
+    filter:blur(20px);pointer-events:none;will-change:transform;}
+
+  /* --- birds --- */
+  .birds{position:absolute;left:0;top:34%;width:100%;height:120px;
+    pointer-events:none;will-change:transform;opacity:0.8;}
+
+  /* --- vignette + grain --- */
+  .vignette{position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(ellipse at 50% 40%,
+      rgba(0,0,0,0) 52%, rgba(6,22,21,0.55) 100%);}
+  .grain{position:absolute;inset:0;pointer-events:none;opacity:0.05;mix-blend-mode:overlay;
+    background-image:radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px);
+    background-size:3px 3px;}
+
+  /* --- caption --- */
+  .caption{position:absolute;left:0;right:0;bottom:46px;text-align:center;
+    color:#f2ead6;font-family:Georgia,'Times New Roman',serif;
+    letter-spacing:0.34em;text-transform:uppercase;
+    font-size:clamp(12px,1.7vw,21px);
+    text-shadow:0 1px 12px rgba(0,0,0,0.55);opacity:0.9;}
+  .caption small{display:block;letter-spacing:0.5em;font-size:0.5em;
+    opacity:0.55;margin-top:9px;font-family:system-ui,sans-serif;}
+
+  .hint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+    color:rgba(242,234,214,0.6);letter-spacing:0.3em;text-transform:uppercase;
+    font-size:11px;pointer-events:none;transition:opacity 1.4s ease;}
+</style>
+</head>
+<body>
+  <div class="scene" id="scene">
+    <div class="sun" id="sun"></div>
+    <div class="stars" id="stars"></div>
+    <div class="fog" id="fog2" style="bottom:34%;"></div>
+    <div class="fog" id="fog1" style="bottom:20%;"></div>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+    <div class="caption">Twilight&nbsp;Ridge<small>paper-cut parallax · move your mouse</small></div>
+    <div class="hint" id="hint">move your mouse · drag</div>
+  </div>
+<script>
+(function(){
+  "use strict";
+  var scene = document.getElementById("scene");
+  var W = window.innerWidth, H = window.innerHeight;
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var pointer = 0, target = 0, time = 0;
+  var layers = [];      // ridge layers
+  var fogs = [];        // fog layers
+  var birds = [];
+
+  // --- ridge layer definitions (far → near) ---
+  var RANGES = [
+    { base:0.62, amp:0.09, freq:2,  phase:0.6, depth:0.10, speed:0.010, fill:"#6f9686" },
+    { base:0.70, amp:0.13, freq:3,  phase:2.1, depth:0.20, speed:0.020, fill:"#4e7d70" },
+    { base:0.78, amp:0.17, freq:2,  phase:3.6, depth:0.34, speed:0.034, fill:"#35605a" },
+    { base:0.86, amp:0.22, freq:3,  phase:1.1, depth:0.52, speed:0.052, fill:"#244a45" },
+    { base:0.94, amp:0.28, freq:2,  phase:4.8, depth:0.72, speed:0.078, fill:"#153430" }
+  ];
+
+  function ridgePath(w, baseY, amp, freq, phase, seed){
+    var N = 90, s = "", i, t, x, y, j;
+    for(i = 0; i <= N; i++){
+      t = i / N; x = t * w;
+      y = baseY
+        - amp * (0.5 + 0.5 * Math.sin(t * freq * 6.2832 + phase))
+        - amp * 0.30 * Math.sin(t * freq * 6.2832 * 1.6 + seed)
+        - amp * 0.14 * Math.sin(t * 6.2832 * 3.3 + seed * 2.1);
+      if(i === 0) s += "M" + x.toFixed(1) + " " + y.toFixed(1);
+      else s += "L" + x.toFixed(1) + " " + y.toFixed(1);
+    }
+    s += "L" + w.toFixed(1) + " " + (baseY + 1.2).toFixed(1);
+    s += "L0 " + (baseY + 1.2).toFixed(1) + "Z";
+    return s;
+  }
+
+  function buildMountains(){
+    var el = document.getElementById("mtnLayer");
+    if(el) el.remove();
+    var host = document.createElement("div");
+    host.id = "mtnLayer";
+    scene.insertBefore(host, scene.firstChild);
+    layers = [];
+    var i, R, svg, g, path, d, svgW = W * 2;
+    for(i = 0; i < RANGES.length; i++){
+      R = RANGES[i];
+      svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 " + svgW + " " + H);
+      svg.setAttribute("preserveAspectRatio", "xMidYMax slice");
+      svg.setAttribute("width", svgW);
+      svg.setAttribute("height", H);
+      // two tiled copies for a seamless horizontal loop
+      d = ridgePath(W, R.base * H, R.amp * H, R.freq, R.phase, i * 1.7);
+      var p1 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p1.setAttribute("d", d); p1.setAttribute("fill", R.fill);
+      svg.appendChild(p1);
+      var p2 = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p2.setAttribute("d", d); p2.setAttribute("fill", R.fill);
+      p2.setAttribute("transform", "translate(" + W + ",0)");
+      svg.appendChild(p2);
+      host.appendChild(svg);
+      layers.push({ svg:svg, speed:R.speed, depth:R.depth, offset:0 });
+    }
+  }
+
+  function buildFogs(){
+    fogs = [];
+    var nodes = document.querySelectorAll(".fog");
+    for(var i = 0; i < nodes.length; i++){
+      fogs.push({ el:nodes[i], speed:0.012 + i * 0.006, depth:0.14 + i * 0.05, offset:0 });
+    }
+  }
+
+  function buildStars(){
+    var host = document.getElementById("stars");
+    host.innerHTML = "";
+    for(var i = 0; i < 26; i++){
+      var s = document.createElement("div");
+      s.className = "star";
+      s.style.left = (Math.random() * 100) + "%";
+      s.style.top = (Math.random() * 34) + "%";
+      s.style.animationDelay = (Math.random() * 4) + "s";
+      s.style.opacity = (0.3 + Math.random() * 0.6).toFixed(2);
+      host.appendChild(s);
+    }
+  }
+
+  function buildBirds(){
+    var old = document.getElementById("birdsHost");
+    if(old) old.remove();
+    var host = document.createElement("div");
+    host.className = "birds"; host.id = "birdsHost";
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 " + W + " 120");
+    svg.setAttribute("width", W); svg.setAttribute("height", 120);
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "rgba(20,40,38,0.7)");
+    svg.setAttribute("stroke-width", "2.4");
+    svg.setAttribute("stroke-linecap", "round");
+    var flocks = [ {x:0.18,y:40},{x:0.42,y:62},{x:0.66,y:34},{x:0.82,y:72} ];
+    flocks.forEach(function(f){
+      var w = 16 + Math.random() * 10;
+      var g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("transform", "translate(" + (f.x*W) + "," + f.y + ")");
+      var p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      p.setAttribute("d", "M0 0 Q" + (-w*0.4) + " -" + w*0.4 + " " + (-w) + " 0 Q" + (w*0.4) + " -" + w*0.4 + " " + w + " 0");
+      g.appendChild(p);
+      svg.appendChild(g);
+      birds.push({ g:g, baseX:f.x*W, speed:0.018 + Math.random()*0.02, phase:Math.random()*6.28 });
+    });
+    scene.appendChild(host);
+    birdsHost = host; birdsSvg = svg;
+  }
+  var birdsHost, birdsSvg;
+
+  // --- stars + initial build ---
+  buildStars();
+  buildMountains();
+  buildFogs();
+  buildBirds();
+
+  var sun = document.getElementById("sun");
+  var hint = document.getElementById("hint");
+
+  window.addEventListener("pointermove", function(e){
+    target = (e.clientX / W - 0.5) * 2;      // -1 .. 1
+    if(hint){ hint.style.opacity = "0"; }
+  }, { passive:true });
+  window.addEventListener("pointerdown", function(){
+    target = (Math.random() - 0.5) * 2;
+    if(hint){ hint.style.opacity = "0"; }
+  }, { passive:true });
+
+  var maxPar = 70;   // max px of mouse parallax at depth 1
+
+  function frame(){
+    time += 1;
+    pointer += (target - pointer) * 0.045;
+
+    // ridge layers: seamless horizontal drift + mouse parallax
+    for(var i = 0; i < layers.length; i++){
+      var L = layers[i];
+      var drift = (time * L.speed) % W;
+      var mx = -pointer * L.depth * maxPar;
+      L.svg.setAttribute("transform",
+        "translate(" + (-drift + mx).toFixed(2) + ",0)");
+    }
+
+    // fog: gentle drift + parallax
+    for(var j = 0; j < fogs.length; j++){
+      var F = fogs[j];
+      var fd = (time * F.speed) % (W * 0.5);
+      var fmx = -pointer * F.depth * maxPar * 0.7;
+      F.el.style.transform =
+        "translate3d(" + ((-fd + fmx) % (W * 0.5)).toFixed(1) + "px,0,0)";
+    }
+
+    // birds: traverse the sky slowly, wrapping, with a soft bob
+    for(var k = 0; k < birds.length; k++){
+      var B = birds[k];
+      var bx = (B.baseX + time * (B.speed * 60)) % (W + 120) - 60;
+      var by = Math.sin(time * 0.02 + B.phase) * 6;
+      B.g.setAttribute("transform", "translate(" + bx.toFixed(1) + "," + (40 + by).toFixed(1) + ")");
+    }
+
+    // sun breathes very gently and shifts a touch with the pointer
+    sun.style.transform =
+      "translate(calc(-50% + " + (-pointer * 14).toFixed(1) + "px),-50%)";
+
+    requestAnimationFrame(frame);
+  }
+
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    buildMountains();
+    buildBirds();
+    for(var i = 0; i < layers.length; i++){
+      layers[i].svg.setAttribute("width", W * 2);
+      layers[i].svg.setAttribute("height", H);
+    }
+  }
+  window.addEventListener("resize", resize);
+
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body>
+</html>

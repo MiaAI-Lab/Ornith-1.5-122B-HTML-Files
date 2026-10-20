@@ -1,0 +1,22 @@
+PROMPT:
+World-class creative technologist & designer. Build standalone HTML page as a self-contained .html with ALL CSS in one <style> and ALL JS in one <script> (inline everything). ZERO external dependencies: no CDN, no external fonts (system stacks only), no external images/SVG files, no libraries — build all visuals with CSS, HTML, inline SVG, or <canvas>. Works fully offline by double-clicking (no network requests). Responsive 320px->4K with <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5. WOW BAR: genuinely stunning, premium, Awwwards-caliber, distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Also create a matching .txt with the same base name containing the exact prompt, a short TITLE, a one-paragraph DESIGN DESCRIPTION, a bulleted list of MAJOR VISUAL TECHNIQUES, and the INTENDED INTERACTION MODEL.
+
+Page: 059-rain-pond — Raindrops striking a pond and sending out concentric ripples, with falling rain. Palette: moody blue-grey, soft highlights. Signature: canvas ripple rings spawning at random + on click, diagonal rain streaks, faint reflection shimmer.
+
+TITLE:
+THE POND — Rain on Still Water
+
+DESIGN DESCRIPTION:
+A low grey sky over dark water, rendered as a single moody canvas. Diagonal rain stitches down in translucent streaks while the surface breathes: ripples — each a set of nested elliptical rings — spawn at random across the pond and bloom outward, fading as they widen, and a pale reflection column shivers and drifts on the water with a slow, living shimmer. Click (or tap) anywhere to drop a stone: a larger ripple opens with a little crown of splash droplets and a soft sonar blip. The whole scene is staged as an editorial "Weather Room" plate — a serif masthead, a live mono HUD tracking rain, ripples and frame rate, and glassy pill controls for intensity, sound and wind.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas ripple rings: nested ellipses (squashed vertically for perspective) that grow and fade, drawn with additive-feeling translucent strokes and a small rising splash-crown of droplets.
+- Diagonal rain streaks as short line segments advected by a configurable wind vector, recycled as they fall off the bottom.
+- Faint reflection shimmer built from an animated radial light column plus six horizontal "light band" gradients whose alpha and width oscillate with sine functions of time.
+- DPR-aware rendering (canvas.width = logicalW * dpr, ctx.setTransform scale) so it stays crisp from 320px to 4K, with a resize rebuild of the drop field.
+- WebAudio: a looping filtered white-noise bed (bandpass + lowpass) for ambient rain whose gain tracks intensity, and a per-drop sine blip with an exponential pitch fall.
+- Three intensities (Calm / Steady / Downpour) and a Wind toggle that reseed the rain field and retune the ambience; auto-spawned ripples keep the surface alive.
+- Editorial masthead, live mono HUD, glassy backdrop-blur chips and a multiply mood for a crafted, gallery feel.
+
+INTENDED INTERACTION MODEL:
+Ambient and tactile. The pond rains and ripples on its own, but the viewer is invited to "drop a stone" — click or tap anywhere on the water to open a large ripple with a splash and a blip. Controls let them dial the rain from Calm to Downpour (which also brightens the ambience and raises the ripple cadence), toggle the sound on/off, and flip Wind on to bend the rain diagonal and make it patter sideways. A hint fades away once the first ripple is made. Pointer, mouse and touch all work, and prefers-reduced-motion disables the splash droplets and hint.

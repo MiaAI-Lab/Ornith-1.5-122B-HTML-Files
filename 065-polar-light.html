@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polar Light — Aurora Curtains</title>
+<style>
+  :root{
+    --night:#040715;
+    --sky:#0a1030;
+    --green:#39ffba;
+    --green2:#1fd6a0;
+    --violet:#8b5cff;
+    --violet2:#c46bff;
+    --pink:#ff6bd0;
+    --snow:#dfe9ff;
+    --serif:Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:var(--night);color:var(--snow);overflow:hidden}
+  body{font-family:var(--sans);-webkit-font-smoothing:antialiased;cursor:crosshair}
+
+  /* ---------- sky wash ---------- */
+  .sky{
+    position:fixed;inset:0;z-index:0;
+    background:
+      radial-gradient(120% 80% at 50% 118%, rgba(57,255,186,.10), transparent 46%),
+      radial-gradient(90% 70% at 78% 8%, rgba(139,92,255,.20), transparent 55%),
+      linear-gradient(180deg,#03050f 0%, #070b22 34%, #0c1536 60%, #101d42 100%);
+  }
+  .sky::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg, transparent 55%, rgba(10,20,48,.55) 78%, rgba(6,12,32,.9) 100%);
+  }
+
+  /* star canvas + aurora canvas stack */
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+  #stars{z-index:1}
+  #aurora{z-index:2}
+
+  /* pine silhouette horizon (inline SVG, two layers for depth) */
+  .horizon{position:fixed;left:0;right:0;bottom:0;z-index:3;pointer-events:none}
+  .horizon svg{display:block;width:100%;height:auto}
+  .ridge-far{opacity:.55;filter:blur(1px)}
+
+  /* faint snow glow along the base */
+  .snowglow{
+    position:fixed;left:-10%;right:-10%;bottom:-6%;z-index:3;height:34%;pointer-events:none;
+    background:radial-gradient(70% 100% at 50% 100%, rgba(180,210,255,.16), transparent 62%);
+    mix-blend-mode:screen;
+  }
+
+  /* vignette */
+  .vignette{position:fixed;inset:0;z-index:5;pointer-events:none;
+    box-shadow:inset 0 0 26vw rgba(0,0,0,.55), inset 0 0 9vw rgba(2,4,12,.7)}
+
+  /* ---------- editorial overlay ---------- */
+  .overlay{position:fixed;inset:0;z-index:6;pointer-events:none;
+    display:flex;flex-direction:column;justify-content:space-between;
+    padding:clamp(20px,4.4vw,54px) clamp(22px,5vw,66px)}
+  .kicker{display:flex;justify-content:space-between;align-items:baseline;gap:18px;
+    font-family:var(--mono);font-size:clamp(.6rem,1.05vw,.76rem);letter-spacing:.34em;
+    text-transform:uppercase;color:#a9c6ff;opacity:.82}
+  .kicker .idx{color:var(--green)}
+  .headline{font-family:var(--serif);font-weight:400;letter-spacing:-.01em;line-height:.9;
+    font-size:clamp(2.8rem,10vw,9.4rem);
+    background:linear-gradient(180deg,#eaf6ff 0%, #bfe6ff 42%, #7fd6ff 70%, #4a7bd6 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 6px 60px rgba(57,255,186,.14)}
+  .headline .it{font-style:italic;
+    background:linear-gradient(180deg,#b6ffdf,#39ffba 55%,#1fd6a0);
+    -webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{max-width:40ch;margin-top:18px;font-size:clamp(.82rem,1.5vw,1.02rem);line-height:1.62;
+    color:#c7dbff;opacity:.9}
+  .meta-row{display:flex;flex-wrap:wrap;gap:14px 34px;margin-top:24px;
+    font-family:var(--mono);font-size:clamp(.6rem,1vw,.72rem);letter-spacing:.16em;
+    text-transform:uppercase;color:#8fb0e6}
+  .meta-row b{color:var(--green);font-weight:400}
+  .foot{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap}
+  .hint{font-family:var(--mono);font-size:.64rem;letter-spacing:.28em;text-transform:uppercase;
+    color:#7f97c8;opacity:.8;display:inline-flex;align-items:center;gap:.7em}
+  .hint .beam{width:34px;height:1px;background:linear-gradient(90deg,transparent,var(--green));
+    box-shadow:0 0 8px var(--green);animation:pulse 2.6s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:.35;transform:scaleX(.6)}50%{opacity:1;transform:scaleX(1)}}
+  .alt{pointer-events:auto;display:inline-flex;align-items:center;gap:.6em;
+    font-family:var(--mono);font-size:.62rem;letter-spacing:.26em;text-transform:uppercase;color:#dff;
+    border:1px solid rgba(57,255,186,.35);border-radius:999px;padding:.72em 1.15em;
+    backdrop-filter:blur(6px);background:rgba(10,30,40,.35);cursor:pointer;
+    transition:background .4s,border-color .4s,transform .4s,box-shadow .4s}
+  .alt:hover{background:rgba(57,255,186,.14);border-color:var(--green);transform:translateY(-2px);
+    box-shadow:0 0 26px rgba(57,255,186,.3)}
+  .alt .dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 10px var(--green);animation:blink 2.4s ease-in-out infinite}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.22}}
+
+  @media (max-width:640px){
+    .kicker{flex-direction:column;gap:6px}
+    .lede{opacity:.85}
+  }
+  @media (prefers-reduced-motion: reduce){
+    .hint .beam{animation:none}
+    .alt .dot{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+<canvas id="stars" aria-hidden="true"></canvas>
+<canvas id="aurora" aria-hidden="true"></canvas>
+<div class="snowglow" aria-hidden="true"></div>
+<div class="horizon" aria-hidden="true">
+  <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+    <path class="ridge-far" fill="#0b1936" d="M0,256 L60,236 L120,248 L180,224 L250,250 L320,232 L400,256 L470,238 L560,258 L640,240 L720,262 L820,244 L900,264 L990,246 L1080,266 L1170,250 L1260,268 L1350,252 L1440,270 L1440,320 L0,320 Z"/>
+    <path fill="#03070f" d="M0,300 C120,274 200,288 320,296 C460,304 520,282 660,292 C820,303 900,286 1040,296 C1200,307 1300,290 1440,300 L1440,320 L0,320 Z"/>
+    <!-- pine trees -->
+    <g fill="#02050c">
+      <path d="M118,300 l14,-46 l14,46 z M124,288 l8,-26 l8,26 z"/>
+      <path d="M214,302 l12,-40 l12,40 z M220,292 l7,-22 l7,22 z"/>
+      <path d="M1296,300 l15,-50 l15,50 z M1303,286 l8,-28 l8,28 z"/>
+      <path d="M1368,302 l12,-40 l12,40 z M1374,292 l7,-22 l7,22 z"/>
+      <path d="M700,300 l13,-44 l13,44 z M706,290 l7,-24 l7,24 z"/>
+    </g>
+  </svg>
+</div>
+<div class="vignette" aria-hidden="true"></div>
+
+<div class="overlay">
+  <div class="kicker">
+    <span>Field Record · <b style="color:#eaf6ff">Tromsø · 69°N</b></span>
+    <span class="idx">KP&nbsp;5 · λ&nbsp;557.7nm</span>
+  </div>
+
+  <div>
+    <h1 class="headline">Polar<br><span class="it">Light</span></h1>
+    <p class="lede">Solar wind meets the magnetosphere above the pine line — oxygen glows
+      emerald at 110&nbsp;km, violet ionised nitrogen higher still. The curtains drift on a
+      wind you can feel in the stillness.</p>
+    <div class="meta-row">
+      <span>Altitude <b>100–400 km</b></span>
+      <span>Colour <b>O·N · 557.7 / 630.0 nm</b></span>
+      <span>Move the pointer to steer the sky</span>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="hint"><span class="beam"></span>aurora streaming</span>
+    <button class="alt" id="pulse"><span class="dot"></span><span id="pulselbl">live · KP5</span></button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var starCv = document.getElementById("stars");
+  var aurCv  = document.getElementById("aurora");
+  if(!starCv || !starCv.getContext || !aurCv || !aurCv.getContext) return;
+  var sctx = starCv.getContext("2d");
+  var ctx  = aurCv.getContext("2d");
+  var DPR = Math.min(window.devicePixelRatio || 1, 2);
+  var W=0, H=0;
+  var stars=[], rays=[];
+  var hx=0, hy=0, tx=0, ty=0;
+
+  /* ---------- stars ---------- */
+  var TINT=[[225,238,255],[190,220,255],[255,244,224],[255,214,226],[200,255,240]];
+  function buildStars(){
+    var area=W*H;
+    var n=Math.round(Math.max(90, Math.min(620, area/3400)));
+    stars=[];
+    for(var i=0;i<n;i++){
+      stars.push({
+        x:Math.random(), y:Math.random()*0.86,      // keep above horizon band
+        r:0.4+Math.random()*1.4,
+        base:0.3+Math.random()*0.7,
+        ph:Math.random()*6.283,
+        sp:0.5+Math.random()*2.4,
+        tint:TINT[(Math.random()*TINT.length)|0],
+        big:Math.random()<0.05
+      });
+    }
+  }
+
+  /* ---------- aurora curtain geometry ---------- */
+  // curtains = list of bands; each column's top/bottom built from summed sines
+  var CURTAINS=[
+    {col:0, hueA:[57,255,186], hueB:[31,214,160], hueC:[139,92,255], amp:0.16, top:0.06, bot:0.66, speed:0.9, phase:0},
+    {col:1, hueA:[120,255,200], hueB:[57,255,186], hueC:[196,107,255], amp:0.14, top:0.10, bot:0.74, speed:0.7, phase:2.1},
+    {col:2, hueA:[196,107,255], hueB:[139,92,255], hueC:[255,107,208], amp:0.12, top:0.04, bot:0.58, speed:0.55, phase:4.2}
+  ];
+  var COLS=140;   // vertical columns across width
+  var COLS2=COLS+1;
+
+  function wave(y, t, base, amp, ph){
+    return base
+      + amp*( 0.6*Math.sin(t*0.55 + ph)
+            + 0.3*Math.sin(t*1.3 + ph*1.7 + y*3.0)
+            + 0.18*Math.sin(t*2.6 + ph*0.5 + y*7.0) );
+  }
+
+  /* ---------- resize ---------- */
+  function resize(){
+    W=window.innerWidth; H=window.innerHeight;
+    [starCv,aurCv].forEach(function(c){
+      c.width=Math.floor(W*DPR); c.height=Math.floor(H*DPR);
+      c.style.width=W+"px"; c.style.height=H+"px";
+    });
+    sctx.setTransform(DPR,0,0,DPR,0,0);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+    buildStars();
+  }
+
+  /* ---------- draw stars ---------- */
+  function drawStars(t){
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i], c=s.tint;
+      var sx=s.x*W, sy=s.y*H;
+      var tw=s.base*(0.5+0.5*Math.sin(t*s.sp+s.ph));
+      if(s.big){
+        var g=sctx.createRadialGradient(sx,sy,0,sx,sy,s.r*7);
+        g.addColorStop(0,"rgba("+c[0]+","+c[1]+","+c[2]+","+tw.toFixed(3)+")");
+        g.addColorStop(1,"rgba("+c[0]+","+c[1]+","+c[2]+",0)");
+        sctx.beginPath(); sctx.fillStyle=g; sctx.arc(sx,sy,s.r*7,0,6.283); sctx.fill();
+      }
+      sctx.beginPath();
+      sctx.fillStyle="rgba("+c[0]+","+c[1]+","+c[2]+","+tw.toFixed(3)+")";
+      sctx.arc(sx,sy,s.r,0,6.283); sctx.fill();
+    }
+  }
+
+  /* ---------- draw aurora ---------- */
+  function drawAurora(t){
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+
+    // pointer sway: steer curtains horizontally + brightness
+    var sway = hx*0.09;
+    var bright = 0.75 + 0.35*(1-Math.abs(hy));
+
+    for(var k=0;k<CURTAINS.length;k++){
+      var cur=CURTAINS[k];
+      var topArr=new Array(COLS2);
+      var botArr=new Array(COLS2);
+      for(var i=0;i<=COLS;i++){
+        var y=i/COLS;
+        var tt = t*cur.speed + cur.phase;
+        topArr[i] = (cur.top + wave(y, tt, 0, cur.amp, cur.phase) + sway) ;
+        botArr[i] = (cur.bot + wave(y, tt+10, cur.amp*0.7, cur.amp*0.5, cur.phase+2) + sway);
+      }
+      // render as stacked gradient columns
+      for(var i=0;i<COLS;i++){
+        var x0=(i/COLS)*W, x1=((i+1)/COLS)*W;
+        var tw=0.5+0.5*Math.sin(t*1.4 + i*0.35 + cur.phase); // vertical shimmer
+        var g=ctx.createLinearGradient(0, topArr[i]*H, 0, botArr[i]*H);
+        var a1=(0.02+0.05*tw)*bright;
+        var a2=(0.10+0.14*tw)*bright;
+        var a3=(0.03+0.06*tw)*bright;
+        g.addColorStop(0,   "rgba("+cur.hueC[0]+","+cur.hueC[1]+","+cur.hueC[2]+",0)");
+        g.addColorStop(0.18,"rgba("+cur.hueA[0]+","+cur.hueA[1]+","+cur.hueA[2]+","+a1.toFixed(4)+")");
+        g.addColorStop(0.5, "rgba("+cur.hueA[0]+","+cur.hueA[1]+","+cur.hueA[2]+","+a2.toFixed(4)+")");
+        g.addColorStop(0.82,"rgba("+cur.hueB[0]+","+cur.hueB[1]+","+cur.hueB[2]+","+a2.toFixed(4)+")");
+        g.addColorStop(1,   "rgba("+cur.hueC[0]+","+cur.hueC[1]+","+cur.hueC[2]+",0)");
+        ctx.fillStyle=g;
+        ctx.beginPath();
+        ctx.moveTo(x0, topArr[i]*H);
+        ctx.lineTo(x1, topArr[i+1]*H);
+        ctx.lineTo(x1, botArr[i+1]*H);
+        ctx.lineTo(x0, botArr[i]*H);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+    ctx.globalCompositeOperation="source-over";
+  }
+
+  /* ---------- loop ---------- */
+  function frame(ts){
+    var t=ts/1000;
+    ctx.clearRect(0,0,W,H);
+    drawStars(t);
+    drawAurora(t);
+    tx += (hx-tx)*0.05; ty += (hy-ty)*0.05;
+    requestAnimationFrame(frame);
+  }
+
+  function onMove(e){
+    var p=e.touches?e.touches[0]:e; if(!p) return;
+    hx=p.clientX/W-0.5; hy=p.clientY/H-0.5;
+  }
+  function onLeave(){ hx=0; hy=0; }
+
+  window.addEventListener("resize", resize);
+  if(!reduce){
+    window.addEventListener("pointermove", onMove, {passive:true});
+    window.addEventListener("pointerleave", onLeave);
+  }
+
+  // pause/resume toggle
+  var btn=document.getElementById("pulse");
+  var lbl=document.getElementById("pulselbl");
+  var on=true;
+  if(btn && lbl){
+    btn.addEventListener("click", function(){
+      on=!on;
+      btn.style.animationPlayState = on?"running":"paused";
+      lbl.textContent = on?"live · KP5":"paused";
+      btn.querySelector(".dot").style.opacity = on?1:.3;
+    });
+  }
+
+  resize();
+  if(reduce){
+    // still render one calm frame (aurora frozen, stars static)
+    drawStars(0); drawAurora(0);
+  } else {
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+RECREATION PROMPT
+=================
+Create a single self-contained HTML file (inline <style> and inline <script>,
+no external assets) of an editorial "line garden" art card. Layout is a two-
+column grid (SVG art frame on the left, serif editorial copy on the right) on a
+warm ivory radial-gradient paper background with a subtle grain overlay. The
+left column holds a 4/5 framed panel containing an SVG "continuous line"
+botanical illustration of a fern frond: one long S-curve stem plus pairs of
+small curved pinnae strokes, a second crossing leaf sprig, an accent-colored
+flower bud at the tip, and small accent dots. Every stroke is drawn onscreen
+using the stroke-dasharray / stroke-dashoffset technique, staggered with
+per-element animation-delay, then pops/fades in. The right column has a kicker,
+a large serif headline (with an italic accent word), a hairline rule, a lede
+paragraph, a metadata row, and a "Replay the drawing" button. The button
+restarts the draw animations by resetting each element's animation to 'none',
+forcing a reflow, then clearing it. Use an old-style serif for body/headings
+and a system sans for labels. Respect prefers-reduced-motion.
+
+TITLE
+=====
+FLORA · Continuous Line
+
+DESIGN DESCRIPTION
+==================
+A quiet, magazine-style presentation of a continuous-line botanical drawing.
+The page reads like an art-plate caption: on warm ivory "rag paper" (built from
+layered radial gradients and a faint multiply grain), a tall 4:5 framed panel
+shows a fern frond rendered as thin dark ink strokes — a single flowing S-curve
+stem rising from the base, alternating left/right pinnae curving outward, a
+second leaf sprig crossing in at the lower right, a vermilion accent bud at the
+tip, and small vermilion spore dots. The illustration animates as if being
+drawn in real time: each path uses the stroke-dashoffset draw-on trick with an
+increasing delay so the plant grows from soil to tip in botanical order, and
+the bud/dots pop in last. Beside it, editorial copy in old-style serif mirrors
+the calm tone — a small uppercase kicker, a large headline emphasizing the word
+"unbroken" in italic vermilion, a hairline rule, a short lede, and a three-item
+metadata strip (Medium / Palette / Season). A rounded "Replay the drawing"
+button lets the viewer re-trigger the whole sequence.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- SVG stroke draw-on animation: stroke-dasharray/stroke-dashoffset set to the
+  path length (--len) with a "draw" keyframe moving offset to 0.
+- Staggered timing via per-path inline custom properties (--len, --d) feeding
+  animation-delay, so strokes appear sequentially.
+- Accent styling: .accent strokes and .bud/.dot circles in vermilion that pop
+  in with a scale+opacity "pop" keyframe.
+- Framed art panel: aspect-ratio 4/5, layered box-shadow, inset keyline via
+  ::after, soft paper gradient background.
+- Warm ivory paper background from radial gradients plus a ::before grain layer
+  (repeating-linear-gradient + radial tint) using mix-blend-mode: multiply.
+- Editorial typography system: old-style serif headings, system-sans labels,
+  letter-spaced uppercase kickers/meta, italic accent word in the headline.
+- Replay interaction via JS: set animation:'none' on all .line/.dot/.bud, force
+  reflow with void svg.offsetWidth, then clear inline animation to restart.
+- Responsive: single-column and centered frame under 820px.
+- prefers-reduced-motion shows the fully drawn illustration with no animation.
+
+INTENDED INTERACTION MODEL
+==========================
+Mostly a one-shot animated reveal on load: the fern draws itself once, in
+sequence, then rests. The single interactive control is the "Replay the
+drawing" button, which restarts every draw/pop animation from the beginning by
+resetting and re-applying the CSS animation after a forced reflow. No pointer
+hover effects beyond the button's own label/letter-spacing transition on hover.
+Under prefers-reduced-motion the illustration is shown fully drawn and static.

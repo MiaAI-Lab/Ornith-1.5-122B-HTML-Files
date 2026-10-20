@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mood · Claymorphism</title>
+<style>
+  :root{
+    --bg:#eef1fb;
+    --mint:#b9f2d8; --mint-d:#7fd9b0;
+    --peach:#ffdccb; --peach-d:#ffb694;
+    --lav:#e1d6ff; --lav-d:#c1aaff;
+    --butter:#fff0b6; --butter-d:#ffd76a;
+    --coral:#ffc9c9; --coral-d:#ff9f9f;
+    --sky:#cfe6ff; --sky-d:#9fc4ff;
+    --ink:#4a4660;
+    --ink-soft:#8a85a3;
+    --clay-hi:rgba(255,255,255,.85);
+    --clay-sh:rgba(120,110,160,.32);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Poppins','Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(60% 50% at 15% 12%, var(--lav) 0%, transparent 55%),
+      radial-gradient(55% 45% at 88% 10%, var(--butter) 0%, transparent 55%),
+      radial-gradient(60% 55% at 82% 92%, var(--mint) 0%, transparent 60%),
+      radial-gradient(55% 50% at 10% 90%, var(--peach) 0%, transparent 55%),
+      linear-gradient(160deg,#eef1fb,#e7e9f7);
+    min-height:100%;
+    display:flex;align-items:center;justify-content:center;
+    padding:clamp(16px,4vw,40px);
+    overflow-x:hidden;
+  }
+
+  /* floating clay blobs behind */
+  .blob{position:fixed;border-radius:50%;filter:blur(2px);opacity:.55;z-index:0;pointer-events:none}
+  .blob.b1{width:180px;height:180px;background:radial-gradient(circle at 35% 30%,#fff,var(--mint-d));top:-40px;left:-40px;animation:float1 11s ease-in-out infinite}
+  .blob.b2{width:140px;height:140px;background:radial-gradient(circle at 35% 30%,#fff,var(--lav-d));bottom:-30px;right:-30px;animation:float2 13s ease-in-out infinite}
+  .blob.b3{width:110px;height:110px;background:radial-gradient(circle at 35% 30%,#fff,var(--butter-d));top:40%;right:6%;animation:float1 15s ease-in-out infinite}
+  @keyframes float1{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(26px) rotate(8deg)}}
+  @keyframes float2{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-22px) rotate(-8deg)}}
+
+  .app{
+    position:relative;z-index:1;
+    width:min(440px,96vw);
+    background:linear-gradient(165deg,#f7f8ff,#e9ebf8);
+    border-radius:38px;
+    padding:clamp(22px,5vw,38px);
+    box-shadow:
+      0 18px 40px -18px rgba(120,110,160,.5),
+      0 6px 14px -8px rgba(120,110,160,.35),
+      inset 0 8px 16px rgba(255,255,255,.9),
+      inset 0 -10px 20px rgba(150,140,190,.28);
+  }
+
+  .head{text-align:center;margin-bottom:clamp(18px,4vw,28px)}
+  .head .eyebrow{
+    display:inline-block;font-size:.72rem;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--ink-soft);padding:.45em 1em;border-radius:999px;margin-bottom:14px;
+    background:var(--mint);
+    box-shadow:inset 0 3px 6px rgba(255,255,255,.8),inset 0 -4px 8px rgba(90,160,120,.35),0 4px 10px -4px rgba(90,160,120,.5);
+  }
+  .head h1{font-size:clamp(1.5rem,5vw,2.1rem);font-weight:700;letter-spacing:-.01em}
+  .head p{margin-top:.5em;color:var(--ink-soft);font-size:.95rem}
+
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:clamp(12px,3vw,18px)}
+  @media(max-width:380px){.grid{grid-template-columns:repeat(2,1fr)}}
+
+  .mood{
+    border:0;cursor:pointer;font:inherit;color:var(--ink);
+    display:flex;flex-direction:column;align-items:center;gap:.4em;
+    padding:clamp(14px,3vw,20px) 8px;
+    border-radius:26px;
+    transition:transform .18s cubic-bezier(.34,1.56,.64,1),box-shadow .18s ease,filter .18s ease;
+    background:var(--m, var(--mint));
+    box-shadow:
+      inset 0 4px 8px rgba(255,255,255,.85),
+      inset 0 -6px 12px var(--md, rgba(90,160,120,.35)),
+      0 8px 16px -8px rgba(120,110,160,.5);
+  }
+  .mood .emo{font-size:clamp(1.7rem,6vw,2.3rem);line-height:1;transition:transform .2s cubic-bezier(.34,1.56,.64,1)}
+  .mood .lab{font-size:.82rem;font-weight:600;letter-spacing:.01em}
+  .mood:hover{transform:translateY(-4px) scale(1.04);filter:brightness(1.02)}
+  .mood:hover .emo{transform:scale(1.15) rotate(-6deg)}
+  .mood:active{transform:translateY(2px) scale(.95);box-shadow:inset 0 6px 14px var(--md, rgba(90,160,120,.35)),inset 0 -2px 4px rgba(255,255,255,.6)}
+  .mood[aria-pressed="true"]{
+    transform:translateY(-2px) scale(1.02);
+    box-shadow:
+      inset 0 4px 8px rgba(255,255,255,.9),
+      inset 0 -8px 16px var(--md, rgba(90,160,120,.35)),
+      0 10px 22px -8px var(--md, rgba(90,160,120,.55));
+    filter:brightness(1.03);
+  }
+  .mood[aria-pressed="true"] .emo{transform:scale(1.18)}
+  .mood:focus-visible{outline:3px solid var(--lav-d);outline-offset:3px}
+
+  .response{
+    margin-top:clamp(18px,4vw,26px);
+    min-height:104px;
+    border-radius:26px;
+    padding:clamp(16px,4vw,22px);
+    display:flex;align-items:center;gap:16px;
+    background:linear-gradient(165deg,#f7f8ff,#e9ebf8);
+    box-shadow:
+      inset 0 6px 12px rgba(255,255,255,.9),
+      inset 0 -8px 16px rgba(150,140,190,.24),
+      0 10px 22px -12px rgba(120,110,160,.5);
+    opacity:0;transform:translateY(10px) scale(.98);
+    transition:opacity .35s ease,transform .4s cubic-bezier(.34,1.56,.64,1);
+  }
+  .response.show{opacity:1;transform:translateY(0) scale(1)}
+  .response .r-emo{font-size:clamp(2.2rem,8vw,3rem);flex:0 0 auto;animation:pop .5s cubic-bezier(.34,1.56,.64,1)}
+  @keyframes pop{0%{transform:scale(0) rotate(-20deg)}100%{transform:scale(1) rotate(0)}}
+  .response .r-txt{font-size:.98rem;line-height:1.45}
+  .response .r-txt b{font-weight:700}
+  .response .r-txt span{display:block;color:var(--ink-soft);font-size:.86rem;margin-top:.35em}
+
+  .foot{display:flex;justify-content:space-between;align-items:center;margin-top:clamp(16px,3.5vw,22px);gap:12px}
+  .count{font-size:.8rem;color:var(--ink-soft)}
+  .count b{color:var(--ink)}
+  .reset{
+    border:0;cursor:pointer;font:inherit;font-weight:600;font-size:.82rem;color:var(--ink);
+    padding:.7em 1.3em;border-radius:999px;background:var(--sky);
+    box-shadow:inset 0 3px 6px rgba(255,255,255,.85),inset 0 -5px 10px rgba(70,120,200,.35),0 6px 14px -6px rgba(70,120,200,.5);
+    transition:transform .16s cubic-bezier(.34,1.56,.64,1),box-shadow .16s ease;
+  }
+  .reset:hover{transform:translateY(-3px) scale(1.04)}
+  .reset:active{transform:translateY(2px) scale(.95);box-shadow:inset 0 5px 12px rgba(70,120,200,.4),inset 0 -2px 4px rgba(255,255,255,.6)}
+
+  @media (prefers-reduced-motion:reduce){
+    .blob{animation:none}
+    .mood,.mood .emo,.response,.reset{transition:none}
+    .response .r-emo{animation:none}
+  }
+</style>
+</head>
+<body>  <div class="blob b1" aria-hidden="true"></div>
+  <div class="blob b2" aria-hidden="true"></div>
+  <div class="blob b3" aria-hidden="true"></div>
+
+  <main class="app" role="main">
+    <div class="head">
+      <span class="eyebrow">Mood Meter</span>
+      <h1>How are you feeling?</h1>
+      <p>Tap a face — the clay squishes.</p>
+    </div>
+
+    <div class="grid" id="grid" role="group" aria-label="Choose your mood">
+      <button class="mood" style="--m:var(--mint);--md:rgba(90,160,120,.35)" data-key="calm" aria-pressed="false">
+        <span class="emo" aria-hidden="true">😌</span><span class="lab">Calm</span>
+      </button>
+      <button class="mood" style="--m:var(--butter);--md:rgba(190,160,40,.32)" data-key="happy" aria-pressed="false">
+        <span class="emo" aria-hidden="true">😊</span><span class="lab">Happy</span>
+      </button>
+      <button class="mood" style="--m:var(--lav);--md:rgba(120,90,200,.32)" data-key="thinking" aria-pressed="false">
+        <span class="emo" aria-hidden="true">🤔</span><span class="lab">Thinking</span>
+      </button>
+      <button class="mood" style="--m:var(--peach);--md:rgba(210,120,90,.32)" data-key="tired" aria-pressed="false">
+        <span class="emo" aria-hidden="true">😴</span><span class="lab">Tired</span>
+      </button>
+      <button class="mood" style="--m:var(--coral);--md:rgba(220,90,90,.34)" data-key="fired" aria-pressed="false">
+        <span class="emo" aria-hidden="true">⚡</span><span class="lab">Fired up</span>
+      </button>
+      <button class="mood" style="--m:var(--sky);--md:rgba(70,120,200,.32)" data-key="cozy" aria-pressed="false">
+        <span class="emo" aria-hidden="true">🥰</span><span class="lab">Cozy</span>
+      </button>
+    </div>
+
+    <div class="response" id="response" role="status" aria-live="polite">
+      <span class="r-emo" id="rEmo" aria-hidden="true">✨</span>
+      <div class="r-txt" id="rTxt">Pick a mood above and watch the clay respond.</div>
+    </div>
+
+    <div class="foot">
+      <span class="count" id="count">Selected: <b>none</b></span>
+      <button class="reset" id="reset" type="button">Reset ↺</button>
+    </div>
+  </main>
+
+  <script>
+  (function(){
+    var MOODS={
+      calm:   {emo:'😌',t:'A nice, steady calm.',s:'Breathe in… and out. The clay is at rest.'},
+      happy:  {emo:'😊',t:'Beaming today!',s:'Good things are happening to you right now.'},
+      thinking:{emo:'🤔',t:'Head in overdrive.',s:'Deep in thought — ideas are brewing.'},
+      tired:  {emo:'😴',t:'Running on fumes.',s:'Maybe some rest, a warm drink, a soft chair.'},
+      fired:  {emo:'⚡',t:'Full of energy!',s:'Channel it — today is yours to move.'},
+      cozy:   {emo:'🥰',t:'Warm and cozy.',s:'Wrapped in good vibes and soft blankets.'}
+    };
+    var grid=document.getElementById('grid');
+    var resp=document.getElementById('response');
+    var rEmo=document.getElementById('rEmo');
+    var rTxt=document.getElementById('rTxt');
+    var count=document.getElementById('count');
+    var reset=document.getElementById('reset');
+    var selected=null, picks=0;
+
+    grid.addEventListener('click',function(e){
+      var btn=e.target.closest('.mood');
+      if(!btn) return;
+      var m=MOODS[btn.dataset.key];
+      if(!m) return;
+      selected=btn.dataset.key;
+      picks++;
+      var all=grid.querySelectorAll('.mood');
+      for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed', all[i]===btn?'true':'false');}
+      rEmo.textContent=m.emo;
+      rTxt.innerHTML='<b>'+m.t+'</b><span>'+m.s+'</span>';
+      resp.classList.remove('show');
+      // reflow to restart the pop animation
+      void resp.offsetWidth;
+      resp.classList.add('show');
+      count.innerHTML='Selected: <b>'+picks+(picks===1?' mood':' moods')+'</b>';
+    });
+
+    reset.addEventListener('click',function(){
+      selected=null;
+      var all=grid.querySelectorAll('.mood');
+      for(var i=0;i<all.length;i++){all[i].setAttribute('aria-pressed','false');}
+      resp.classList.remove('show');
+      setTimeout(function(){
+        rEmo.textContent='✨';
+        rTxt.textContent='Pick a mood above and watch the clay respond.';
+        resp.classList.add('show');
+      },180);
+      picks=0;
+      count.innerHTML='Selected: <b>none</b>';
+    });
+  })();
+  </script>
+</body>
+</html>

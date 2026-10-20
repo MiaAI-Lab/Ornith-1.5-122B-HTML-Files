@@ -1,0 +1,22 @@
+EXACT PROMPT:
+Build a standalone, fully offline HTML5 page. One self-contained .html file: all CSS in a single <style> block, all JS in a single <script> block, inline everything. Zero external dependencies (no CDN, no external fonts — system stacks only, no external images/SVG files/libraries). Must work by double-clicking with no network requests. Responsive 320px to 4K. Valid HTML5.
+
+Scene: Bioluminescent jellyfish pulsing through deep water with tentacles. Palette: deep blue water, glowing magenta/cyan bioluminescence. Signature effects: a canvas/SVG bell that pulses (contracts and expels water), trailing tentacle curves streaming behind, a soft glow, and floating particles.
+
+TITLE:
+Levitating in the Midnight Zone — Bioluminescent Jellyfish
+
+DESIGN DESCRIPTION:
+In a deep-water gradient that runs from a faint surface blue down into near-black, several siphonophore-like jellyfish drift and pulse. Each bell is drawn as a scalloped half-dome whose rim ripples with animated lobes; a downward "dip" of the skirt simulates the contraction that expels water, and each pulse fires a flare of cyan and magenta. Long tentacles stream beneath as segmented, swaying curves that taper to a thread. Pre-rendered radial-gradient glow sprites (cyan, magenta, white) are stamped additively so the animals bloom against the ink, and soft vertical god-rays and drifting marine-particle motes complete the abyss. Editorial Georgia serif display type with a gradient-clipped accent and tabular "Depth / Contraction" readouts sit quietly over the scene, with a vignette focusing the glow.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas bell built from a scalloped half-ellipse outline: cosine-sampled rim plus animated lobe ripples and a pulsing skirt dip (contraction).
+- Tentacles drawn as segmented polylines with per-segment sine sway and width taper to a fine thread.
+- Pre-rendered radial-gradient glow sprites (cyan/magenta/white) stamped additively for bioluminescent bloom.
+- Soft god-ray sprite + drifting particle motes for depth and atmosphere.
+- Pointer parallax (eased) for a "look around" drift; click/startle perturbs the jellyfish.
+- Tabular Depth/Contraction readouts and a CSS vignette over Georgia serif type.
+- requestAnimationFrame with delta-time and a prefers-reduced-motion branch; capped DPR redraw on resize.
+
+INTENDED INTERACTION MODEL:
+Passive pulsing drift by default. Moving the pointer drifts the parallax so you can "look around"; clicking/tapping startles the jellyfish into a flare. prefers-reduced-motion reduces the drift/pulse intensity. Canvas redraws on resize with a capped DPR for 4K crispness. Fully responsive.

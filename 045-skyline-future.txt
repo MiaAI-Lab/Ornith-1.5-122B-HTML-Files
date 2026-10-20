@@ -1,0 +1,22 @@
+EXACT PROMPT:
+Build a standalone, fully offline HTML5 page. One self-contained .html file: all CSS in a single <style> block, all JS in a single <script> block, inline everything. Zero external dependencies (no CDN, no external fonts — system stacks only, no external images/SVG files/libraries). Must work by double-clicking with no network requests. Responsive 320px to 4K. Valid HTML5.
+
+Scene: A futuristic city skyline at dusk with flying vehicle lights. Palette: dusk purple/orange sky with neon-lit windows. Signature effects: a CSS-built city silhouette, animated flying light trails streaking across the sky, window twinkle, and a reflective water/glass surface below mirroring the city glow.
+
+TITLE:
+Dusk Metropolis — Flying Light Trails
+
+DESIGN DESCRIPTION:
+A dusk skyline rendered entirely in CSS: layered building silhouettes of varying height form a jagged city profile against a gradient sky that burns orange at the horizon and cools into deep violet and indigo overhead. A slow aurora of dusk color bands drifts above. Hundreds of neon windows are scattered across the towers, each twinkling on its own schedule in amber, cyan and rose. Thin flying vehicles streak across the sky as elongated light trails that fade in and out at different depths, some arcing over the towers. Below the horizon line a dark reflective plane mirrors the skyline in blurred, rippling vertical streaks, so the whole city appears to float in a symmetric glow. Typography is set in a clean system-ui sans with generous letter-spacing, kept minimal and editorial so the scene carries the page.
+
+MAJOR VISUAL TECHNIQUES:
+- Pure-CSS city silhouette built from stacked/positioned building blocks with per-building window grids.
+- Canvas (or layered CSS) animated flying light trails — parallax layers moving at different speeds with fade in/out.
+- Staggered window twinkle via randomized animation delays and opacity keyframes.
+- Vertical gradient reflection plane with a subtle ripple/blur to mimic water.
+- Multi-stop linear-gradient dusk sky with drifting color bands.
+- System-ui editorial typography with wide tracking and a thin hairline rule.
+- requestAnimationFrame-driven motion with reduced-motion fallback.
+
+INTENDED INTERACTION MODEL:
+Passive cinematic viewing by default. Moving the pointer (or device tilt) induces a gentle parallax drift of the sky, trails and skyline; a tap/click triggers a denser burst of flying lights. Honors prefers-reduced-motion by slowing/stopping non-essential twinkle and drift. Fully responsive — the skyline recomposes across breakpoints.

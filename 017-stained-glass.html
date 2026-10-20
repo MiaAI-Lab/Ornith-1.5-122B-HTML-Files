@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lumen · Rose Window</title>
+<style>
+  :root{
+    --stone-0:#0f0b13;
+    --stone-1:#1a1320;
+    --stone-2:#2a1f33;
+    --ruby:#e62843;      --ruby-d:#7a0b20;
+    --sapphire:#2f74e0;  --sapphire-d:#0b2460;
+    --emerald:#1cbf83;   --emerald-d:#085034;
+    --gold:#f6d06a;      --gold-d:#a8781c;
+    --amethyst:#c08ef0;  --amethyst-d:#5c2ba0;
+    --lead:#d7a83c;      --lead-d:#6e4c11;
+    --ink:#f7efe2;
+    --muted:#b6a7c4;
+    --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(120% 90% at 50% 8%, #2a1f38 0%, #171020 42%, #0c0813 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+  }
+
+  /* ---------- STONE CATHEDRAL BACKDROP ---------- */
+  .vault{position:fixed;inset:0;z-index:-3;pointer-events:none}
+  .vault::before{ /* faint stone block grid */
+    content:"";position:absolute;inset:0;opacity:.10;
+    background-image:
+      linear-gradient(to right, rgba(255,255,255,.14) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0,0,0,.35) 1px, transparent 1px);
+    background-size:88px 88px;
+    mask-image:radial-gradient(120% 100% at 50% 30%, #000 55%, transparent 100%);
+  }
+  .haze{position:fixed;inset:0;z-index:-2;pointer-events:none;
+    background:radial-gradient(70% 60% at 50% 42%, rgba(246,208,106,.10), transparent 60%);}
+
+  /* ---------- COLORED GLOW (pulsing, behind window) ---------- */
+  .halo{
+    position:fixed;left:50%;top:40%;width:120vmax;height:120vmax;
+    transform:translate(-50%,-50%);z-index:-1;pointer-events:none;
+    filter:blur(60px);opacity:.7;mix-blend-mode:screen;
+    background:
+      radial-gradient(46% 46% at 50% 50%, rgba(230,40,67,.55), transparent 70%),
+      radial-gradient(40% 40% at 32% 40%, rgba(47,116,224,.55), transparent 72%),
+      radial-gradient(40% 40% at 68% 40%, rgba(28,191,131,.5), transparent 72%),
+      radial-gradient(34% 34% at 50% 66%, rgba(192,142,240,.45), transparent 72%);
+    animation:haloPulse 7s var(--ease) infinite;
+  }
+  @keyframes haloPulse{
+    0%,100%{opacity:.55;transform:translate(-50%,-50%) scale(1)}
+    50%{opacity:.92;transform:translate(-50%,-50%) scale(1.05)}
+  }
+
+  /* ---------- LIGHT RAYS ---------- */
+  .rays{
+    position:fixed;left:50%;top:30%;width:160vmax;height:160vmax;
+    transform:translate(-50%,-50%);z-index:0;pointer-events:none;
+    mix-blend-mode:screen;opacity:.55;
+    background:conic-gradient(from -90deg,
+      rgba(246,208,106,.0) 0deg,
+      rgba(246,208,106,.22) 8deg, rgba(246,208,106,.0) 20deg,
+      rgba(230,40,67,.16) 34deg, rgba(230,40,67,.0) 46deg,
+      rgba(47,116,224,.18) 60deg, rgba(47,116,224,.0) 74deg,
+      rgba(28,191,131,.16) 90deg, rgba(28,191,131,.0) 104deg,
+      rgba(192,142,240,.16) 120deg, rgba(192,142,240,.0) 134deg,
+      rgba(246,208,106,.20) 150deg, rgba(246,208,106,.0) 164deg,
+      rgba(230,40,67,.14) 180deg, rgba(230,40,67,.0) 192deg,
+      rgba(47,116,224,.16) 206deg, rgba(47,116,224,.0) 220deg,
+      rgba(28,191,131,.14) 238deg, rgba(28,191,131,.0) 252deg,
+      rgba(246,208,106,.18) 270deg, rgba(246,208,106,.0) 284deg,
+      rgba(192,142,240,.14) 300deg, rgba(192,142,240,.0) 314deg,
+      rgba(230,40,67,.14) 330deg, rgba(230,40,67,.0) 344deg,
+      rgba(246,208,106,.16) 358deg, rgba(246,208,106,.0) 360deg);
+    animation:spin 90s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .rays::after{ /* soft center bloom to fade the hub */
+    content:"";position:absolute;inset:30%;border-radius:50%;
+    background:radial-gradient(circle, rgba(255,240,210,.5), transparent 70%);
+    filter:blur(10px);
+  }
+
+  main{position:relative;z-index:2;width:100%;display:flex;flex-direction:column;align-items:center;padding:clamp(16px,4vw,56px);}
+
+  .eyebrow{
+    font-family:Georgia,"Times New Roman",serif;letter-spacing:.42em;text-transform:uppercase;
+    font-size:clamp(.6rem,1.4vw,.8rem);color:var(--gold);opacity:.85;margin:0 0 6px;text-align:center;
+  }
+  h1{
+    font-family:Georgia,"Times New Roman",serif;font-weight:400;letter-spacing:.06em;
+    font-size:clamp(1.7rem,5vw,3.4rem);margin:0 0 6px;text-align:center;
+    background:linear-gradient(180deg,#fff3dd,#e9c979);-webkit-background-clip:text;background-clip:text;color:transparent;
+    text-shadow:0 2px 30px rgba(246,208,106,.25);
+  }
+  .sub{color:var(--muted);font-size:clamp(.8rem,1.8vw,1rem);letter-spacing:.08em;margin:0 0 clamp(14px,3vw,30px);text-align:center}
+
+  /* ---------- THE WINDOW FRAME (gothic arch) ---------- */
+  .stage{position:relative;width:min(88vw,62vh,640px);aspect-ratio:1/1.06;
+    filter:drop-shadow(0 30px 60px rgba(0,0,0,.6));}
+  .arch{
+    position:absolute;inset:0;
+    clip-path:polygon(0 13%, 0 87%, 50% 100%, 100% 87%, 100% 13%, 50% 0%);
+    background:linear-gradient(160deg,#3a2d44,#1c1424 60%,#120c19);
+    box-shadow:inset 0 0 0 2px rgba(0,0,0,.6);
+  }
+  .arch::before{ /* carved stone edge highlight */
+    content:"";position:absolute;inset:0;
+    clip-path:polygon(0 13%, 0 87%, 50% 100%, 100% 87%, 100% 13%, 50% 0%);
+    box-shadow:inset 0 0 0 10px rgba(255,255,255,.03), inset 0 0 0 11px rgba(0,0,0,.5);
+    pointer-events:none;
+  }
+  .glass{position:absolute;inset:0;width:100%;height:100%;display:block;
+    transform-origin:50% 46%;
+    transition:transform .6s var(--ease);}
+  .glass svg{width:100%;height:100%;display:block}
+
+  /* lead-line shimmer sweep */
+  .sweep{position:absolute;inset:0;pointer-events:none;mix-blend-mode:overlay;
+    background:linear-gradient(115deg, transparent 40%, rgba(255,246,220,.35) 50%, transparent 60%);
+    transform:translateX(-40%);animation:sweep 9s var(--ease) infinite;}
+  @keyframes sweep{0%{transform:translateX(-45%)}60%,100%{transform:translateX(45%)}}
+
+  /* ---------- FLOOR + PROJECTED LIGHT POOL ---------- */
+  .floor{position:relative;width:min(92vw,760px);height:clamp(60px,16vh,180px);margin-top:-2vh;z-index:1;pointer-events:none}
+  .pool{position:absolute;inset:0;
+    background:radial-gradient(60% 100% at 50% 0%, rgba(246,208,106,.28), rgba(230,40,67,.12) 40%, transparent 72%);
+    filter:blur(14px);animation:poolPulse 7s var(--ease) infinite;
+    clip-path:polygon(34% 0,66% 0,100% 100%,0 100%);}
+  .floorline{position:absolute;left:0;right:0;bottom:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.12),transparent);}
+
+  /* dust motes canvas */
+  #motes{position:fixed;inset:0;z-index:1;pointer-events:none;width:100%;height:100%}
+
+  footer{position:relative;z-index:2;color:var(--muted);font-size:.72rem;letter-spacing:.2em;
+    text-transform:uppercase;opacity:.6;margin:clamp(20px,5vw,48px) 0}
+
+  @media (prefers-reduced-motion: reduce){
+    .halo,.rays,.sweep,.pool,#motes{animation:none}
+    .halo{opacity:.7}.rays{opacity:.45}
+    .glass{transform:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="vault"></div>
+<div class="haze"></div>
+<div class="halo" id="halo"></div>
+<div class="rays" id="rays"></div>
+<canvas id="motes"></canvas>
+
+<main>
+  <p class="eyebrow">A Rose Window in Light</p>
+  <h1>Lumen Vitæ</h1>
+  <p class="sub">Stained glass · leaded jewel tracery · living daylight</p>
+
+  <div class="stage" id="stage">
+    <div class="arch"></div>
+    <div class="glass" id="glass"></div>
+    <div class="sweep"></div>
+  </div>
+
+  <div class="floor">
+    <div class="pool"></div>
+    <div class="floorline"></div>
+  </div>
+</main>
+
+<footer>Orinth · Light Lab — 017</footer>
+
+<script>
+(function(){
+  "use strict";
+  var NS="http://www.w3.org/2000/svg";
+  var CX=500, CY=500, PI=Math.PI;
+
+  function pt(r,a){ return [CX + r*Math.cos(a), CY + r*Math.sin(a)]; }
+
+  // annular sector (donut segment) path between angles a1<a2
+  function sector(a1,a2,ri,R,fill,sw){
+    var large = (a2-a1>PI)?1:0;
+    var o=pt(R,a1), oe=pt(R,a2), ie=pt(ri,a2), is=pt(ri,a1);
+    var d="M "+o[0]+" "+o[1]+
+          " A "+R+" "+R+" 0 "+large+" 1 "+oe[0]+" "+oe[1]+
+          " L "+ie[0]+" "+ie[1]+
+          " A "+ri+" "+ri+" 0 "+large+" 0 "+is[0]+" "+is[1]+" Z";
+    return '<path d="'+d+'" fill="url(#'+fill+')" stroke="url(#lead)" stroke-width="'+(sw||3)+'" stroke-linejoin="round"/>';
+  }
+
+  var rings = [
+    {ri:90,  R:150, n:12, pal:["g-ruby","g-amethyst"]},
+    {ri:152, R:215, n:12, pal:["g-sapphire","g-emerald"]},
+    {ri:217, R:300, n:16, pal:["g-gold","g-ruby","g-emerald","g-sapphire"]},
+    {ri:302, R:375, n:20, pal:["g-sapphire","g-amethyst","g-gold","g-emerald"]},
+    {ri:377, R:430, n:24, pal:["g-ruby","g-gold","g-sapphire","g-amethyst","g-emerald"]}
+  ];
+
+  var s = "";
+  // defs: gradients + lead stroke style + glow filter
+  s += '<defs>';
+  s += '<radialGradient id="g-ruby" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#ffd2dc"/><stop offset="42%" stop-color="#e62843"/><stop offset="100%" stop-color="#7a0b20"/></radialGradient>';
+  s += '<radialGradient id="g-sapphire" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#bcd0ff"/><stop offset="42%" stop-color="#2f74e0"/><stop offset="100%" stop-color="#0b2460"/></radialGradient>';
+  s += '<radialGradient id="g-emerald" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#a6f0d0"/><stop offset="42%" stop-color="#1cbf83"/><stop offset="100%" stop-color="#085034"/></radialGradient>';
+  s += '<radialGradient id="g-gold" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#fff3c8"/><stop offset="44%" stop-color="#f6d06a"/><stop offset="100%" stop-color="#a8781c"/></radialGradient>';
+  s += '<radialGradient id="g-amethyst" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#e8d4ff"/><stop offset="42%" stop-color="#c08ef0"/><stop offset="100%" stop-color="#5c2ba0"/></radialGradient>';
+  s += '<radialGradient id="g-core" cx="50%" cy="40%" r="70%"><stop offset="0%" stop-color="#fffbe8"/><stop offset="45%" stop-color="#f6d06a"/><stop offset="78%" stop-color="#e62843"/><stop offset="100%" stop-color="#7a0b20"/></radialGradient>';
+  s += '<linearGradient id="lead" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f0cf7a"/><stop offset="50%" stop-color="#c99a34"/><stop offset="100%" stop-color="#6e4c11"/></linearGradient>';
+  s += '<filter id="leadGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  s += '</defs>';
+
+  // outer stone + gold trim bands (drawn first, behind glass)
+  s += '<circle cx="'+CX+'" cy="'+CY+'" r="462" fill="none" stroke="#241a2c" stroke-width="26"/>';
+  s += '<circle cx="'+CX+'" cy="'+CY+'" r="452" fill="none" stroke="url(#lead)" stroke-width="10" filter="url(#leadGlow)"/>';
+
+  // concentric lead came lines at every ring boundary
+  var boundaries=[90,150,152,215,217,300,302,375,377,430];
+  boundaries.forEach(function(r){
+    s += '<circle cx="'+CX+'" cy="'+CY+'" r="'+r+'" fill="none" stroke="url(#lead)" stroke-width="4" filter="url(#leadGlow)"/>';
+  });
+
+  // radial mullions (lead spokes) from hub to outer glass, 24 divisions
+  for(var k=0;k<24;k++){
+    var a=(k/24)*2*PI;
+    var p1=pt(92,a), p2=pt(430,a);
+    s += '<line x1="'+p1[0]+'" y1="'+p1[1]+'" x2="'+p2[0]+'" y2="'+p2[1]+'" stroke="url(#lead)" stroke-width="3" filter="url(#leadGlow)"/>';
+  }
+
+  // glass panels, innermost to outermost
+  rings.forEach(function(ring){
+    var step=(2*PI)/ring.n;
+    for(var i=0;i<ring.n;i++){
+      var a1=i*step, a2=(i+1)*step;
+      var col=ring.pal[i % ring.pal.length];
+      s += sector(a1,a2,ring.ri,ring.R,col,3);
+    }
+  });
+
+  // tracery bosses (small gold dots) at outer divisions
+  for(var b=0;b<24;b++){
+    var ab=(b/24)*2*PI, bp=pt(430,ab);
+    s += '<circle cx="'+bp[0]+'" cy="'+bp[1]+'" r="6" fill="url(#g-gold)" stroke="#6e4c11" stroke-width="1.5"/>';
+  }
+
+  // central medallion rosette + glowing core
+  var med=12, mstep=(2*PI)/med;
+  for(var m=0;m<med;m++){
+    var m1=m*mstep, m2=(m+1)*mstep;
+    s += sector(m1,m2,92,148, (m%2)?"g-emerald":"g-sapphire", 2.5);
+  }
+  s += '<circle cx="'+CX+'" cy="'+CY+'" r="90" fill="url(#g-core)" stroke="url(#lead)" stroke-width="5" filter="url(#leadGlow)"/>';
+  // 8-point star in the core
+  var star="";
+  for(var st=0;st<8;st++){
+    var sa=st*(PI/4);
+    var tip=pt(74,sa), base=pt(40,sa+PI/8);
+    star += (st===0?"M ":"L ")+tip[0]+" "+tip[1]+" L ";
+  }
+  s += '<g opacity=".9"><circle cx="'+CX+'" cy="'+CY+'" r="30" fill="#fffbe8" opacity=".85"/>';
+  s += '<path d="M500 418 L512 488 L582 500 L512 512 L500 582 L488 512 L418 500 L488 488 Z" fill="#fff6d0" opacity=".9"/></g>';
+
+  document.getElementById("glass").innerHTML = '<svg viewBox="0 0 1000 1000" preserveAspectRatio="xMidYMid meet">'+s+'</svg>';
+
+  // ---------- mouse parallax on the glass ----------
+  var glass=document.getElementById("glass");
+  var tx=0,ty=0,cx2=0,cy2=0;
+  function onMove(e){
+    var x=(e.touches?e.touches[0].clientX:window.event.clientX)||0;
+    var y=(e.touches?e.touches[0].clientY:window.event.clientY)||0;
+    var dx=(x/window.innerWidth-0.5), dy=(y/window.innerHeight-0.5);
+    tx=dx*26; ty=dy*26;
+  }
+  window.addEventListener("mousemove",onMove,{passive:true});
+  window.addEventListener("touchmove",function(e){onMove(e);},{passive:true});
+  (function loop(){
+    cx2+=(tx-cx2)*0.06; cy2+=(ty-cy2)*0.06;
+    var rot=(cx2*0.02).toFixed(3);
+    glass.style.transform="translate("+cx2.toFixed(2)+"px,"+cy2.toFixed(2)+"px) rotate("+rot+"deg) scale(1.02)";
+    requestAnimationFrame(loop);
+  })();
+
+  // ---------- dust motes in the light ----------
+  var canvas=document.getElementById("motes"), ctx=canvas.getContext("2d");
+  var W,H,DPR;
+  function resize(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=canvas.width=innerWidth*DPR; H=canvas.height=innerHeight*DPR;
+    canvas.style.width=innerWidth+"px"; canvas.style.height=innerHeight+"px";
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  resize(); window.addEventListener("resize",resize);
+  var N=Math.min(90, Math.max(34, (innerWidth/16)|0));
+  var motes=[];
+  for(var i=0;i<N;i++){
+    motes.push({x:Math.random()*innerWidth,y:Math.random()*innerHeight,
+      r:Math.random()*1.8+0.4, vx:(Math.random()-.5)*0.12, vy:-(Math.random()*0.18+0.05),
+      tw:Math.random()*PI*2});
+  }
+  var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function drawMotes(t){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    var hx=innerWidth*0.5, hy=innerHeight*0.34;
+    for(var i=0;i<motes.length;i++){
+      var m=motes[i];
+      m.x+=m.vx; m.y+=m.vy; m.tw+=0.03;
+      if(m.y<-6){m.y=innerHeight+6;m.x=Math.random()*innerWidth;}
+      if(m.x<-6)m.x=innerWidth+6; if(m.x>innerWidth+6)m.x=-6;
+      var d=Math.hypot(m.x-hx,m.y-hy);
+      var near=Math.max(0,1-d/(innerWidth*0.5));
+      var a=(0.25+0.55*Math.abs(Math.sin(m.tw)))*near;
+      ctx.beginPath();
+      ctx.fillStyle="rgba(255,236,190,"+a.toFixed(3)+")";
+      ctx.arc(m.x,m.y,m.r,0,2*PI); ctx.fill();
+    }
+    if(!reduce) requestAnimationFrame(drawMotes);
+  }
+  if(!reduce) requestAnimationFrame(drawMotes);
+})();
+</script>
+
+</body>
+</html>

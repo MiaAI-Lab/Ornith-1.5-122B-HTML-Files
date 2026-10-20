@@ -1,0 +1,42 @@
+PROMPT (exact, as given):
+
+World-class creative technologist & designer. Build these standalone HTML page(s) as files in the current working directory.
+
+CONSTRAINTS (non-negotiable):
+- One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything.
+- ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>.
+- Works fully fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible.
+- WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks.
+
+For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL.
+
+This page: 053-terrarium.html + 053-terrarium.txt — Cozy glass terrarium with tiny plants, moss, and drifting fireflies at dusk. Palette: warm green, amber firefly glow, deep night blue. Signature: CSS glass jar with refraction rim, layered plants, canvas fireflies with soft glow and wandering paths.
+
+
+TITLE:
+
+"Terrarium at Dusk" — a warm glass jar garden with wandering fireflies.
+
+
+DESIGN DESCRIPTION:
+
+A single cozy glass jar sits on a wooden shelf against a deep night-blue gradient, its interior a miniature ecosystem: layered moss mounds, a little cactus, a fern, a round succulent and sprouting grasses built entirely from CSS shapes and gradients, with tiny pebbles and a crescent moon visible through the glass. Warm amber light glows from within while a soft condensation haze and a refraction rim trace the jar's curved edges. Behind and around the jar, canvas fireflies drift on slow wandering paths, each a soft additive glow that brightens and dims as it drifts, casting faint warmth onto the scene. The composition is a centered, intimate still-life with a vignette and gentle heat-haze, designed to feel warm, quiet and alive.
+
+
+MAJOR VISUAL TECHNIQUES:
+
+- Canvas firefly system: ~40 insects on perlin-ish wandering paths with per-firefly glow, twinkle phase, speed and a soft additive radial halo (globalCompositeOperation = 'lighter').
+- CSS glass jar: translucent body via layered linear/radial gradients, curved refraction rim, bright specular highlights, a rim light and subtle chromatic edge.
+- Layered CSS plants: moss mounds, cactus, fern, succulent and grasses built from clip-path, border-radius and gradient shading, stacked in back/mid/front parallax layers.
+- Depth parallax: background, jar interior and foreground firefly layers translate at different rates from pointer movement.
+- Ambient motion: condensation haze, a slow heat-haze distortion, drifting dust motes and a faint inner glow pulse for a "living" feel.
+- Warm amber-on-deep-blue palette with a vignette and a small crescent moon for narrative detail.
+- Responsive scaling (clamp/vw/vh, resize handler) from 320px to 4K; prefers-reduced-motion disables the animation loops.
+
+
+INTENDED INTERACTION MODEL:
+
+- Move the pointer (or drag on touch) to parallax the scene and gently nudge the plants; the jar and foreground respond at different depths.
+- Fireflies wander autonomously and never repeat exactly; they gather and scatter on their own slow rhythms.
+- Click / tap a firefly (or the jar) to burst a warm glow and briefly attract nearby fireflies.
+- No controls or UI chrome: the piece is a calm, self-running diorama meant to be admired, with motion honoring reduced-motion settings.

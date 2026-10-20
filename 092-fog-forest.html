@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fog Forest — God Rays</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:system-ui,-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    background:
+      linear-gradient(180deg,
+        #c9d2c4 0%, #aeb9ac 18%, #8b9a88 42%, #5f6f5e 68%, #38432f 100%);
+    color:#eef1ea;
+    min-height:100vh;
+    overflow:hidden;
+    position:relative;
+  }
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;z-index:1}
+
+  /* drifting fog bands — layered, blurred, slow */
+  .fog{position:fixed;left:-30%;right:-30%;height:100%;z-index:2;
+    pointer-events:none;--px:0;}
+  .band{position:absolute;left:0;right:0;height:34%;
+    background:linear-gradient(180deg, rgba(230,235,226,0) 0%, rgba(222,228,218,.55) 45%, rgba(230,235,226,0) 100%);
+    filter:blur(26px);will-change:transform;}
+  .b1{top:8%;  animation:drift1 34s ease-in-out infinite}
+  .b2{top:30%; animation:drift2 46s ease-in-out infinite}
+  .b3{top:52%; animation:drift3 38s ease-in-out infinite}
+  .b4{top:70%; animation:drift1 52s ease-in-out infinite reverse}
+  @keyframes drift1{0%{transform:translate3d(calc(-6% + var(--px)),0,0)}50%{transform:translate3d(calc(6% + var(--px)),0,0)}100%{transform:translate3d(calc(-6% + var(--px)),0,0)}}
+  @keyframes drift2{0%{transform:translate3d(calc(8% + var(--px)),0,0)}50%{transform:translate3d(calc(-5% + var(--px)),0,0)}100%{transform:translate3d(calc(8% + var(--px)),0,0)}}
+  @keyframes drift3{0%{transform:translate3d(calc(-9% + var(--px)),0,0)}50%{transform:translate3d(calc(7% + var(--px)),0,0)}100%{transform:translate3d(calc(-9% + var(--px)),0,0)}}
+
+  .vignette{position:fixed;inset:0;z-index:4;pointer-events:none;
+    background:radial-gradient(75% 68% at 50% 34%, transparent 42%, rgba(20,26,18,.5) 80%, rgba(12,16,10,.85) 100%);}
+
+  .caption{position:fixed;left:0;right:0;top:0;z-index:6;text-align:center;
+    padding:3.4rem 1rem 1.4rem;
+    background:linear-gradient(to bottom, rgba(20,26,18,.35), transparent);}
+  .caption .t{font-family:Georgia,'Segoe UI',serif;font-weight:400;
+    font-size:clamp(1.7rem,5.6vw,3.2rem);letter-spacing:.26em;text-transform:uppercase;
+    color:#f2f4ec;text-shadow:0 2px 30px rgba(20,26,18,.6);}
+  .caption .s{display:block;margin-top:.7rem;font-size:clamp(.6rem,2vw,.78rem);
+    letter-spacing:.34em;text-transform:uppercase;color:rgba(242,244,236,.6)}
+
+  .hint{position:fixed;top:auto;bottom:2.6rem;left:0;right:0;text-align:center;z-index:6;
+    font-size:.6rem;letter-spacing:.3em;text-transform:uppercase;color:rgba(242,244,236,.4)}
+
+  @media (prefers-reduced-motion: reduce){
+    .band{animation:none !important}
+  }
+</style>
+</head>
+<body>
+  <canvas id="forest"></canvas>
+  <div class="fog">
+    <div class="band b1"></div>
+    <div class="band b2"></div>
+    <div class="band b3"></div>
+    <div class="band b4"></div>
+  </div>
+  <div class="vignette"></div>
+
+  <div class="caption">
+    <div class="t">Fog Forest</div>
+    <span class="s">god rays · drifting mist · layered silhouettes</span>
+  </div>
+  <div class="hint">move the pointer to drift through the mist</div>
+  <script>
+    (function(){
+      var cv = document.getElementById('forest');
+      var ctx = cv.getContext('2d');
+      var fogEl = document.querySelector('.fog');
+      var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var W = 0, H = 0, DPR = 1;
+
+      function resize(){
+        DPR = Math.min(window.devicePixelRatio || 1, 2);
+        W = window.innerWidth; H = window.innerHeight;
+        cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        buildLayers();
+      }
+
+      // ---- layered pine silhouettes with parallax ----
+      var LAYERS = [
+        {depth:0.25, baseY:0.52, hMin:0.16, hMax:0.30, step:0.055, color:'#9aa693', gap:0.30},
+        {depth:0.5,  baseY:0.62, hMin:0.24, hMax:0.42, step:0.075, color:'#6f7d68', gap:0.22},
+        {depth:0.8,  baseY:0.74, hMin:0.34, hMax:0.58, step:0.10,  color:'#48553f', gap:0.14},
+        {depth:1.0,  baseY:0.90, hMin:0.46, hMax:0.82, step:0.14,  color:'#232d21', gap:0.06}
+      ];
+
+      // deterministic pseudo-random
+      var seed = 1337;
+      function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+
+      function buildLayers(){
+        LAYERS.forEach(function(L){
+          L.trees = [];
+          var span = W * 2;
+          var x = -W * 0.1;
+          while (x < span){
+            var h = (L.hMin + rnd() * (L.hMax - L.hMin)) * H;
+            var w = h * (0.26 + rnd() * 0.14);
+            L.trees.push({x:x, h:h, w:w, tiers: 4 + Math.floor(rnd()*3), jitter: rnd()*6.28});
+            x += L.step * W * (0.7 + rnd() * 0.6);
+          }
+          L.offset = 0;
+        });
+      }
+
+      function drawPine(cx, baseY, h, w, tiers, jitter, color){
+        ctx.fillStyle = color;
+        // trunk
+        var tw = w * 0.08;
+        ctx.fillRect(cx - tw/2, baseY - h*0.06, tw, h*0.12);
+        // stacked triangular tiers
+        for (var i = 0; i < tiers; i++){
+          var t = i / tiers;
+          var ty = baseY - h * (0.12 + t * 0.86);
+          var twid = w * (1 - t * 0.72) * (0.9 + 0.1 * Math.sin(jitter + i));
+          var nextBottom = baseY - h * (0.12 + ((i+1)/tiers) * 0.86);
+          ctx.beginPath();
+          ctx.moveTo(cx, ty - h*0.14);
+          ctx.lineTo(cx + twid/2, nextBottom + h*0.06);
+          ctx.lineTo(cx - twid/2, nextBottom + h*0.06);
+          ctx.closePath();
+          ctx.fill();
+        }
+      }
+
+      function drawTrees(t){
+        var wind = reduce ? 0 : Math.sin(t * 0.00006) * 0.5;
+        LAYERS.forEach(function(L){
+          var px = (mouseX - 0.5) * L.depth * 140;
+          var drift = (reduce ? 0 : (t * 0.006 * (0.2 + L.depth))) % W;
+          var off = ((drift + px) % W + W) % W;
+          L.offset = off;
+          var baseY = L.baseY * H;
+          for (var k = -1; k <= 2; k++){
+            var shift = k * W;
+            for (var i = 0; i < L.trees.length; i++){
+              var tr = L.trees[i];
+              var cx = tr.x - off + shift;
+              if (cx < -tr.w || cx > W + tr.w) continue;
+              drawPine(cx, baseY, tr.h, tr.w, tr.tiers, tr.jitter, L.color);
+            }
+          }
+        });
+      }
+
+      // ---- volumetric god rays ----
+      var rays = [];
+      function buildRays(){
+        rays = [];
+        var n = 9;
+        for (var i = 0; i < n; i++){
+          rays.push({a: (i / n) * Math.PI * 0.9 + 0.05, spread: 0.06 + Math.random()*0.05,
+                     ph: Math.random()*6.28, spd: 0.4 + Math.random()*0.6, int: 0.5 + Math.random()*0.5});
+        }
+      }
+      function drawRays(t){
+        var lx = W * (0.46 + Math.sin(t*0.00008)*0.03);
+        var ly = H * 0.14;
+        var maxLen = Math.hypot(W, H) * 1.1;
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < rays.length; i++){
+          var r = rays[i];
+          var sway = Math.sin(t * 0.0004 * r.spd + r.ph) * 0.04;
+          var ang = r.a + sway;
+          var pulse = 0.6 + 0.4 * Math.sin(t * 0.0006 * r.spd + r.ph);
+          var dx = Math.cos(ang), dy = Math.sin(ang);
+          var ex = lx + dx * maxLen, ey = ly + dy * maxLen;
+          var perp = ang + Math.PI/2;
+          var halfW = maxLen * (r.spread + sway*0.5);
+          var g = ctx.createLinearGradient(lx, ly, ex, ey);
+          g.addColorStop(0, 'rgba(245,248,235,' + (0.22 * r.int * pulse) + ')');
+          g.addColorStop(0.4, 'rgba(230,238,220,' + (0.10 * r.int * pulse) + ')');
+          g.addColorStop(1, 'rgba(220,230,215,0)');
+          ctx.fillStyle = g;
+          ctx.beginPath();
+          ctx.moveTo(lx, ly);
+          ctx.lineTo(ex + Math.cos(perp)*halfW, ey + Math.sin(perp)*halfW);
+          ctx.lineTo(ex - Math.cos(perp)*halfW, ey - Math.sin(perp)*halfW);
+          ctx.closePath();
+          ctx.fill();
+        }
+        // soft sun glow at the source
+        var sg = ctx.createRadialGradient(lx, ly, 0, lx, ly, W*0.4);
+        sg.addColorStop(0, 'rgba(250,252,242,0.45)');
+        sg.addColorStop(0.3, 'rgba(238,244,228,0.18)');
+        sg.addColorStop(1, 'rgba(238,244,228,0)');
+        ctx.fillStyle = sg;
+        ctx.beginPath(); ctx.arc(lx, ly, W*0.4, 0, 6.2832); ctx.fill();
+        ctx.restore();
+      }
+
+      // ---- drifting dust motes ----
+      var motes = [];
+      function buildMotes(){
+        motes = [];
+        var n = Math.min(90, Math.floor(W*H/16000));
+        for (var i = 0; i < n; i++){
+          motes.push({x:Math.random()*W, y:Math.random()*H, r:0.4+Math.random()*1.6,
+                      vx:(Math.random()-0.5)*0.15, vy:-0.05-Math.random()*0.18,
+                      ph:Math.random()*6.28, int:0.2+Math.random()*0.6});
+        }
+      }
+      function drawMotes(){
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        for (var i = 0; i < motes.length; i++){
+          var m = motes[i];
+          if (!reduce){ m.x += m.vx + Math.sin(m.ph)*0.1; m.y += m.vy; m.ph += 0.01; }
+          if (m.y < -4){ m.y = H + 4; m.x = Math.random()*W; }
+          if (m.x < -4) m.x = W + 4; if (m.x > W + 4) m.x = -4;
+          var a = (0.5 + 0.5*Math.sin(m.ph)) * m.int;
+          ctx.fillStyle = 'rgba(245,248,238,' + a + ')';
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.r, 0, 6.2832); ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      var mouseX = 0.5;
+      function frame(ts){
+        ctx.clearRect(0, 0, W, H);
+        drawRays(ts);
+        drawTrees(ts);
+        drawMotes();
+        requestAnimationFrame(frame);
+      }
+
+      window.addEventListener('pointermove', function(e){ mouseX = e.clientX / (W || 1); });
+      window.addEventListener('touchmove', function(e){ if (e.touches[0]) mouseX = e.touches[0].clientX / (W||1); }, {passive:true});
+      window.addEventListener('resize', resize);
+
+      resize();
+      buildRays();
+      buildMotes();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>

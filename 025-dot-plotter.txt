@@ -1,0 +1,57 @@
+TITLE
+Meridian · Halftone Field — an animated ink plotter that draws a luminance gradient one dot at a time.
+
+RECREATION PROMPT
+Build a single self-contained HTML page (no external assets) that presents a cream "paper sheet" centered on a warm beige desk, styled to look like a technical plotter output card from a fictional instrument company called "Meridian Instruments".
+
+LAYOUT & FRAME
+- Full-viewport body centered with flex; background is a radial-to-linear warm beige/taupe gradient (paper tones like #ece5d5 → #ded6c6 → #cfc6b2).
+- A `.sheet` element: width min(96vw, 900px), aspect-ratio 4/3 (switch to 3/4 under 520px), rounded 4px, layered paper shadows, overflow hidden.
+- Paper grain via two faint multiply radial-gradient dot textures (::before) and a soft inset vignette (::after).
+- Inside the sheet a full-size <canvas> (z-index 2) for the dots.
+- A dashed registration frame (`.frame`, inset 5%, 1px dashed rgba(20,21,26,.28)) and four corner registration marks (`.reg`) each with a crosshair plus a small ring.
+- A plotter gantry: a horizontal `.rail` near the top (5%) and a `.pen` that slides left/right along it. The pen has a dark `.carriage`, a vertical `.arm` whose CSS height is set dynamically, and a triangular `.nib` at the bottom tip.
+
+HUD (mono/technical typography, all uppercase, wide letter-spacing)
+- Top-left brand block: "Meridian Instruments" / bold "Halftone Field".
+- Top-right spec block (right-aligned, mono): "Sheet 025 · Ink on Cotton", "Grid {cols}×{rows} · Pass {pass}", "Plot {pct}%".
+- Bottom-left caption paragraph explaining the piece.
+- Bottom-right a "Progress" meter: a thin bar that fills left-to-right with a live % and a status label ("plotting…" / "complete"), plus a "↻ Re-plot sheet" button.
+- Respect prefers-reduced-motion (disable all animation).
+
+CANVAS ANIMATION (the core)
+- Build a deterministic pseudo-random grid (~52 cells on the short edge) with a small per-dot jitter in position and radius. Margin of ~0.09 of the sheet kept clear on all sides.
+- The field value at each cell is a diagonal light ramp (u,v) blended with a strong lower-left focal Gaussian pool and a weaker upper-right highlight, plus fine grain noise; clamped to [0,1]. Luminance 1 = darkest = largest dot.
+- Dot target radius = maxR * sqrt(field) with slight random jitter; maxR ≈ cell*0.46.
+- Plot the grid boustrophedon (serpentine: even rows left→right, odd rows right→left) at ~1.55 rows/second. A float `plotRows` tracks progress; the pen's CSS left position and the arm's height follow the current pen column/row.
+- Dots on the current row reveal as the pen passes them using a smoothstep fade (local/0.06); already-passed rows stay fully drawn.
+- Each dot, once drawn, "blooms": radius overshoots by up to 16% then decays exponentially (ink bloom settling), and it has a tiny continuous sinusoidal wobble in x/y.
+- Dot fill is near-black (#14151a) with slight per-dot opacity variation.
+- When a full pass completes, hold ~1.6s then auto-restart (re-plot) in a loop; increment the Pass counter.
+
+DESIGN DESCRIPTION:
+A cream "paper sheet" (min(96vw, 900px), aspect-ratio 4/3, rounded, layered paper
+shadows) centered on a warm beige/taupe desk gradient, styled as a technical
+plotter output card from the fictional "Meridian Instruments". A full-size canvas
+holds a luminance-halftone dot field revealed by a sliding plotter pen on a top
+rail; a dashed registration frame and four corner crosshair marks complete the
+print-card look. A mono/technical HUD shows the brand, live grid/pass/percent
+specs, a progress meter and a re-plot button. Palette: paper tones (#ece5d5 →
+#ded6c6 → #cfc6b2) with near-black ink (#14151a).
+
+MAJOR VISUAL TECHNIQUES
+- Canvas 2D halftone: dot area modulated by a synthetic luminance field (diagonal ramp + Gaussian focal pools + noise).
+- Boustrophedon/serpentine plotting path with a live CSS-animated pen carriage and dynamically stretched arm.
+- Smoothstep reveal of dots as the pen sweeps each row; per-dot ink "bloom" (overshoot + exponential decay) and subtle continuous wobble.
+- Deterministic seeded RNG (Math.sin-based) for reproducible jitter in grid positions and radii.
+- Layered paper realism: warm gradient sheet, multiply grain texture, inset vignette, multi-stop drop shadows.
+- Registration marks + dashed plot frame for a print/plotter aesthetic.
+- Technical HUD with mono type, live progress bar, pass/grid/pct readouts, and a re-plot control.
+- prefers-reduced-motion fallback renders a static fully-plotted field.
+
+INTENDED INTERACTION MODEL
+- Passive/ambient: the sheet continuously auto-plots a full serpentine pass, pauses ~1.6s at "complete", then re-plots forever.
+- Click anywhere on the sheet to immediately re-plot (reset progress and clear all dots).
+- The "↻ Re-plot sheet" button does the same (and stops click event from bubbling).
+- Responsive: resizing the window rebuilds the grid and restarts the plot.
+- Reduced-motion users see the finished static halftone with no animation.

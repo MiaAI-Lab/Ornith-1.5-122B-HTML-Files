@@ -1,0 +1,22 @@
+PROMPT:
+World-class creative technologist & designer. Build standalone HTML page as a self-contained .html with ALL CSS in one <style> and ALL JS in one <script> (inline everything). ZERO external dependencies: no CDN, no external fonts (system stacks only), no external images/SVG files, no libraries — build all visuals with CSS, HTML, inline SVG, or <canvas>. Works fully offline by double-clicking (no network requests). Responsive 320px->4K with <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5. WOW BAR: genuinely stunning, premium, Awwwards-caliber, distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Also create a matching .txt with the same base name containing the exact prompt, a short TITLE, a one-paragraph DESIGN DESCRIPTION, a bulleted list of MAJOR VISUAL TECHNIQUES, and the INTENDED INTERACTION MODEL.
+
+Page: 060-sunrise — A sunrise timeline across a landscape with a shifting color temperature. Palette: indigo pre-dawn -> peach -> gold morning. Signature: animated sky gradient timeline, sun arcing up over hills, lengthening/shortening shadows, progress scrubber.
+
+TITLE:
+SOLSTICE — A Sunrise Timeline
+
+DESIGN DESCRIPTION:
+A single sunrise stretched into a scrubbable hour. The whole landscape lives on one canvas: a multi-stop sky gradient that interpolates through six keyframes from a star-strewn indigo pre-dawn, through violet and peach, into a warm gold hour and finally a clear morning blue. A glowing sun disc rises on a smooth cosine arc over three layered, sine-built hill silhouettes, and a row of pine trees on the nearest ridge cast shadows that stretch long at dawn and fall away as the sun climbs. An editorial masthead, a live mono HUD (local clock, sun elevation, shadow length, current phase) and a gradient progress scrubber that mirrors the sky itself turn a passive animation into a gallery instrument you can move through by hand.
+
+MAJOR VISUAL TECHNIQUES:
+- Six-keyframe sky interpolation: top / horizon / haze color channels lerped between indigo, violet, peach, gold and morning-blue keyframes for a true shifting color temperature.
+- Sun on a cosine arc (elevation = (1-cos(πt))/2) with a radial glow whose tint warms at low angles, plus a bright radial-gradient disc.
+- Three precomputed sine-composite hill ridges (far to near, darker as they come forward) filled with a top-to-bottom shade gradient.
+- Cast shadows: pine silhouettes whose ground shadows stretch with 1/(elevation) and flip direction relative to the sun's horizontal position, so shadows lengthen at dawn and shorten through the morning.
+- Twinkling stars that fade out as dawn elevation rises, and a warm horizon haze band that warms the sunrise.
+- DPR-aware canvas scaling (capped at 2×) with a resize rebuild of the ridges, so it stays crisp 320px to 4K.
+- Editorial masthead, live mono HUD, glassy phase/clock chips and a sky-mirrored range scrubber with a gold dial.
+
+INTENDED INTERACTION MODEL:
+A scrubbable timeline. Viewers drag the gold dial (or the gradient track) to move the hour by hand — the sky, sun, shadows and HUD all follow instantly — or hit Play to let the full sunrise run over ~18 seconds, with Loop on by default to wrap back to pre-dawn. Restart jumps to the start and resumes. The clock, sun elevation, shadow state (long → medium → short → brief) and phase label (night, pre-dawn, dawn, sunrise, gold hour, morning) update live. On prefers-reduced-motion the auto-play is disabled so the scene stays still until the user scrubs.

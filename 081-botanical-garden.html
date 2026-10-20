@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Herbarium · Pressed-Flower Specimen Index</title>
+<style>
+  :root{
+    --sage:#8a9a7b; --sage-deep:#5f6f52; --sage-ink:#435139;
+    --cream:#f4efe1; --cream-2:#ece3cf; --paper:#f8f2e4;
+    --terra:#c07a54; --terra-deep:#9c5a38; --ink:#3b3a33; --ink-soft:#6f6b5d;
+    --rule:rgba(59,58,51,.28);
+    --serif:Georgia,'Times New Roman','Palatino Linotype',serif;
+    --sans:'Segoe UI',system-ui,-apple-system,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; min-height:100vh;
+    font-family:var(--serif); color:var(--ink);
+    background:
+      radial-gradient(130% 100% at 18% -5%, #fbf6e9 0%, #f4ecd9 42%, #e9dfc8 100%);
+    -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+    padding:0 6vw;
+  }
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.5;
+    mix-blend-mode:multiply;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(60,55,40,.028) 0 1px, transparent 1px 3px),
+      repeating-linear-gradient(0deg, rgba(60,55,40,.02) 0 1px, transparent 1px 4px);
+  }
+  body::after{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none;
+    box-shadow: inset 0 0 180px 40px rgba(80,66,42,.28);
+  }
+  .shell{position:relative; z-index:1; max-width:1280px; margin:0 auto;}
+
+  .masthead{ text-align:center; padding:8vh 0 4vh; position:relative; }
+  .kicker{
+    font-family:var(--sans); font-size:.72rem; letter-spacing:.42em;
+    text-transform:uppercase; color:var(--terra-deep); margin:0 0 1.3rem;
+  }
+  .kicker b{ color:var(--sage-deep); font-weight:600; }
+  h1{
+    font-size:clamp(2.6rem,8vw,6.2rem); margin:0; font-weight:400;
+    letter-spacing:.01em; line-height:.96;
+  }
+  h1 em{ font-style:italic; color:var(--terra-deep); }
+  .sub{
+    font-style:italic; color:var(--ink-soft); font-size:clamp(1rem,2vw,1.3rem);
+    margin:.9rem 0 0; letter-spacing:.02em;
+  }
+  .divider{
+    display:flex; align-items:center; justify-content:center; gap:1rem;
+    margin:2rem auto 0; max-width:520px; color:var(--sage-deep);
+  }
+  .divider::before,.divider::after{ content:""; height:1px; flex:1; background:var(--rule); }
+  .divider .glyph{ font-size:1.1rem; letter-spacing:.3em; }
+  .meta-row{
+    display:flex; flex-wrap:wrap; justify-content:center; gap:1.4rem 2.4rem;
+    margin:2.4rem auto 0; font-family:var(--sans);
+  }
+  .meta-row div{ text-align:center; }
+  .meta-row .n{ font-size:1.5rem; color:var(--terra-deep); display:block; line-height:1; }
+  .meta-row .l{
+    font-size:.62rem; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--ink-soft); margin-top:.5rem; display:block;
+  }
+
+  .grid{
+    display:grid; gap:2.4rem 2rem; margin:2vh 0 8vh;
+    grid-template-columns:repeat(auto-fill,minmax(252px,1fr));
+  }
+
+  .card{
+    position:relative; background:
+      linear-gradient(150deg, #fbf7ec 0%, #f3ecda 60%, #ece2cb 100%);
+    border:1px solid rgba(90,78,54,.22);
+    border-radius:3px; padding:14px 14px 16px;
+    box-shadow: 0 1px 0 rgba(255,255,255,.6) inset, 0 14px 30px -18px rgba(60,48,28,.5);
+    transition: transform .5s cubic-bezier(.2,.7,.2,1), box-shadow .5s;
+    cursor:pointer;
+  }
+  .card::before,.card::after{
+    content:""; position:absolute; width:58px; height:20px; top:-9px;
+    background:linear-gradient(180deg, rgba(192,122,84,.55), rgba(156,90,56,.4));
+    box-shadow:0 2px 5px rgba(0,0,0,.12);
+    transform:rotate(-6deg); border-radius:1px;
+  }
+  .card::after{ right:-6px; left:auto; transform:rotate(7deg);
+    background:linear-gradient(180deg, rgba(138,154,123,.5), rgba(95,111,82,.38)); }
+  .card:hover,.card.blooming{
+    transform:translateY(-8px);
+    box-shadow:0 26px 44px -20px rgba(60,48,28,.6);
+  }
+
+  .plate{
+    position:relative; aspect-ratio:1/1; border-radius:2px; overflow:hidden;
+    background:
+      radial-gradient(120% 120% at 50% 30%, #fdfbf4 0%, #f2ead6 70%, #e7dcc2 100%);
+    box-shadow: inset 0 0 0 1px rgba(90,78,54,.18), inset 0 10px 30px -18px rgba(60,48,28,.55);
+    margin-bottom:14px;
+  }
+  .plate::after{
+    content:""; position:absolute; inset:7px; border:1px solid rgba(90,78,54,.16);
+    border-radius:2px; pointer-events:none;
+  }
+  .acc-number{
+    position:absolute; top:12px; left:12px; z-index:3;
+    font-family:var(--sans); font-size:.6rem; letter-spacing:.18em;
+    color:var(--terra-deep); background:rgba(248,242,228,.85);
+    padding:3px 7px; border:1px solid rgba(156,90,56,.35); border-radius:2px;
+  }
+  .ribbon{
+    position:absolute; right:-2px; bottom:10px; z-index:3;
+    font-family:var(--sans); font-size:.56rem; letter-spacing:.22em;
+    text-transform:uppercase; color:#f6efe0;
+    background:linear-gradient(135deg,var(--terra),var(--terra-deep));
+    padding:4px 12px 4px 10px; border-radius:2px;
+    box-shadow:0 3px 7px rgba(90,45,20,.35);
+  }
+
+  .flower{
+    position:absolute; inset:0; z-index:2;
+    transform:scale(.9); opacity:.96;
+    transition: transform 1s cubic-bezier(.2,.7,.2,1), filter .8s;
+    filter: saturate(.92);
+  }
+  .card:hover .flower,.card.blooming .flower{
+    transform:scale(1.02); filter:saturate(1.15) contrast(1.04);
+  }
+  .petal{
+    position:absolute; left:50%; top:50%;
+    width:var(--pw); height:var(--ph);
+    margin-left:calc(var(--pw) * -0.5); margin-top:calc(var(--ph) * -1);
+    transform-origin:50% 100%;
+    background:linear-gradient(to top, var(--c2), var(--c1));
+    border-radius:54% 54% 44% 44% / 62% 62% 38% 38%;
+    box-shadow:
+      inset 0 6px 9px rgba(255,255,255,.28),
+      inset 0 -9px 13px rgba(0,0,0,.14),
+      0 1px 2px rgba(0,0,0,.06);
+    transform:rotate(var(--a)) scale(var(--s,1));
+    transition: transform .8s cubic-bezier(.2,.7,.2,1) calc(var(--i,0) * 26ms), filter .8s;
+    will-change:transform;
+  }
+  .petal::after{
+    content:""; position:absolute; left:50%; top:8%; width:1px; height:78%;
+    transform:translateX(-50%);
+    background:linear-gradient(rgba(255,255,255,.4),rgba(255,255,255,0));
+  }
+  .layer-1 .petal{ --s:.86; }
+  .layer-2 .petal{ --pw:calc(var(--pw) * .8); --ph:calc(var(--ph) * .82); }
+  .card:hover .petal,.card.blooming .petal{
+    --s:1; transform:rotate(calc(var(--a) + var(--spread))) scale(1);
+  }
+  .stamen{
+    position:absolute; left:50%; top:50%; width:var(--cw); height:var(--cw);
+    margin-left:calc(var(--cw) * -0.5); margin-top:calc(var(--cw) * -0.5);
+    border-radius:50%; z-index:4;
+    background:radial-gradient(circle at 40% 35%, var(--ce), var(--c2e) 70%);
+    box-shadow: inset 0 2px 4px rgba(255,255,255,.4), inset 0 -3px 6px rgba(0,0,0,.3), 0 1px 3px rgba(0,0,0,.15);
+    transition: transform .8s cubic-bezier(.2,.7,.2,1) 120ms;
+  }
+  .card:hover .stamen,.card.blooming .stamen{ transform:scale(1.12); }
+  .stamen i{
+    position:absolute; inset:18%; border-radius:50%; display:block;
+    background:radial-gradient(circle at 30% 30%, var(--cdot), transparent 60%);
+    opacity:.8;
+  }
+
+  .label{ font-family:var(--serif); }
+  .lbl-top{ display:flex; justify-content:space-between; align-items:baseline; gap:.5rem; }
+  .binomial{ font-style:italic; font-size:1.16rem; line-height:1.15; color:var(--ink); }
+  .common{
+    font-family:var(--sans); font-size:.66rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--terra-deep); margin:.35rem 0 0;
+  }
+  .family{ font-style:italic; color:var(--ink-soft); font-size:.92rem; margin:.5rem 0 0; }
+  .rule{ height:1px; background:var(--rule); margin:.9rem 0 .8rem; position:relative; }
+  .rule::after{ content:""; position:absolute; left:0; top:-1px; width:46px; height:1px; background:var(--terra); }
+  .facts{ list-style:none; margin:0; padding:0; font-size:.82rem; color:var(--ink-soft); }
+  .facts li{ display:flex; justify-content:space-between; gap:1rem; padding:.28rem 0;
+    border-bottom:1px dotted rgba(90,78,54,.2); }
+  .facts li:last-child{ border-bottom:0; }
+  .facts .k{ font-family:var(--sans); font-size:.6rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--sage-deep); }
+  .facts .v{ text-align:right; }
+  .barcode{ margin-top:1rem; height:26px; opacity:.7; display:flex; gap:1px; align-items:flex-end; }
+  .barcode span{ flex:0 0 1px; background:var(--ink); }
+
+  .colophon{
+    text-align:center; padding:5vh 0 8vh; color:var(--ink-soft);
+    font-style:italic; font-size:.95rem;
+  }
+  .colophon .tag{
+    font-family:var(--sans); font-style:normal; font-size:.64rem;
+    letter-spacing:.3em; text-transform:uppercase; color:var(--terra-deep);
+    display:block; margin-bottom:.8rem;
+  }
+
+  .card{ animation:rise .9s cubic-bezier(.2,.7,.2,1) both; }
+  @keyframes rise{ from{opacity:0; transform:translateY(26px);} to{opacity:1; transform:none;} }
+
+  @media (max-width:560px){
+    .meta-row{ gap:1rem 1.6rem; }
+    .card::before{ width:44px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{ animation:none !important; }
+    .petal{ --s:1; transition:none; }
+    .card:hover .petal,.card.blooming .petal{ transform:rotate(var(--a)) scale(1); }
+    .flower{ transform:none; filter:none; }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="masthead">
+    <p class="kicker">The <b>Marlow</b> Collection · Catalogue <b>No. 081</b></p>
+    <h1>The <em>Herbarium</em></h1>
+    <p class="sub">A cabinet of pressed flowers, pressed between paper and memory.</p>
+    <div class="divider"><span class="glyph">✦ ❧ ✦</span></div>
+    <div class="meta-row">
+      <div><span class="n">08</span><span class="l">Specimens</span></div>
+      <div><span class="n">1919–47</span><span class="l">Collected</span></div>
+      <div><span class="n">VI</span><span class="l">Families</span></div>
+      <div><span class="n">A–Z</span><span class="l">Indexed</span></div>
+    </div>
+  </header>
+
+  <main class="grid" id="grid" aria-label="Pressed-flower specimen index"></main>
+
+  <footer class="colophon">
+    <span class="tag">Pressed &amp; mounted by hand</span>
+    Each specimen was gathered at peak bloom, pressed flat between blotters, and
+    labelled in faded ink. Hover — or tap — a sheet and the flower opens again.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SPECIES = [
+    {bin:'Rosa gallica', common:'Red Rose', family:'Rosaceae',
+     col:'E. L. Marsh', date:'14 May 1921', loc:'Cotswold Hedgerow', region:'England',
+     no:'081 · I', petals:7, layers:4, pw:30, ph:72, c1:'#c68b6b', c2:'#9c5a38',
+     cw:34, ce:'#e9c67a', c2e:'#a5613f', cdot:'#5a3320', spread:14},
+    {bin:'Bellis perennis', common:'English Daisy', family:'Asteraceae',
+     col:'A. Fenn', date:'2 Apr 1934', loc:'Meadow Lane', region:'Kent',
+     no:'081 · II', petals:15, layers:2, pw:15, ph:64, c1:'#f6eede', c2:'#e7d5b6',
+     cw:30, ce:'#f0d488', c2e:'#d0a93f', cdot:'#b98a2a', spread:7},
+    {bin:'Campanula rotundifolia', common:'Bluebell Bellflower', family:'Campanulaceae',
+     col:'M. Rowell', date:'9 Jul 1928', loc:'Limestone Bank', region:'Derbyshire',
+     no:'081 · III', petals:5, layers:2, pw:40, ph:60, c1:'#aeb8cf', c2:'#6f7f9c',
+     cw:26, ce:'#e9dd9c', c2e:'#c9b25e', cdot:'#8a743a', spread:18},
+    {bin:'Papaver rhoeas', common:'Corn Poppy', family:'Papaveraceae',
+     col:'Rev. T. Ash', date:'1 Jun 1923', loc:'Wheat Field Edge', region:'Suffolk',
+     no:'081 · IV', petals:4, layers:2, pw:52, ph:66, c1:'#d0713f', c2:'#8f3a24',
+     cw:30, ce:'#3a332c', c2e:'#241f1a', cdot:'#151210', spread:20},
+    {bin:'Viola tricolor', common:'Heartsease', family:'Violaceae',
+     col:'C. Delaveau', date:'18 May 1939', loc:'Cottage Garden', region:'Berkshire',
+     no:'081 · V', petals:5, layers:1, pw:38, ph:52, c1:'#b79bb0', c2:'#6f5270',
+     cw:24, ce:'#f0cf6e', c2e:'#c79a3a', cdot:'#8a6a22', spread:16},
+    {bin:'Aster amellus', common:'Michaelmas Daisy', family:'Asteraceae',
+     col:'H. Bianchi', date:'6 Sep 1941', loc:'Rockery Terrace', region:'Wales',
+     no:'081 · VI', petals:18, layers:3, pw:12, ph:60, c1:'#c7a6bd', c2:'#8a6f88',
+     cw:26, ce:'#ecc464', c2e:'#c79a3e', cdot:'#8a6a24', spread:6},
+    {bin:'Geranium phaeum', common:'Dusky Cranesbill', family:'Geraniaceae',
+     col:'O. Nwosu', date:'22 Apr 1946', loc:'Shaded Wall', region:'Ireland',
+     no:'081 · VII', petals:5, layers:1, pw:30, ph:48, c1:'#7a6470', c2:'#433540',
+     cw:20, ce:'#c9a95c', c2e:'#8a6f30', cdot:'#4a3a1a', spread:15},
+    {bin:'Tulipa sylvestris', common:'Wild Tulip', family:'Liliaceae',
+     col:'Sir P. Halloway', date:'27 Mar 1919', loc:'Orchard Margin', region:'Norfolk',
+     no:'081 · VIII', petals:6, layers:2, pw:34, ph:80, c1:'#e2a25a', c2:'#b3662f',
+     cw:26, ce:'#f2dd8a', c2e:'#c79a3e', cdot:'#7a5a24', spread:10}
+  ];
+
+  var idxGlobal = 0;
+  function el(tag, cls){ return document.createElement(cls ? tag : tag); }
+  function buildFlower(cfg){
+    var flower = document.createElement('div'); flower.className = 'flower';
+    flower.style.setProperty('--spread', cfg.spread + 'deg');
+    for (var L = 0; L < cfg.layers; L++){
+      var wrap = document.createElement('div');
+      wrap.className = 'layer-' + (L+1);
+      var offset = (L % 2) ? (360 / cfg.petals / 2) : 0;
+      for (var p = 0; p < cfg.petals; p++){
+        var petal = document.createElement('span'); petal.className = 'petal';
+        var ang = (360 / cfg.petals) * p + offset;
+        petal.style.setProperty('--a', ang + 'deg');
+        petal.style.setProperty('--i', idxGlobal);
+        petal.style.setProperty('--pw', cfg.pw + 'px');
+        petal.style.setProperty('--ph', cfg.ph + 'px');
+        petal.style.setProperty('--c1', cfg.c1);
+        petal.style.setProperty('--c2', cfg.c2);
+        wrap.appendChild(petal);
+        idxGlobal++;
+      }
+      flower.appendChild(wrap);
+    }
+    var st = document.createElement('div'); st.className = 'stamen';
+    st.style.setProperty('--cw', cfg.cw + 'px');
+    st.style.setProperty('--ce', cfg.ce);
+    st.style.setProperty('--c2e', cfg.c2e);
+    st.style.setProperty('--cdot', cfg.cdot);
+    st.innerHTML = '<i></i>';
+    flower.appendChild(st);
+    return flower;
+  }
+  function buildCard(cfg){
+    var card = document.createElement('article'); card.className = 'card';
+    card.setAttribute('tabindex','0'); card.setAttribute('role','button');
+    card.setAttribute('aria-label', cfg.bin + ', ' + cfg.common);
+
+    var plate = document.createElement('div'); plate.className = 'plate';
+    plate.appendChild(buildFlower(cfg));
+    var acc = document.createElement('span'); acc.className = 'acc-number'; acc.textContent = cfg.no;
+    var rib = document.createElement('span'); rib.className = 'ribbon';
+    rib.textContent = cfg.family.replace(/aceae$/, '');
+    plate.appendChild(acc); plate.appendChild(rib);
+
+    var label = document.createElement('div'); label.className = 'label';
+    label.innerHTML =
+      '<div class="lbl-top"><span class="binomial">' + cfg.bin + '</span></div>' +
+      '<p class="common">' + cfg.common + '</p>' +
+      '<p class="family">Familia ' + cfg.family + '</p>' +
+      '<div class="rule"></div>' +
+      '<ul class="facts">' +
+        '<li><span class="k">Collector</span><span class="v">' + cfg.col + '</span></li>' +
+        '<li><span class="k">Collected</span><span class="v">' + cfg.date + '</span></li>' +
+        '<li><span class="k">Locality</span><span class="v">' + cfg.loc + '</span></li>' +
+        '<li><span class="k">Region</span><span class="v">' + cfg.region + '</span></li>' +
+      '</ul>';
+    var bar = document.createElement('div'); bar.className = 'barcode';
+    [2,1,2,3,1,2,3,1,1,2,1,3,2,1,2,1,3,2,1,1,2,3,1,2].forEach(function(x){
+      var s = document.createElement('span');
+      s.style.flexGrow = '0'; s.style.flexShrink = '0'; s.style.flexBasis = '0';
+      s.style.width = (x===3?3:1) + 'px';
+      s.style.height = (14 + (x*3)%10) + 'px';
+      bar.appendChild(s);
+    });
+    label.appendChild(bar);
+
+    card.appendChild(plate); card.appendChild(label);
+    card.addEventListener('click', function(){ card.classList.toggle('blooming'); });
+    card.addEventListener('keydown', function(e){
+      if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); card.classList.toggle('blooming'); }
+    });
+    card.addEventListener('mouseenter', function(){ card.classList.add('blooming'); });
+    card.addEventListener('mouseleave', function(){ card.classList.remove('blooming'); });
+    card.style.animationDelay = (idxGlobal * 60) + 'ms';
+    return card;
+  }
+
+  var grid = document.getElementById('grid');
+  SPECIES.forEach(function(cfg){ grid.appendChild(buildCard(cfg)); });
+})();
+</script>
+</body>
+</html>

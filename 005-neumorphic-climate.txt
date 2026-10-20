@@ -1,0 +1,20 @@
+PROMPT USED:
+Build a standalone, fully offline HTML page: a Neumorphic climate dashboard with soft extruded gauges, dials, and cards. Palette: soft off-white/grey with a single accent. Signature elements: dual inset/outset box-shadows, animated needle gauges, and conic progress rings. One self-contained .html file, all CSS in a single <style> block and all JS in a single <script> block, zero external dependencies (no CDN, fonts, images, or libraries), responsive 320px→4K, valid HTML5, and a genuinely premium Awwwards-caliber look with intentional motion and delightful polish.
+
+TITLE:
+Aether — Neumorphic Climate Console
+
+DESIGN DESCRIPTION:
+Aether is a soft-touch neumorphic telemetry console where every surface is a gently extruded panel lit by a paired light-source box-shadow (a bright top-left highlight against a soft bottom-right dark shadow), with inset "carved" wells holding the live data. A cool off-white/blue-grey palette (#e4e9f2) keeps the field calm while a single teal accent (#3ba7a4) marks progress, needles and emphasis, with a warm coral reserved for warnings. The layout is a 12-column dashboard grid of raised stat cards with SVG sparklines, a soft inset needle gauge whose springy pointer settles onto its reading, concentric conic progress rings for CO₂/UV and the renewable energy mix, a hand-drawn-feeling smoothed canvas thermal-trend chart with gradient fills, and a tactile slider thermostat whose thumb and track are themselves neumorphic wells. A live clock pulses a small accent dot, values count up on load with eased number animations, and the trend chart drifts every few seconds so the console always feels subtly alive.
+
+MAJOR VISUAL TECHNIQUES:
+- Paired inset/outset box-shadows on a single light angle to build the extruded (raised) and carved (inset) neumorphic surfaces.
+- Conic-gradient logo medallion with a carved center well and gloss highlight.
+- Animated SVG needle gauge with hand-drawn tick marks and a spring-eased (cubic-bezier overshoot) pointer.
+- Conic-style progress rings built from stroke-dasharray/dashoffset on SVG circles, each with an eased count-up number animation.
+- Smoothed (quadratic-Bézier) dual-series canvas line chart with animated gradient area fills and a live-drifting data stream.
+- Custom neumorphic range slider and inset segmented control, fully styled per engine.
+- Responsive 12-column grid that collapses cleanly at tablet and phone widths; fluid type via clamp().
+
+INTENDED INTERACTION MODEL:
+Passive + tactile. On load the gauges swing and the rings/counters animate to their values; the clock ticks and the thermal chart re-drifts every 4s for ambient life. The user drags the thermostat slider (the fill and fan % update live) and toggles the AUTO/ECO/BOOST segmented mode. Otherwise the dashboard is a living read-only instrument — motion is gentle and continuous rather than event-driven, reinforcing the "always on, softly monitoring" feel.

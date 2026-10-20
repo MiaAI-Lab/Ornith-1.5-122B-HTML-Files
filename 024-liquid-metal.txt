@@ -1,0 +1,74 @@
+RECREATION PROMPT
+=================
+Create a single self-contained HTML file (inline <style> plus inline <script>,
+no external assets) of a dark, product-style hero showing a morphing "liquid
+chrome" blob. Center a large circular form on a dark radial-gradient stage with
+a faint reflective environment glow and a soft perspective "reflection pool"
+beneath it. The blob is a div with a multi-stop diagonal linear-gradient in
+silver/chrome tones, an animated morphing multi-value border-radius (the
+signature effect), a slow hue-rotate loop, and layered sheen/sweep/specular
+highlight pseudo-elements and child divs (screen blend). Behind it, a full-size
+<canvas> continuously draws flowing horizontal chrome light bands (sine-moved
+vertical gradients) and a few drifting cyan radial highlight points. The blob
+wrapper reacts to the pointer: translate + rotateX/rotateY tilt with a
+smoothed (lerped) follow. Overlay minimal chrome-tinted type — a top brand/status
+row and a bottom headline with a metallic gradient-text fill, a caption and an
+interaction hint. Use system sans-serif. Respect prefers-reduced-motion.
+
+TITLE
+=====
+MERCURO · Liquid Chrome
+
+DESIGN DESCRIPTION
+==================
+A dark, premium product hero for a fictional "liquid metal" element. Against a
+near-black blue-grey radial-gradient stage, a large chrome sphere/blob sits
+center, its surface a convincing polished-metal look built from a multi-stop
+diagonal gradient (bright white highlight → silver → steel grey → dark) plus
+inset and drop shadows. Its defining motion is a continuously morphing border-
+radius that oozes between organic shapes (a 12s loop), combined with a slow
+24s hue-rotate so the metal subtly shifts tone. On top of the base form, several
+light layers add realism: a rotating conic sheen, a horizontal specular sweep,
+and two bobbing specular hot spots, all screen-blended. Beneath the blob, a
+blurred perspective "reflection pool" pulses gently. A full-screen canvas
+behind everything draws slow-flowing horizontal ribbons of light and drifting
+cyan glows, suggesting a moving reflective environment. Typography is minimal
+and metallic: a spaced brand with a glowing wordmark, a live status readout,
+and a large ultra-light headline "Liquid Metal" filled with a silver gradient
+(background-clip: text). The caption explains that moving the pointer steers
+the reflection.
+
+MAJOR VISUAL TECHNIQUES
+=======================
+- Signature morphing blob: multi-value border-radius animated across five
+  keyframes (morph, 12s) plus a continuous hue-rotate loop (hue, 24s).
+- Chrome material: multi-stop diagonal linear-gradient (white → silver → steel
+  → dark) with inset highlight + deep drop shadows for a polished look.
+- Layered light on the form: rotating conic-gradient sheen (spin, screen),
+  translating linear specular sweep (sweep, screen), and two bobbing radial
+  specular hot spots (bob).
+- Canvas background: requestAnimationFrame loop drawing 6 sine-oscillating
+  horizontal light bands (createLinearGradient fills) and 3 drifting cyan
+  radial highlight points; DPR-aware resize.
+- Pointer-reactive 3D tilt: pointermove/touchmove set targets, a rAF loop
+  eases (lerps at 0.06) toward them and applies translate3d + rotateX/rotateY
+  on the blob wrapper for a parallax "steer the reflection" feel.
+- Reflection pool: perspective rotateX ellipse with a pulsing opacity/scale
+  (reflectPulse) and blur.
+- Metallic gradient text headline via linear-gradient + background-clip: text,
+  color: transparent.
+- Ambient environment glows (layered radial gradients) and a soft pulse dot.
+- Dark chrome palette via CSS custom properties (--chrome-hi/1/2/3/lo, --accent
+  cyan).
+- prefers-reduced-motion disables all animations.
+
+INTENDED INTERACTION MODEL
+==========================
+Pointer-driven and ambient. The blob continuously morphs and shifts hue on its
+own, and the canvas environment flows automatically. The core interaction is
+the pointer: moving the mouse (or dragging with a touch) across the viewport
+tilts the blob in 3D (rotateX/rotateY) with a slight translate parallax, using
+a smoothed lerp so the motion feels fluid and "liquid" — as if steering the
+reflection across its surface. No clicks or scrolling drive the effect; it is a
+demonstration piece meant to be hovered. Under prefers-reduced-motion all
+animation (morph, hue, sheen, sweep, canvas, tilt loop effects) is disabled.

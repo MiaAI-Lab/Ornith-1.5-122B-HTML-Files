@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UNFURL · A Flower in Bloom</title>
+<style>
+  html,body{margin:0;padding:0;height:100%;overflow:hidden;background:#fbeef0;
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;touch-action:none}
+  .stage{position:fixed;inset:0;
+    background:
+      radial-gradient(90% 70% at 50% 22%, #fff6f2 0%, #fde7ec 40%, #f6d3dc 78%, #e9b7c6 100%);
+    display:flex;align-items:flex-end;justify-content:center;}
+  .stage::before{content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(120% 80% at 50% 0%, rgba(255,255,255,.6), transparent 55%);}
+  #pollen{position:fixed;inset:0;z-index:4;pointer-events:none}
+
+  /* ground glow */
+  .ground{position:absolute;left:0;right:0;bottom:0;height:26%;z-index:2;
+    background:linear-gradient(180deg, rgba(233,183,198,0), rgba(200,140,165,.5) 55%, rgba(150,90,120,.7));
+    filter:blur(2px);}
+
+  .plant{position:relative;z-index:3;width:min(520px,92vw);height:min(78vh,760px);
+    transform-origin:bottom center;
+    animation:sway 6.5s ease-in-out infinite;animation-delay:3.4s;opacity:0;
+    animation-fill-mode:both;}
+  @keyframes sway{
+    0%,100%{transform:rotate(-1.4deg)}
+    50%{transform:rotate(1.4deg)}
+  }
+  .plant svg{width:100%;height:100%;overflow:visible;display:block}
+
+  /* stem growth via dash offset */
+  .stem{fill:none;stroke:#6fae54;stroke-width:9;stroke-linecap:round;
+    stroke-dasharray:560;stroke-dashoffset:560;
+    animation:grow 2.2s cubic-bezier(.22,.9,.3,1) 0.2s forwards;}
+  @keyframes grow{to{stroke-dashoffset:0}}
+  .stem-hl{fill:none;stroke:rgba(255,255,255,.45);stroke-width:2.4;stroke-linecap:round;
+    stroke-dasharray:560;stroke-dashoffset:560;
+    animation:grow 2.2s cubic-bezier(.22,.9,.3,1) 0.2s forwards;}
+
+  /* leaves */
+  .leaf{transform-origin:center;transform-box:fill-box;opacity:0;
+    animation:leaf 1s cubic-bezier(.2,.9,.3,1) forwards;}
+  .leaf.l1{animation-delay:1.3s}
+  .leaf.l2{animation-delay:1.6s}
+  .leaf.l3{animation-delay:1.9s}
+  @keyframes leaf{0%{opacity:0;transform:scale(0) rotate(-30deg)}
+    70%{opacity:1;transform:scale(1.12) rotate(4deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+
+  /* bud */
+  .bud{transform-origin:center;transform-box:fill-box;opacity:0;transform:scale(0);
+    animation:bud 0.8s cubic-bezier(.2,.9,.3,1) 1.9s forwards;}
+  @keyframes bud{0%{opacity:0;transform:scale(0)}100%{opacity:1;transform:scale(1)}}
+
+  /* petals: layered, rotate + scale open in stages */
+  .petal-layer{transform-origin:center;transform-box:fill-box;opacity:0;transform:scale(0) rotate(0deg);
+    animation:bloom 1.1s cubic-bezier(.2,.85,.3,1) forwards;}
+  .layer1{animation-delay:2.4s}
+  .layer2{animation-delay:2.85s}
+  .layer3{animation-delay:3.25s}
+  @keyframes bloom{
+    0%{opacity:0;transform:scale(0) rotate(-40deg)}
+    75%{opacity:1;transform:scale(1.06) rotate(6deg)}
+    100%{opacity:1;transform:scale(1) rotate(0)}
+  }
+  .layer2{animation-name:bloom2}
+  @keyframes bloom2{
+    0%{opacity:0;transform:scale(0) rotate(30deg)}
+    75%{opacity:1;transform:scale(1.08) rotate(-6deg)}
+    100%{opacity:1;transform:scale(1) rotate(0)}
+  }
+
+  .center{transform-origin:center;transform-box:fill-box;opacity:0;transform:scale(0);
+    animation:bud 0.6s cubic-bezier(.2,.9,.3,1) 3.6s forwards;}
+
+  /* gentle breathing once open */
+  .bloom-open{animation:breathe 5s ease-in-out 4.2s infinite both;}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+
+  .wordmark{position:fixed;left:clamp(22px,5vw,60px);top:clamp(20px,4vh,44px);z-index:6;pointer-events:none}
+  .wordmark .k{font-size:clamp(.58rem,1.4vw,.74rem);letter-spacing:.42em;text-transform:uppercase;color:#c77ba0}
+  .wordmark h1{margin:.32em 0 0;font-family:Georgia,"Times New Roman",serif;font-weight:400;
+    font-size:clamp(1.6rem,5vw,3.1rem);line-height:.98;color:#8a3a5c;letter-spacing:.01em}
+  .wordmark h1 em{font-style:italic;color:#d9628f;font-weight:300}
+  .foot{position:fixed;right:clamp(20px,4vw,50px);bottom:clamp(20px,4vh,44px);z-index:6;
+    max-width:min(380px,40vw);text-align:right;pointer-events:none}
+  .foot p{margin:0;color:#a96582;font-size:clamp(.7rem,1.4vw,.86rem);line-height:1.55;letter-spacing:.02em}
+  .foot .hint{margin-top:.7em;font-size:.7em;letter-spacing:.16em;text-transform:uppercase;color:#c0879f}
+  @media (prefers-reduced-motion: reduce){
+    .plant{animation:none;opacity:1}
+    .stem,.stem-hl{stroke-dashoffset:0}
+    .leaf,.bud,.petal-layer,.center{opacity:1;transform:none;animation:none}
+    .petal-layer{transform:scale(1)}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="ground"></div>
+
+  <div class="plant" id="plant">
+    <svg viewBox="0 0 400 600" aria-label="A flower growing and blooming, stem rising and petals unfurling in layers">
+      <defs>
+        <linearGradient id="stemG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#7cbf5e"/><stop offset="1" stop-color="#4f8a3c"/>
+        </linearGradient>
+        <radialGradient id="petalA" cx="0.5" cy="0.9" r="0.9">
+          <stop offset="0" stop-color="#fff2f5"/><stop offset="0.5" stop-color="#ff9fbf"/>
+          <stop offset="1" stop-color="#ec6a97"/>
+        </radialGradient>
+        <radialGradient id="petalB" cx="0.5" cy="0.9" r="0.9">
+          <stop offset="0" stop-color="#fff6f8"/><stop offset="0.5" stop-color="#ffc2d4"/>
+          <stop offset="1" stop-color="#f289ad"/>
+        </radialGradient>
+        <radialGradient id="petalC" cx="0.5" cy="0.85" r="0.9">
+          <stop offset="0" stop-color="#ffffff"/><stop offset="0.5" stop-color="#ffd7e2"/>
+          <stop offset="1" stop-color="#f7a3bd"/>
+        </radialGradient>
+        <radialGradient id="core" cx="0.5" cy="0.4" r="0.7">
+          <stop offset="0" stop-color="#ffe9a8"/><stop offset="0.6" stop-color="#f7c46c"/>
+          <stop offset="1" stop-color="#e39a3d"/>
+        </radialGradient>
+        <linearGradient id="leafG" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8fd46b"/><stop offset="1" stop-color="#4e9138"/>
+        </linearGradient>
+      </defs>
+
+      <!-- stem -->
+      <path class="stem" d="M200,560 C196,470 206,400 200,300 C196,230 204,180 200,130"/>
+      <path class="stem-hl" d="M200,560 C196,470 206,400 200,300 C196,230 204,180 200,130"/>
+
+      <!-- leaves -->
+      <g class="leaf l1">
+        <path d="M200,430 C150,420 120,380 128,340 C170,348 200,380 200,430 Z" fill="url(#leafG)"/>
+        <path d="M200,430 C168,414 146,388 132,352" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6"/>
+      </g>
+      <g class="leaf l2">
+        <path d="M200,360 C250,352 284,312 276,272 C232,280 200,316 200,360 Z" fill="url(#leafG)"/>
+        <path d="M200,360 C236,344 260,316 272,282" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.6"/>
+      </g>
+      <g class="leaf l3">
+        <path d="M200,300 C160,296 138,262 144,232 C178,240 200,268 200,300 Z" fill="url(#leafG)" opacity=".95"/>
+      </g>
+
+      <!-- bud (closes before opening) -->
+      <g class="bud">
+        <path d="M200,132 C182,120 180,96 200,84 C220,96 218,120 200,132 Z" fill="#e8739c"/>
+        <path d="M200,132 C190,124 188,106 198,94" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.4"/>
+      </g>
+
+      <!-- bloom layers (hidden until stem grows) -->
+      <g class="bloom-open">
+        <!-- layer 1: outer, large -->
+        <g class="petal-layer layer1">
+          <g transform="translate(200,120)">
+            <ellipse cx="0" cy="-46" rx="26" ry="52" fill="url(#petalA)" transform="rotate(0)"/>
+            <ellipse cx="0" cy="-46" rx="26" ry="52" fill="url(#petalA)" transform="rotate(72)"/>
+            <ellipse cx="0" cy="-46" rx="26" ry="52" fill="url(#petalA)" transform="rotate(144)"/>
+            <ellipse cx="0" cy="-46" rx="26" ry="52" fill="url(#petalA)" transform="rotate(216)"/>
+            <ellipse cx="0" cy="-46" rx="26" ry="52" fill="url(#petalA)" transform="rotate(288)"/>
+          </g>
+        </g>
+        <!-- layer 2: mid -->
+        <g class="petal-layer layer2">
+          <g transform="translate(200,120)">
+            <ellipse cx="0" cy="-34" rx="20" ry="42" fill="url(#petalB)" transform="rotate(36)"/>
+            <ellipse cx="0" cy="-34" rx="20" ry="42" fill="url(#petalB)" transform="rotate(108)"/>
+            <ellipse cx="0" cy="-34" rx="20" ry="42" fill="url(#petalB)" transform="rotate(180)"/>
+            <ellipse cx="0" cy="-34" rx="20" ry="42" fill="url(#petalB)" transform="rotate(252)"/>
+            <ellipse cx="0" cy="-34" rx="20" ry="42" fill="url(#petalB)" transform="rotate(324)"/>
+          </g>
+        </g>
+        <!-- layer 3: inner, pale -->
+        <g class="petal-layer layer3">
+          <g transform="translate(200,120)">
+            <ellipse cx="0" cy="-22" rx="14" ry="30" fill="url(#petalC)" transform="rotate(18)"/>
+            <ellipse cx="0" cy="-22" rx="14" ry="30" fill="url(#petalC)" transform="rotate(90)"/>
+            <ellipse cx="0" cy="-22" rx="14" ry="30" fill="url(#petalC)" transform="rotate(162)"/>
+            <ellipse cx="0" cy="-22" rx="14" ry="30" fill="url(#petalC)" transform="rotate(234)"/>
+            <ellipse cx="0" cy="-22" rx="14" ry="30" fill="url(#petalC)" transform="rotate(306)"/>
+          </g>
+        </g>
+        <!-- centre -->
+        <circle class="center" cx="200" cy="120" r="17" fill="url(#core)"/>
+        <circle class="center" cx="200" cy="120" r="17" fill="none" stroke="rgba(227,154,61,.6)" stroke-width="2"/>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<canvas id="pollen" aria-hidden="true"></canvas>
+
+<div class="wordmark">
+  <div class="k">Unfurl · No. 071</div>
+  <h1>Slowly, it remembers<br>how to be a <em>flower</em>.</h1>
+</div>
+<div class="foot">
+  <p>First the stem reaches, then the leaves unfold, then the bud — and only at the end do the petals let go, layer upon layer, turning toward a light you cannot see.</p>
+  <div class="hint">Watch it bloom · it begins again on reload</div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("pollen");
+  var ctx=cv.getContext("2d");
+  var W=0,H=0,DPR=1, motes=[];
+
+  function size(){
+    DPR=Math.min(window.devicePixelRatio||1,2);
+    W=cv.clientWidth; H=cv.clientHeight;
+    cv.width=Math.floor(W*DPR); cv.height=Math.floor(H*DPR);
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  function make(){
+    return {x:Math.random(), y:Math.random(), r:Math.random()*2+0.6,
+      vx:(Math.random()-0.5)*0.0008, vy:-(Math.random()*0.0009+0.0003),
+      ph:Math.random()*6.28, sp:Math.random()*0.6+0.2,
+      a:Math.random()*0.4+0.15, hue:Math.random()<0.5?340:45};
+  }
+  window.addEventListener("resize",size);
+  size();
+  var n=Math.min(90, Math.round(W*H/12000));
+  for(var i=0;i<n;i++) motes.push(make());
+
+  var time=0,last=0;
+  function loop(ts){
+    if(!last)last=ts;
+    var dt=Math.min((ts-last)/1000,0.05); last=ts;
+    if(reduce) dt*=0.2;
+    time+=dt;
+    ctx.clearRect(0,0,W,H);
+    ctx.globalCompositeOperation="lighter";
+    for(var j=0;j<motes.length;j++){
+      var m=motes[j];
+      m.x+=m.vx+Math.sin(time*m.sp+m.ph)*0.0002;
+      m.y+=m.vy;
+      if(m.y<-0.03){m.y=1.03;m.x=Math.random();}
+      if(m.x<-0.03)m.x=1.03; else if(m.x>1.03)m.x=-0.03;
+      var px=m.x*W, py=m.y*H;
+      var pulse=0.5+0.5*Math.sin(time*m.sp+m.ph);
+      var a=m.a*(0.5+0.5*pulse);
+      var g=ctx.createRadialGradient(px,py,0,px,py,m.r*4);
+      var col = m.hue===45 ? "rgba(255,235,150," : "rgba(255,190,210,";
+      g.addColorStop(0, col+a.toFixed(3)+")");
+      g.addColorStop(1, col+"0)");
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(px,py,m.r*4,0,6.2832); ctx.fill();
+    }
+    ctx.globalCompositeOperation="source-over";
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

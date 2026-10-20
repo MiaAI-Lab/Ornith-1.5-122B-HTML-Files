@@ -1,0 +1,20 @@
+TITLE
+FERRO No. 061 — "The invisible field, made visible" (Magnetic field of a bar magnet with animated iron-filings)
+
+RECREATION PROMPT
+Build these standalone HTML page(s) as files in the current working directory. CONSTRAINTS (non-negotiable): - One self-contained .html per page. ALL CSS in one <style>, ALL JS in one <script>. Inline everything. - ZERO external dependencies: no CDN, no external fonts (system stacks only: system-ui, Georgia, 'Segoe UI', Menlo, Consolas, serif/sans-serif/monospace), no external images, no external SVG files, no libraries. Build all visuals with CSS, HTML, inline SVG, or <canvas>. - Works fully offline by double-clicking. No network requests. Responsive 320px->4K; include <meta name="viewport" content="width=device-width, initial-scale=1">. Valid HTML5: <!DOCTYPE html>, <html lang="en">, <meta charset="utf-8">, semantic where sensible. WOW BAR: genuinely stunning, premium, Awwwards-caliber, NOT generic. Distinctive art direction, curated palette, refined typography, deliberate composition, real intentional motion, delightful details, one signature effect. Handcrafted, unique, take design risks. For EACH page also create a matching .txt with the SAME base name containing: the exact full prompt used; a short TITLE; a one-paragraph DESIGN DESCRIPTION; a bulleted list of MAJOR VISUAL TECHNIQUES; and the INTENDED INTERACTION MODEL. Files to create: 061-magnetic-field.html + 061-magnetic-field.txt — Magnetic field lines around a bar magnet with animated iron-filings. Palette: steel grey magnet, blue field lines, dark bg. Signature: canvas particles flowing along field-line curves from pole to pole, hover to reveal field vectors, subtle glow.
+
+DESIGN DESCRIPTION
+A deep navy-to-black void holds a single horizontal bar magnet rendered in a brushed-steel gradient with faintly red-tinted north and blue-tinted south pole caps. The field is computed physically from two magnetic monopoles (a source at N, a sink at S); field lines are traced with a fourth-order Runge-Kutta integrator following the unit tangent of B, so the curves are real dipole lines rather than drawn arcs. Glowing blue lines emanate from the north pole and sweep back into the south, and hundreds of luminous "iron-filing" particles ride those exact polylines pole-to-pole, additive-blended with soft radial haloes and a trailing afterglow so the flow reads as a living current. A curated editorial overlay (serif italic accent, tabular readouts of field strength and filing count, a hairline coordinate grid masked into the vignette) frames the physics like a gallery piece. Near the poles the filings crowd and brighten, quietly teaching where the field is strongest.
+
+MAJOR VISUAL TECHNIQUES
+- Two-monopole field model B = +m·(r_N)/|r_N|³ − m·(r_S)/|r_S|³, evaluated per pixel/point for a physically correct dipole.
+- RK4 integration of the unit tangent to trace authentic field-line polylines from N to S, with capture/escape termination.
+- Iron-filing particles parametrised by arc length along each traced line, wrapping pole-to-pole with per-particle speed, hue jitter and twinkle.
+- Motion-trail afterglow via translucent dark fill each frame (no hard clear) plus "lighter" additive blending for glow.
+- Radial-gradient haloes per particle instead of flat dots; soft shadowBlur on the field lines.
+- Brushed-steel magnet with layered linear gradients, tinted pole caps, seam line and specular highlight; rounded-rect path helper.
+- Editorial overlay: masked coordinate grid, radial vignette, tabular-nums live readouts, serif/italic display type.
+
+INTENDED INTERACTION MODEL
+Passive: the field and filings flow continuously, pole-to-pole, strongest at the poles. Hover (or touch-drag) anywhere to reveal the local field vector — a glowing compass arrow that points along B at the cursor, with a live |B| magnitude readout in the legend. Moving the pointer also repels nearby filings, parting the current around the cursor so the flow visibly deforms and reforms. Pointer, touch and reduced-motion (slowed) input are all supported.
