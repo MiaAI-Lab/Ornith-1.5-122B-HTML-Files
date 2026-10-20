@@ -22,9 +22,9 @@
     filter:blur(2px);}
 
   .plant{position:relative;z-index:3;width:min(520px,92vw);height:min(78vh,760px);
-    transform-origin:bottom center;
-    animation:sway 6.5s ease-in-out infinite;animation-delay:3.4s;opacity:0;
-    animation-fill-mode:both;}
+    transform-origin:bottom center;opacity:0;
+    animation:rise 1.6s ease-out forwards, sway 6.5s ease-in-out 1.6s infinite;}
+  @keyframes rise{0%{opacity:0}100%{opacity:1}}
   @keyframes sway{
     0%,100%{transform:rotate(-1.4deg)}
     50%{transform:rotate(1.4deg)}
